@@ -49,15 +49,19 @@
     for (var i = 0; i < 5; i++) r += ch.charAt(Math.floor(Math.random() * ch.length));
     return 'T' + String(d.getFullYear()).substr(2) + pad(d.getMonth() + 1) + pad(d.getDate()) + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds()) + r;
   }
-  var BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  var BULAN_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  var BULAN_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var LANG = 'id', BULAN = BULAN_ID;
+  function setLang(l) { LANG = l === 'en' ? 'en' : 'id'; BULAN = LANG === 'en' ? BULAN_EN : BULAN_ID; }
+  function namaBulan(m, pendek) { var n = BULAN[m - 1]; return pendek ? n.substr(0, 3) : n; }
   function fmtTgl(ymd) {
     if (!isDate(ymd)) return ymd || '';
     return +ymd.substr(8, 2) + ' ' + BULAN[+ymd.substr(5, 2) - 1].substr(0, 3) + ' ' + ymd.substr(0, 4);
   }
   function fmtHari(ymd, today) {
-    if (ymd === today) return 'Hari ini';
+    if (ymd === today) return LANG === 'en' ? 'Today' : 'Hari ini';
     var y = new Date(today + 'T00:00:00Z'); y.setUTCDate(y.getUTCDate() - 1);
-    if (ymd === y.toISOString().substr(0, 10)) return 'Kemarin';
+    if (ymd === y.toISOString().substr(0, 10)) return LANG === 'en' ? 'Yesterday' : 'Kemarin';
     return fmtTgl(ymd);
   }
   function periodRange(kind, today) {
@@ -69,10 +73,40 @@
       return {start: py + '-' + pad(pm) + '-01', end: py + '-' + pad(pm) + '-' + lastDay(py, pm)};
     }
     if (kind === 'tahun') return {start: y + '-01-01', end: y + '-12-31'};
+    if (kind === 'hari') return {start: today, end: today};
+    if (kind === 'tahunlalu') return {start: (y - 1) + '-01-01', end: (y - 1) + '-12-31'};
     return {start: '0000-01-01', end: '9999-12-31'};
   }
 
   // ------------------------------------------------------------ master
+  function prevKind(kind) { return kind === 'bulan' ? 'lalu' : (kind === 'tahun' ? 'tahunlalu' : null); }
+  function prevRange(kind, today) {
+    if (kind === 'lalu') { var r = periodRange('lalu', today); return periodRange('lalu', r.start); }
+    if (kind === 'hari') { var d = new Date(today + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - 1); var y = d.toISOString().substr(0, 10); return {start: y, end: y}; }
+    var p = prevKind(kind); return p ? periodRange(p, today) : null;
+  }
+  // arus satu akun dalam rentang: masuk (debit untuk aset), keluar (kredit)
+  function accountFlow(lines, kode, start, end, f) {
+    var masuk = 0, keluar = 0, saldoAwal = 0;
+    lines.forEach(function (l) {
+      if (l.kode !== kode || !pass(l, f)) return;
+      if (l.tanggal < start) { saldoAwal += l.debit - l.kredit; return; }
+      if (l.tanggal > end) return;
+      masuk += l.debit; keluar += l.kredit;
+    });
+    return {saldoAwal: saldoAwal, masuk: masuk, keluar: keluar, saldoAkhir: saldoAwal + masuk - keluar};
+  }
+  // saldo akhir bulan untuk n bulan terakhir
+  function monthlyBalance(lines, kode, today, n) {
+    var by = {}, out = [], y = +today.substr(0, 4), m = +today.substr(5, 2), keys = [];
+    for (var i = n - 1; i >= 0; i--) { var mm = m - i, yy = y; while (mm < 1) { mm += 12; yy--; } keys.push(yy + '-' + pad(mm)); }
+    var run = 0, idx = 0, sorted = lines.filter(function (l) { return l.kode === kode; }).sort(function (a, b) { return a.tanggal < b.tanggal ? -1 : (a.tanggal > b.tanggal ? 1 : 0); });
+    keys.forEach(function (k) {
+      while (idx < sorted.length && sorted[idx].tanggal.substr(0, 7) <= k) { run += sorted[idx].debit - sorted[idx].kredit; idx++; }
+      out.push({bulan: k, saldo: run});
+    });
+    return out;
+  }
   function indexMaster(master) {
     var M = {raw: master || {}, akun: {}, dompet: {}, dompetAktif: [], kategori: [], katByKode: {}, pihak: [], pihakByNama: {}, st: {}, users: []};
     if (!master) return M;
@@ -377,6 +411,6 @@
     jangka: jangka, newId: newId, fmtTgl: fmtTgl, fmtHari: fmtHari, periodRange: periodRange, indexMaster: indexMaster,
     loanKind: loanKind, isRepay: isRepay, sisa: sisa, openLoans: openLoans, saldoPihak: saldoPihak, deriveLines: deriveLines,
     makeTx: makeTx, toPayload: toPayload, buildLines: buildLines, saldoMap: saldoMap, walletBalances: walletBalances,
-    trialBalance: trialBalance, incomeStatement: incomeStatement, balanceSheet: balanceSheet, freq: freq, recent: recent, clean: clean
+    trialBalance: trialBalance, incomeStatement: incomeStatement, setLang: setLang, namaBulan: namaBulan, prevRange: prevRange, accountFlow: accountFlow, monthlyBalance: monthlyBalance, pass: pass, balanceSheet: balanceSheet, freq: freq, recent: recent, clean: clean
   };
 });
