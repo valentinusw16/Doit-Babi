@@ -1,8 +1,9 @@
-/* Kas Keluarga - aplikasi HP (Fase 1). Tanpa framework; data di IndexedDB; sinkron ke Google Sheets lewat Apps Script. */
+/* Do it - aplikasi HP (Fase 1). Tanpa framework; data di IndexedDB; sinkron ke Google Sheets lewat Apps Script. */
 (function () {
   'use strict';
   var C = window.Core;
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.2';
+  var APP_NAME = 'Do it';
 
   // ---------------------------------------------------------------- util
   function $(s, r) { return (r || document).querySelector(s); }
@@ -63,7 +64,8 @@
     cfg: null, tx: {}, jurnalByTx: {}, master: null, M: C.indexMaster(null), rev: 0, mrev: 0, queue: [], prefs: {lastDompet: {}},
     lastSync: 0, online: true, syncing: false, again: false, authFail: false, inflight: null, dirty: false, ver: 0,
     tab: 'beranda', owner: 'Semua', q: '', showVoid: false, limit: 80,
-    rep: {kind: 'is', period: 'bulan', dim: 'pemilik', who: 'Semua', limit: 50}, _lines: null
+    rep: {kind: 'is', period: 'bulan', dim: 'pemilik', who: 'Semua', limit: 50}, _lines: null,
+    pref: Object.assign({theme: 'rose', mode: 'auto'}, lsGet('kk.pref') || {})
   };
   var persistT = null;
   function persist() {
@@ -74,6 +76,13 @@
   }
   function touch() { S.ver++; S._lines = null; S.dirty = true; persist(); }
   function getLines() { if (!S._lines) S._lines = C.buildLines({tx: S.tx, jurnalByTx: S.jurnalByTx, M: S.M}); return S._lines; }
+  function isDark() { var m = S.pref.mode; return m === 'dark' || (m !== 'light' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches); }
+  function applyTheme() {
+    var d = document.documentElement; d.setAttribute('data-theme', S.pref.theme || 'rose'); d.setAttribute('data-dark', isDark() ? '1' : '0');
+    var bg = getComputedStyle(d).getPropertyValue('--bg').trim(), m = document.querySelector('meta[name=theme-color]');
+    if (m && bg) m.setAttribute('content', bg);
+  }
+  var THEMES = [['rose', 'Merah', ['#fbf3f4', '#c0275f', '#fbe1e8']], ['navy', 'Navy', ['#f5efeb', '#2f4156', '#c8d9e6']], ['mono', 'Monokrom', ['#f4f4f4', '#111111', '#ebebeb']]];
   function toast(msg) {
     var t = $('#toast'); t.textContent = msg; t.className = 'show';
     clearTimeout(toast._t); toast._t = setTimeout(function () { t.className = ''; }, 2400);
@@ -170,8 +179,12 @@
     return flush().then(function () {
       return api('sync', {since: full ? 0 : S.rev, master: !!opt.master || !!S.needMaster || !S.master});
     }).then(function (r) {
-      if (r.unchanged && r.mrev !== S.mrev) return api('sync', {since: S.rev, master: true});
-      return r;
+      if (r.master || r.mrev === S.mrev) return r;
+      // data master (dompet, pihak, kategori) berubah di tempat lain: ambil juga
+      return api('sync', {since: S.rev, master: true}).then(function (m) {
+        if (r.unchanged) return m;
+        r.master = m.master; return r;
+      });
     }).then(function (r) {
       S.needMaster = false;
       if (!r.unchanged) merge(r, r.since === 0);
@@ -354,6 +367,11 @@
       '<div class="row tap" data-act="saldo-awal"><div class="ico">' + ICON.loan + '</div><div class="grow"><div class="t">Saldo awal</div><div class="s">Isi saldo dompet, piutang, dan utang saat mulai memakai</div></div></div>' +
       '<div class="row tap" data-act="pihak-list"><div class="ico">' + ICON.list + '</div><div class="grow"><div class="t">Daftar pihak</div><div class="s">Piutang dan utang per orang</div></div></div>' +
       '<div class="row tap" data-act="dompet-list"><div class="ico">' + ICON.home + '</div><div class="grow"><div class="t">Dompet dan akun</div><div class="s">' + S.M.dompetAktif.length + ' dompet aktif</div></div></div></div>';
+    h += '<h2>Tampilan</h2><div class="card"><div class="seg" style="margin-bottom:12px">' +
+      [['auto', 'Otomatis'], ['light', 'Terang'], ['dark', 'Gelap']].map(function (m) { return '<button class="' + (S.pref.mode === m[0] ? 'on' : '') + '" data-act="pref-mode" data-v="' + m[0] + '">' + m[1] + '</button>'; }).join('') +
+      '</div><div class="themes">' + THEMES.map(function (t) {
+        return '<button class="theme' + (S.pref.theme === t[0] ? ' on' : '') + '" data-act="pref-theme" data-v="' + t[0] + '"><div class="sw">' + t[2].map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('') + '</div><b>' + t[1] + '</b></button>';
+      }).join('') + '</div></div>';
     h += '<h2>Sinkron</h2><div class="card"><div class="row"><div class="grow"><div class="t">Antrean kirim</div><div class="s">' + (S.queue.length ? S.queue.length + ' menunggu' + (failed.length ? ', ' + failed.length + ' gagal' : '') : 'Kosong') + '</div></div><button class="btn sm" data-act="sync">Sinkron sekarang</button></div>';
     if (S.queue.length) {
       h += S.queue.map(function (o) {
@@ -362,7 +380,7 @@
           (o.error ? '<button class="btn sm danger" data-act="q-drop" data-id="' + esc(o.id) + '">Buang</button>' : '') + '</div>';
       }).join('');
     }
-    h += '</div><h2>Perangkat</h2><div class="card"><dl class="kv"><dt>Masuk sebagai</dt><dd>' + esc(S.cfg.user) + '</dd><dt>Server</dt><dd>…' + esc(S.cfg.url.slice(-18)) + '</dd><dt>Versi</dt><dd>' + VERSION + '</dd><dt>Judul</dt><dd>' + esc(st.NamaKeluarga || 'Kas Keluarga') + '</dd></dl>' +
+    h += '</div><h2>Perangkat</h2><div class="card"><dl class="kv"><dt>Masuk sebagai</dt><dd>' + esc(S.cfg.user) + '</dd><dt>Server</dt><dd>…' + esc(S.cfg.url.slice(-18)) + '</dd><dt>Versi</dt><dd>' + VERSION + '</dd></dl>' +
       '<div style="display:flex;gap:10px;margin-top:14px"><button class="btn" data-act="full-sync">Muat ulang semua data</button><button class="btn danger" data-act="logout">Keluar</button></div></div>';
     h += '<div class="muted" style="font-size:12.5px;margin:16px 4px">Daftar akun, kategori, dompet, dan pengguna diubah di Google Sheets (sheet Akun, Kategori, Dompet, Pengguna), lalu ketuk Muat ulang semua data.</div>';
     return h;
@@ -374,7 +392,7 @@
     var y = window.scrollY;
     var st = S.M.st, view = {beranda: vBeranda, transaksi: vTransaksi, laporan: vLaporan, lainnya: vLainnya}[S.tab]();
     var tabs = [['beranda', 'Beranda', ICON.home], ['transaksi', 'Transaksi', ICON.list], ['laporan', 'Laporan', ICON.chart], ['lainnya', 'Lainnya', ICON.more]];
-    $('#app').innerHTML = '<div class="app"><header class="top"><div class="title">' + esc(st.NamaKeluarga || 'Kas Keluarga') + '</div><button id="badge" class="badge" data-act="sync"></button></header><main>' + view + '</main></div>' +
+    $('#app').innerHTML = '<div class="app"><header class="top"><div class="title">' + esc(APP_NAME) + '</div><button id="badge" class="badge" data-act="sync"></button></header><main>' + view + '</main></div>' +
       '<nav class="bottom"><div class="in">' + tabs.map(function (t) { return '<button class="' + (S.tab === t[0] ? 'on' : '') + '" data-act="tab" data-v="' + t[0] + '">' + t[2] + t[1] + '</button>'; }).join('') + '</div></nav>' +
       '<button class="fab" data-act="add" aria-label="Tambah transaksi">' + ICON.plus + 'Catat</button>';
     setBadge();
@@ -382,7 +400,7 @@
   }
 
   function renderSetup(err) {
-    $('#app').innerHTML = '<div class="setup"><h1>Kas Keluarga</h1><p>Masukkan alamat server dan kunci pribadimu. Cukup sekali; keduanya tersimpan di HP ini.</p>' +
+    $('#app').innerHTML = '<div class="setup"><h1>' + esc(APP_NAME) + '</h1><p>Masukkan alamat server dan kunci pribadimu. Cukup sekali; keduanya tersimpan di HP ini.</p>' +
       (err ? '<div class="err">' + esc(err) + '</div>' : '') +
       '<label class="lbl2">Alamat server (berakhiran /exec)</label><input class="input" id="s-url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec">' +
       '<label class="lbl2">Kunci pribadi</label><input class="input" id="s-key" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="32 huruf dan angka">' +
@@ -654,8 +672,47 @@
     var wb = C.walletBalances(getLines(), S.M, null);
     var h = '<div class="sheet-h"><div class="sh-t">Dompet dan akun</div><button class="x" data-act="info-close">' + ICON.x + '</button></div><div class="sheet-b"><div class="card">' +
       wb.map(function (w) { return '<div class="row"><div class="grow"><div class="t">' + esc(w.nama) + '</div><div class="s">' + esc(w.pemilik) + ' · akun ' + esc(w.kode) + '</div></div><div class="a ' + (w.saldo < 0 ? 'out' : '') + '">' + esc(C.fmtRp(w.saldo)) + '</div></div>'; }).join('') +
-      '</div><div class="muted" style="font-size:12.5px;margin:12px 4px">Menambah atau menonaktifkan dompet dilakukan di sheet Dompet pada Google Sheets (jangan hapus baris; isi Aktif = FALSE).</div></div>';
+      '</div><div style="margin-top:14px"><button class="btn primary" data-act="w-open">Tambah dompet</button></div><div class="muted" style="font-size:12.5px;margin:12px 4px">Untuk menonaktifkan dompet, buka sheet Dompet di Google Sheets dan isi Aktif = FALSE (jangan hapus baris).</div></div>';
     $('#overlay').innerHTML = '<div class="scrim" data-act="info-close"></div><div class="sheet full">' + h + '</div>';
+  }
+
+  // ---------------------------------------------------------------- tambah dompet
+  var W = null;
+  function openWalletForm() { W = {nama: '', jenis: 'Kas', pemilik: S.cfg.user, saldo: 0, err: '', busy: false}; renderWalletForm(true); }
+  function renderWalletForm(focus) {
+    var h = '<div class="sheet-h"><div class="sh-t">Tambah dompet</div><button class="x" data-act="w-close" aria-label="Kembali">' + ICON.x + '</button></div><div class="sheet-b">' +
+      '<label class="lbl2">Nama dompet</label><input class="input" id="w-nama" data-w="nama" value="' + esc(W.nama) + '" autocomplete="off" placeholder="mis. Dana, BRI, Tabungan Haji">' +
+      '<label class="lbl2">Jenis</label>' + chips([{v: 'Kas', l: 'Kas / e-wallet / bank'}, {v: 'Investasi', l: 'Investasi'}], W.jenis, 'w-jenis') +
+      '<label class="lbl2">Pemilik</label>' + chips(S.M.users.map(function (u) { return {v: u, l: u}; }), W.pemilik, 'w-owner') +
+      '<label class="lbl2">Saldo awal (opsional)</label><input class="input" inputmode="numeric" data-w="saldo" data-money="1" placeholder="0" value="' + (W.saldo ? C.fmtNum(W.saldo) : '') + '">' +
+      '<div class="note">Kode akun dibuat otomatis. Dompet baru langsung muncul di HP lain.</div></div>' +
+      '<div class="sheet-f">' + (W.err ? '<div class="err">' + esc(W.err) + '</div>' : '') + '<button class="btn primary" data-act="w-save"' + (W.busy ? ' disabled' : '') + '>' + (W.busy ? 'Menyimpan…' : 'Simpan dompet') + '</button></div>';
+    $('#overlay').innerHTML = '<div class="scrim" data-act="w-close"></div><div class="sheet full">' + h + '</div>';
+    if (focus) { var a = $('#w-nama'); if (a) a.focus(); }
+  }
+  function saveWallet() {
+    var nama = C.clean(W.nama);
+    if (nama.length < 2) { W.err = 'Nama dompet minimal 2 huruf'; renderWalletForm(); return; }
+    W.busy = true; W.err = ''; renderWalletForm();
+    api('dompetBaru', {nama: nama, jenis: W.jenis, pemilik: W.pemilik}).then(function (r) {
+      var saldo = Number(W.saldo) || 0, real = r.nama || nama;
+      S.needMaster = true; syncNow({master: true, force: true});
+      var t0 = Date.now();
+      (function wait() {
+        if (S.M.dompet[real] || Date.now() - t0 > 8000) {
+          W = null;
+          if (r.dup) toast('Dompet itu sudah ada'); else toast('Dompet ditambahkan');
+          if (saldo > 0 && S.M.dompet[real]) {
+            openForm({jenis: 'Saldo awal', subJenis: 'Dompet', dompet: real, jumlah: saldo, waktu: C.todayLocal() + 'T00:00'});
+            saveForm();
+          } else showDompet();
+          return;
+        }
+        setTimeout(wait, 150);
+      })();
+    }).catch(function (e) {
+      W.busy = false; W.err = e.net ? 'Perlu koneksi internet untuk menambah dompet.' : (e.code === 'AUTH' ? 'Kunci ditolak server.' : e.message); renderWalletForm();
+    });
   }
 
   // ---------------------------------------------------------------- aksi
@@ -676,6 +733,13 @@
     'saldo-awal': function () { openForm({jenis: 'Saldo awal', subJenis: 'Dompet'}); },
     'pihak-list': showPihak, 'dompet-list': showDompet,
     'info-close': function () { $('#overlay').innerHTML = ''; },
+    'pref-mode': function (el) { S.pref.mode = el.dataset.v; lsSet('kk.pref', S.pref); applyTheme(); render(); },
+    'pref-theme': function (el) { S.pref.theme = el.dataset.v; lsSet('kk.pref', S.pref); applyTheme(); render(); },
+    'w-open': function () { openWalletForm(); },
+    'w-close': function () { W = null; showDompet(); },
+    'w-jenis': function (el) { W.jenis = el.dataset.v; renderWalletForm(); },
+    'w-owner': function (el) { W.pemilik = el.dataset.v; renderWalletForm(); },
+    'w-save': saveWallet,
     'pihak-add': function () { addPihakPicker(function () { showPihak(); }); },
     'q-drop': function (el) { discardOp(el.dataset.id); },
     logout: function () {
@@ -756,6 +820,11 @@
   document.addEventListener('input', function (e) {
     var el = e.target;
     if (el.id === 'q') { S.q = el.value; S.limit = 80; var l = $('#txlist'); if (l) l.innerHTML = txListHTML(); return; }
+    if (el.dataset.w && W) {
+      if (el.dataset.money) { var sv = el.value.replace(/\D/g, '').substr(0, 13); W.saldo = sv ? Number(sv) : 0; el.value = sv ? C.fmtNum(sv) : ''; }
+      else W[el.dataset.w] = el.value;
+      return;
+    }
     if (el.id === 'pq' && P) { P.q = el.value; $('#plist').innerHTML = pickerList(); return; }
     if (el.dataset.amt && F) {
       var d = el.value.replace(/\D/g, '').substr(0, 13); F.jumlah = d ? Number(d) : 0; el.value = d ? C.fmtNum(d) : ''; return;
@@ -791,6 +860,7 @@
   }
 
   function start() {
+    applyTheme();
     S.cfg = lsGet('kk.cfg');
     if (!S.cfg) { render(); return; }
     DB.get('state').then(function (st) {
@@ -809,6 +879,7 @@
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
   }
+  if (window.matchMedia) { var mq = matchMedia('(prefers-color-scheme: dark)'), onMq = function () { if (S.pref.mode === 'auto') applyTheme(); }; if (mq.addEventListener) mq.addEventListener('change', onMq); }
   window.__KK = {S: S, syncNow: syncNow};
   start();
 })();

@@ -1,15 +1,38 @@
-:root {
-  --bg: #f4f6f5; --card: #ffffff; --ink: #14201d; --muted: #5d6b67; --line: #e1e7e4;
-  --accent: #0f766e; --accent-ink: #ffffff; --accent-soft: #dff2ef;
-  --in: #0b7a43; --out: #b4332a; --warn: #9a5b00; --warn-soft: #fff1d6; --err-soft: #fde4e1;
-  --radius: 16px; --nav-h: 62px;
+:root { --radius: 16px; --nav-h: 62px; color-scheme: light; }
+:root[data-dark="1"] { color-scheme: dark; }
+
+/* Tema 1: Merah muda (bawaan) */
+:root, :root[data-theme="rose"] {
+  --bg: #fbf3f4; --card: #ffffff; --ink: #2a1218; --muted: #7a5f66; --line: #f0dfe2;
+  --accent: #c0275f; --accent-ink: #ffffff; --accent-soft: #fbe1e8; --toast: #2a1218;
+  --in: #0b7a43; --out: #b9381f; --warn: #9a5b00; --warn-soft: #fff1d6; --err-soft: #fde4e1;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1513; --card: #17211f; --ink: #e8f0ed; --muted: #9aaba6; --line: #2a3835;
-    --accent: #2dd4bf; --accent-ink: #052e2a; --accent-soft: #123532;
-    --in: #4ade80; --out: #ff8a7d; --warn: #fbbf24; --warn-soft: #3a2c0a; --err-soft: #43201c;
-  }
+:root[data-theme="rose"][data-dark="1"] {
+  --bg: #1b0a10; --card: #2a1119; --ink: #fbeaee; --muted: #c9a3ad; --line: #43202b;
+  --accent: #f58aa8; --accent-ink: #3a0716; --accent-soft: #4a1a28; --toast: #fbeaee;
+  --in: #5ee59a; --out: #ff9a85; --warn: #fbbf24; --warn-soft: #3a2c0a; --err-soft: #43201c;
+}
+/* Tema 2: Navy */
+:root[data-theme="navy"] {
+  --bg: #f5efeb; --card: #ffffff; --ink: #1f2c3a; --muted: #5d7285; --line: #dfe5ea;
+  --accent: #2f4156; --accent-ink: #ffffff; --accent-soft: #c8d9e6; --toast: #1f2c3a;
+  --in: #1f7a55; --out: #b4452f; --warn: #9a5b00; --warn-soft: #fff1d6; --err-soft: #fde4e1;
+}
+:root[data-theme="navy"][data-dark="1"] {
+  --bg: #121b25; --card: #1d2a38; --ink: #eef3f7; --muted: #9fb3c4; --line: #32465a;
+  --accent: #8fb3c8; --accent-ink: #11202c; --accent-soft: #2b4052; --toast: #eef3f7;
+  --in: #6ee7a8; --out: #ff9a85; --warn: #fbbf24; --warn-soft: #3a2c0a; --err-soft: #43201c;
+}
+/* Tema 3: Monokrom */
+:root[data-theme="mono"] {
+  --bg: #f4f4f4; --card: #ffffff; --ink: #111111; --muted: #666666; --line: #e2e2e2;
+  --accent: #111111; --accent-ink: #ffffff; --accent-soft: #ebebeb; --toast: #111111;
+  --in: #1a7a45; --out: #b3261e; --warn: #8a5300; --warn-soft: #f3ead6; --err-soft: #f5e3e1;
+}
+:root[data-theme="mono"][data-dark="1"] {
+  --bg: #0b0b0b; --card: #171717; --ink: #f2f2f2; --muted: #9a9a9a; --line: #2b2b2b;
+  --accent: #f2f2f2; --accent-ink: #111111; --accent-soft: #262626; --toast: #f2f2f2;
+  --in: #5dd88f; --out: #ff8f84; --warn: #fbbf24; --warn-soft: #34290c; --err-soft: #3d201d;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); }
@@ -120,7 +143,7 @@ table.rep td.kode { color: var(--muted); font-size: 12px; width: 54px; }
 .jr .h { font-size: 13px; font-weight: 700; } .jr .h span { color: var(--muted); font-weight: 500; }
 .jr .l { display: flex; justify-content: space-between; font-size: 13.5px; font-variant-numeric: tabular-nums; padding: 1px 0; }
 .jr .l.k { padding-left: 18px; color: var(--muted); }
-#toast { position: fixed; left: 50%; bottom: calc(var(--nav-h) + 86px + env(safe-area-inset-bottom)); transform: translate(-50%, 12px); background: #14201d; color: #fff;
+#toast { position: fixed; left: 50%; bottom: calc(var(--nav-h) + 86px + env(safe-area-inset-bottom)); transform: translate(-50%, 12px); background: var(--toast); color: var(--bg);
   padding: 10px 16px; border-radius: 12px; font-size: 14px; opacity: 0; transition: .2s; z-index: 50; pointer-events: none; max-width: 90vw; text-align: center; }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
 .setup { max-width: 460px; margin: 0 auto; padding: calc(40px + env(safe-area-inset-top)) 22px 40px; }
@@ -128,3 +151,10 @@ table.rep td.kode { color: var(--muted); font-size: 12px; width: 54px; }
 .setup p { color: var(--muted); margin: 0 0 18px; }
 .empty { text-align: center; color: var(--muted); padding: 28px 10px; }
 @media (min-width: 760px) { .fab { right: calc(50% - 344px); } }
+
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.theme { border: 2px solid var(--line); border-radius: 14px; padding: 10px; text-align: left; background: var(--card); }
+.theme.on { border-color: var(--accent); }
+.theme .sw { display: flex; height: 30px; border-radius: 8px; overflow: hidden; margin-bottom: 8px; border: 1px solid var(--line); }
+.theme .sw i { flex: 1; }
+.theme b { font-size: 13px; }

@@ -1,13 +1,13 @@
 {
-  "name": "Kas Keluarga",
-  "short_name": "Kas Keluarga",
+  "name": "Do it",
+  "short_name": "Do it",
   "description": "Catat keuangan keluarga dengan cepat",
   "lang": "id",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f4f6f5",
+  "background_color": "#ffd25a",
   "theme_color": "#0f766e",
   "icons": [
     {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
