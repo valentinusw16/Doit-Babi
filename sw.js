@@ -1,5 +1,5 @@
 /* Service worker: cangkang aplikasi tersedia offline. Permintaan ke server data tidak pernah disimpan di sini. */
-var CACHE = 'doit-v1.1.2';
+var CACHE = 'doit-v1.2.0';
 var SHELL = ['./', 'index.html', 'style.css', 'core.js', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

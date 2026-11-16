@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var C = window.Core;
-  var VERSION = '1.1.2';
+  var VERSION = '1.2.0';
   var APP_NAME = 'Do it';
 
   // ---------------------------------------------------------------- util
@@ -71,7 +71,7 @@
   function persist() {
     clearTimeout(persistT);
     persistT = setTimeout(function () {
-      DB.set('state', {rev: S.rev, mrev: S.mrev, tx: S.tx, jurnalByTx: S.jurnalByTx, master: S.master, queue: S.queue, prefs: S.prefs, lastSync: S.lastSync, user: S.cfg && S.cfg.user});
+      DB.set('state', {rev: S.rev, mrev: S.mrev, tx: S.tx, jurnalByTx: {}, master: S.master, queue: S.queue, prefs: S.prefs, lastSync: S.lastSync, user: S.cfg && S.cfg.user});
     }, 250);
   }
   function touch() { S.ver++; S._lines = null; S.dirty = true; persist(); }
@@ -158,15 +158,13 @@
 
   function merge(r, full) {
     if (r.master) { S.master = r.master; S.M = C.indexMaster(r.master); }
-    var by = {};
-    r.jurnal.forEach(function (j) { (by[j.TransaksiID] = by[j.TransaksiID] || []).push(j); });
+    // jurnal dihitung di HP dengan aturan yang sama dengan server (lebih ringan disimpan & dikirim)
     if (full) {
       var keep = {};
       Object.keys(S.tx).forEach(function (id) { if (S.tx[id]._pending && !r.transaksi.some(function (t) { return t.ID === id; })) keep[id] = S.tx[id]; });
       S.tx = keep; S.jurnalByTx = {};
     }
     r.transaksi.forEach(function (t) { S.tx[t.ID] = t; });
-    Object.keys(by).forEach(function (id) { S.jurnalByTx[id] = by[id]; });
     S.rev = r.rev; S.mrev = r.mrev; touch();
   }
 
@@ -177,11 +175,11 @@
     S.syncing = true; setBadge();
     var full = !!opt.full || !S.master;
     return flush().then(function () {
-      return api('sync', {since: full ? 0 : S.rev, master: !!opt.master || !!S.needMaster || !S.master});
+      return api('sync', {since: full ? 0 : S.rev, master: !!opt.master || !!S.needMaster || !S.master, tanpaJurnal: true});
     }).then(function (r) {
       if (r.master || r.mrev === S.mrev) return r;
       // data master (dompet, pihak, kategori) berubah di tempat lain: ambil juga
-      return api('sync', {since: S.rev, master: true}).then(function (m) {
+      return api('sync', {since: S.rev, master: true, tanpaJurnal: true}).then(function (m) {
         if (r.unchanged) return m;
         r.master = m.master; return r;
       });
@@ -865,7 +863,7 @@
     if (!S.cfg) { render(); return; }
     DB.get('state').then(function (st) {
       if (st && st.user === S.cfg.user) {
-        S.rev = st.rev || 0; S.mrev = st.mrev || 0; S.tx = st.tx || {}; S.jurnalByTx = st.jurnalByTx || {}; S.master = st.master || null;
+        S.rev = st.rev || 0; S.mrev = st.mrev || 0; S.tx = st.tx || {}; S.jurnalByTx = {}; S.master = st.master || null;
         S.queue = st.queue || []; S.prefs = st.prefs || {lastDompet: {}}; S.lastSync = st.lastSync || 0;
         S.M = C.indexMaster(S.master);
       }

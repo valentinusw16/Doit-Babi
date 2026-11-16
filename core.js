@@ -103,12 +103,20 @@
     }
     return Number(loan.Jumlah) - paid;
   }
+  function paidMap(txMap, ignoreId) {
+    var paid = {};
+    for (var k in txMap) {
+      var r = txMap[k];
+      if (r.Referensi && r.Status === 'Aktif' && k !== ignoreId && isRepay(r)) paid[r.Referensi] = (paid[r.Referensi] || 0) + (Number(r.Jumlah) || 0);
+    }
+    return paid;
+  }
   function openLoans(txMap, ignoreId) {
-    var out = [];
+    var out = [], paid = paidMap(txMap, ignoreId);   // satu kali jalan, bukan per pinjaman
     for (var k in txMap) {
       var r = txMap[k], kind = loanKind(r);
       if (!kind || r.Status !== 'Aktif') continue;
-      var s = sisa(txMap, k, ignoreId);
+      var s = Number(r.Jumlah) - (paid[k] || 0);
       if (s > 0) out.push({id: k, kind: kind, pihak: r.Pihak, jumlah: Number(r.Jumlah), sisa: s, jatuhTempo: r.JatuhTempo, jangka: r.Jangka, pemilik: r.PemilikDompet, tanggal: String(r.Waktu).substr(0, 10)});
     }
     out.sort(function (a, b) { return a.jatuhTempo < b.jatuhTempo ? -1 : (a.jatuhTempo > b.jatuhTempo ? 1 : 0); });
@@ -131,9 +139,9 @@
     if (!kode) throw new Error('Pengaturan akun ' + jenis + ' ' + jg + ' belum ada');
     return kode;
   }
-  function walletInfo(M, nama) {
+  function walletInfo(M, nama, harusAktif) {
     var d = M.dompet[nama];
-    if (!d || !d.Aktif) throw new Error('Dompet tidak dikenal atau nonaktif: ' + nama);
+    if (!d || (harusAktif && !d.Aktif)) throw new Error('Dompet tidak dikenal atau nonaktif: ' + nama);
     return {nama: d.Nama, kode: d.KodeAkun, pemilik: d.Pemilik};
   }
   function deriveLines(tx, M) {
@@ -192,7 +200,7 @@
     }
     function dompet(nama) {
       if (!nama) throw new Error('Pilih dompet');
-      return walletInfo(M, nama);
+      return walletInfo(M, nama, true);   // transaksi baru: dompet harus aktif
     }
     if (jenis === 'Income' || jenis === 'Expense') {
       w = dompet(f.dompet); kat(jenis);
