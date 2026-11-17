@@ -16,7 +16,7 @@
   function norm(tag) { return String(tag || '').toLowerCase().trim().replace(/^#+/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
   function expenseGroups() {
     var g = [], seen = {};
-    S.M.kategori.forEach(function (k) { if (k.Jenis === 'Expense' && !seen[k.Kategori]) { seen[k.Kategori] = 1; g.push(k.Kategori); } });
+    S.M.kategori.forEach(function (k) { if (k.Jenis === 'Expense' && !seen[k.Kategori] && k.Kategori !== X.NONOP_G) { seen[k.Kategori] = 1; g.push(k.Kategori); } });
     return g;
   }
 
@@ -65,7 +65,7 @@
   function vAnggaran() {
     var k = curMonth(), lines = budgetLines(), bm = C2.budgetMonth(lines, S.tx, k, S.owner), today = C.todayLocal(), isNow = k === today.substr(0, 7);
     var h = '<div class="mnav"><button class="hb" data-act="bm-prev" aria-label="‹">' + ICON.back + '</button><b>' + esc(monthLabel(k)) + '</b><button class="hb" data-act="bm-next" aria-label="›">' + '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>' + '</button></div>';
-    h += '<div class="stick"><div class="frow">' + X.ownerChips(S.owner, 'owner') + '</div></div>';
+    h += '<div class="stick"><div class="ddrow">' + X.ownerChips(S.owner, 'owner') + '</div></div>';
     var T = bm.total, p = T.tersedia ? T.terpakai / T.tersedia : 0;
     h += '<div class="card hero"><div class="lbl">' + t('bl.total') + '</div><div class="big">' + esc(fm(T.tersedia)) + '</div>' +
       '<div class="sr" style="margin-top:6px"><span>' + esc(t('bl.used', fm(T.terpakai))) + '</span><b class="' + (T.sisa < 0 ? 'out' : 'in') + '">' + esc(t(T.sisa < 0 ? 'bl.over' : 'bl.left', fm(Math.abs(T.sisa)))) + '</b></div>' + pbar(p) +
@@ -77,20 +77,20 @@
       if (r.bawa) notes.push(t('bl.carry', fm(r.bawa)));
       if (l.rincian && l.rincian.length) notes.push(t('bl.detail', l.rincian.length));
       if (l.ov && l.ov[k] != null) notes.push(t('bl.ov'));
-      return '<div class="card bl tap" data-act="bl-open" data-id="' + esc(l.id) + '"><div class="ah"><span class="gi">' + X.catIcon(lineGroup(l)) + '</span><span>' + esc(lineName(l)) + '</span><b class="' + (r.sisa < 0 ? 'out' : '') + '">' + esc(fm(r.sisa)) + '</b></div>' +
+      return '<div class="card bl tap" data-act="bl-open" data-id="' + esc(l.id) + '"><div class="ah"><span class="gi">' + X.catIcon(lineGroup(l)) + '</span><span>' + esc(lineName(l)) + (l.pemilik && S.owner === 'Semua' ? '<span class="tag">' + esc(l.pemilik) + '</span>' : '') + '</span><b class="' + (r.sisa < 0 ? 'out' : '') + '">' + esc(fm(r.sisa)) + '</b></div>' +
         '<div class="sr"><span class="muted">' + esc(t('bl.used.of', C.fmtNum(r.terpakai), C.fmtNum(r.tersedia))) + '</span><b>' + pct(r.pct) + '</b></div>' + pbar(r.pct) +
         (notes.length ? '<div class="s muted sm" style="margin-top:6px">' + esc(notes.join(' · ')) + '</div>' : '') + '</div>';
     }).join('');
     return h;
   }
   function blPick() {
-    var have = {}; budgetLines().forEach(function (l) { have[l.scope + ':' + l.key] = 1; });
+    var own = S.owner !== 'Semua' ? S.owner : S.cfg.user, have = {}; budgetLines().forEach(function (l) { if ((l.pemilik || own) === own) have[l.scope + ':' + l.key] = 1; });
     var items = [];
     expenseGroups().forEach(function (g) { if (!have['grup:' + g]) items.push({v: 'grup:' + g, l: dn(g), g: t('bl.grp'), ico: X.catIcon(g)}); });
     S.M.kategori.forEach(function (c) { if (c.Jenis === 'Expense' && !have['sub:' + c.KodeAkun]) items.push({v: 'sub:' + c.KodeAkun, l: dn(c.SubKategori), g: dn(c.Kategori), s: t('bl.sub'), ico: X.catIcon(c.Kategori)}); });
     X.openPicker({title: t('bl.pick'), items: items, onPick: function (it) {
       var sp = it.v.split(':'); X.closePicker();
-      openForm('bl', null, {scope: sp[0], key: sp.slice(1).join(':'), rincian: [], jumlah: 0, rollover: true, mulai: curMonth(), ov: {}, ovm: 0});
+      openForm('bl', null, {scope: sp[0], key: sp.slice(1).join(':'), pemilik: own, rincian: [], jumlah: 0, rollover: true, mulai: curMonth(), ov: {}, ovm: 0});
     }});
   }
   var FORMS = {
@@ -98,6 +98,7 @@
       title: function (p) { return p.id ? t('bl.edit') : t('bl.add'); },
       body: function (p) {
         var d = p.d, k = curMonth(), name = lineName(d), h = '<div class="card"><div class="ah" style="padding:0"><span class="gi">' + X.catIcon(lineGroup(d)) + '</span><span>' + esc(name) + '</span><b class="muted sm">' + t(d.scope === 'sub' ? 'bl.sub' : 'bl.grp') + '</b></div></div>';
+        h += '<label class="lbl2">' + t('bl.owner') + '</label><div class="chips">' + S.M.users.map(function (u) { return '<button class="chip sm' + (d.pemilik === u ? ' on' : '') + '" data-act="bl-owner" data-v="' + esc(u) + '"' + (p.id ? ' disabled' : '') + '>' + esc(u) + '</button>'; }).join('') + '</div>' + (p.id ? '' : '<div class="muted sm" style="margin-top:4px">' + t('bl.owner.hint') + '</div>');
         h += '<label class="lbl2">' + t('bl.rincian') + '</label><div class="muted sm" style="margin:-4px 0 8px">' + t('bl.rincian.hint') + '</div>';
         h += (d.rincian || []).map(function (r, i) {
           return '<div class="rrow"><input class="input" data-pfr="n" data-list="rincian" data-i="' + i + '" value="' + esc(r.n || '') + '" placeholder="' + esc(t('bl.r.name')) + '">' +
@@ -160,7 +161,8 @@
       body: function (p) {
         var k = curMonth(), bm = C2.budgetMonth(budgetLines(), S.tx, k, S.owner), d = p.d;
         function pick(field, act) {
-          return '<div class="chips">' + bm.rows.map(function (r) { return '<button class="chip sm' + (d[field] === r.line.id ? ' on' : '') + '" data-act="' + act + '" data-id="' + esc(r.line.id) + '">' + esc(lineName(r.line)) + ' · ' + esc(C.fmtNum(r.sisa)) + '</button>'; }).join('') + '</div>';
+          var src = bm.rows.filter(function (r) { return r.line.id === d.from; })[0], rows = field === 'to' && src ? bm.rows.filter(function (r) { return (r.line.pemilik || '') === (src.line.pemilik || ''); }) : bm.rows;
+          return '<div class="chips">' + rows.map(function (r) { return '<button class="chip sm' + (d[field] === r.line.id ? ' on' : '') + '" data-act="' + act + '" data-id="' + esc(r.line.id) + '">' + esc(lineName(r.line)) + (r.line.pemilik && S.owner === 'Semua' ? ' (' + esc(r.line.pemilik) + ')' : '') + ' · ' + esc(C.fmtNum(r.sisa)) + '</button>'; }).join('') + '</div>';
         }
         return '<div class="muted sm" style="margin:0 2px 6px">' + esc(monthLabel(k)) + '</div><label class="lbl2">' + t('ro.from') + '</label>' + pick('from', 'ro-from') + '<label class="lbl2">' + t('ro.to') + '</label>' + pick('to', 'ro-to') + money(t('ro.amount'), 'jumlah', d.jumlah) +
           '<div class="note">' + t('ro.note') + '</div>';
@@ -206,14 +208,27 @@
   }
 
   // ---------------------------------------------------------------- RUTIN
-  function recName(r) { var k = S.M.katByKode[r.p && r.p.kodeAkun]; return r.nama || (k ? dn(k.SubKategori) : (r.p && r.p.jenis)); }
+  function recName(r) { if (r.susut) return t('su.name', r.p.dompet); var k = S.M.katByKode[r.p && r.p.kodeAkun]; return r.nama || (k ? dn(k.SubKategori) : (r.p && r.p.jenis)); }
   function freqText(r) { return t('rt.f.' + (r.frek === 'mingguan' ? 'w' + (r.interval || 1) : (r.frek === 'tahunan' ? 'y1' : 'm1'))); }
   function recs() { return rc.list('berulang').filter(function (r) { return !r.tolak; }); }
+  /** Rutin biasa tampil di HP pembuatnya; penyusutan tampil di HP pemilik aset. */
+  function owner(r) { if (r.susut) { var w = S.M.dompet[r.p && r.p.dompet]; return w ? w.Pemilik : r._oleh; } return r._oleh; }
+  function myRecs() {
+    var me = S.cfg.user;
+    return recs().filter(function (r) { return r.aktif !== false && !r.susut && owner(r) === me && r.p; }).map(function (r) { return Object.assign({_nama: recName(r)}, r); });
+  }
+  function formFromRec(id) {
+    var r = recs().filter(function (x) { return x.id === id; })[0]; if (!r) return null;
+    var today = C.todayLocal(), ds = C2.dueDates(r, today, 24).filter(function (d) { return !S.tx[C2.recTxId(r.id, d)]; }), due = ds[0];
+    var f = formFor(r, due || today); f.waktu = today + 'T' + (r.p.jam || C.nowLocal().substr(11, 5));
+    if (!due) f.id = C.newId();
+    return {form: f, rec: due ? {id: r.id, due: due} : null, nama: recName(r)};
+  }
   /** Rutin yang jatuh tempo dan belum dicatat. Hanya milik pencatat (agar tidak ganda di dua HP). */
   function dueList() {
     var today = C.todayLocal(), me = S.cfg.user, out = [];
     recs().forEach(function (r) {
-      if (r.aktif === false || r._oleh !== me) return;
+      if (r.aktif === false || owner(r) !== me) return;
       var ds = C2.dueDates(r, today, 24).filter(function (d) { return !S.tx[C2.recTxId(r.id, d)]; });
       if (ds.length) out.push({rec: r, due: ds[0], more: ds.length - 1});
     });
@@ -274,7 +289,7 @@
   function rutinFromTx(x) {
     var next = C2.addMonthsKeep(x.Waktu.substr(0, 10), 1), k = S.M.katByKode[x.KodeAkun];
     openRutin(null, {nama: k ? dn(k.SubKategori) + (x.Toko ? ' · ' + x.Toko : '') : (x.Toko || ''), jumlah: +x.Jumlah, frek: 'bulanan', interval: 1, mulai: next, akhir: '',
-      p: {jenis: x.Jenis, dompet: x.Dompet, dompetTujuan: x.DompetTujuan, kodeAkun: x.KodeAkun, jumlah: +x.Jumlah, toko: x.Toko, lokasi: x.Lokasi, barang: x.Barang, tag: x.Tag, catatan: x.Catatan, biayaAdmin: x.BiayaAdmin},
+      p: {jenis: x.Jenis, dompet: x.Dompet, dompetTujuan: x.DompetTujuan, kodeAkun: x.KodeAkun, jumlah: +x.Jumlah, toko: x.Toko, lokasi: x.Lokasi, barang: x.Barang, tag: x.Tag, catatan: x.Catatan, biayaAdmin: x.BiayaAdmin, jam: x.Waktu.substr(11, 5)},
       key: [x.Jenis, x.KodeAkun, x.Dompet, String(x.Toko || '').toLowerCase()].join('|')});
   }
 
@@ -297,14 +312,14 @@
   X.hooks.homeMid = function () {
     var h = '', lines = budgetLines();
     if (lines.length) {
-      var k = C.todayLocal().substr(0, 7), bm = C2.budgetMonth(lines, S.tx, k, null), T = bm.total, p = T.tersedia ? T.terpakai / T.tersedia : 0;
+      var k = C.todayLocal().substr(0, 7), bm = C2.budgetMonth(lines, S.tx, k, S.owner), T = bm.total, p = T.tersedia ? T.terpakai / T.tersedia : 0;
+      if (!bm.rows.length) return '';
       h += '<button class="card tap bl homebud" data-act="page" data-v="rencana"><div class="ah"><span class="gi">' + ICON.plan + '</span><span>' + t('home.budget') + '</span><b class="' + (T.sisa < 0 ? 'out' : '') + '">' + esc(fm(T.sisa)) + '</b></div>' +
         '<div class="sr"><span class="muted">' + esc(t('bl.used.of', C.fmtNum(T.terpakai), C.fmtNum(T.tersedia))) + '</span><b>' + pct(p) + '</b></div>' + pbar(p) + '</button>';
     }
-    if (X.analisis) h += X.analisis.homeCard();
     return h;
   };
-  X.plan = {markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, dueList: dueList};
+  X.plan = {markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
 
   // ---------------------------------------------------------------- aksi
   function saveVia(promise, done) { PF.busy = true; PF.err = ''; renderForm(); promise.then(function () { PF = null; X.closeOverlays(); X.toast(t('saved')); X.render(); if (done) done(); }).catch(fail); }
@@ -319,20 +334,24 @@
       var jumlah = rin.length ? rincianTotal(rin) : (+d.jumlah || 0);
       if (!(jumlah > 0)) { PF.err = t('bl.err.amount'); renderForm(); return; }
       var ov = Object.assign({}, d.ov || {}); if (+d.ovm > 0) ov[k] = +d.ovm; else delete ov[k];
-      var data = {scope: d.scope, key: d.key, rincian: rin, jumlah: jumlah, rollover: !!d.rollover, mulai: d.mulai || k, ov: ov, aktif: true};
+      if (!d.pemilik) { PF.err = t('bl.err.owner'); renderForm(); return; }
+      var dup = budgetLines().some(function (l) { return l.id !== PF.id && l.scope === d.scope && l.key === d.key && l.pemilik === d.pemilik; });
+      if (dup) { PF.err = t('bl.err.dup', d.pemilik); renderForm(); return; }
+      var data = {scope: d.scope, key: d.key, pemilik: d.pemilik, rincian: rin, jumlah: jumlah, rollover: !!d.rollover, mulai: d.mulai || k, ov: ov, aktif: true};
       saveVia(rc.save('anggaran', data, PF.id));
     },
     'bl-del': function () { if (!confirm(t('bl.del.q'))) return; var id = PF.id; saveVia(rc.remove(id)); },
+    'bl-owner': function (el) { PF.d.pemilik = el.dataset.v; renderForm(); },
     'bl-realok': function () { openForm('ro', null, {from: '', to: '', jumlah: 0}); },
     'ro-from': function (el) { PF.d.from = el.dataset.id; renderForm(); },
     'ro-to': function (el) { PF.d.to = el.dataset.id; renderForm(); },
     'ro-save': function () {
       var d = PF.d, ls = budgetLines(), a = ls.filter(function (l) { return l.id === d.from; })[0], b = ls.filter(function (l) { return l.id === d.to; })[0];
-      if (!a || !b || a.id === b.id) { PF.err = t('ro.err.pick'); renderForm(); return; }
+      if (!a || !b || a.id === b.id || (a.pemilik || '') !== (b.pemilik || '')) { PF.err = t('ro.err.pick'); renderForm(); return; }
       if (!(+d.jumlah > 0)) { PF.err = t('bl.err.amount'); renderForm(); return; }
       var k = curMonth();
       try {
-        var sp = C2.spentByMonth(S.tx, a, S.owner), det = C2.monthDetail(a, k, sp);
+        var sp = C2.spentByMonth(S.tx, a, a.pemilik || S.owner), det = C2.monthDetail(a, k, sp);
         if (d.jumlah > Math.max(0, det.sisa)) { PF.err = t('ro.err.left', fm(Math.max(0, det.sisa))); renderForm(); return; }
         var ab = C2.reallocate(a, b, k, +d.jumlah);
         saveVia(rc.batch([{op: 'simpan', tipe: 'anggaran', id: a.id, data: strip(ab[0])}, {op: 'simpan', tipe: 'anggaran', id: b.id, data: strip(ab[1])}]));
@@ -394,7 +413,8 @@
     'rt-del': function () { if (!confirm(t('bl.del.q'))) return; saveVia(rc.remove(PF.id)); },
     'rt-accept': function (el) {
       var s = suggestions()[+el.dataset.i]; if (!s) return;
-      var data = {nama: '', p: {jenis: s.jenis, dompet: s.dompet, kodeAkun: s.kodeAkun, jumlah: s.jumlah, toko: s.toko}, frek: s.frek, interval: s.interval, mulai: s.terakhir, akhir: '', terakhir: s.terakhir, aktif: true, key: s.key};
+      var lastTx = C.recent(S.tx, function (x) { return x.Jenis === s.jenis && x.KodeAkun === s.kodeAkun && x.Dompet === s.dompet; }, 1)[0];
+      var data = {nama: '', p: {jenis: s.jenis, dompet: s.dompet, kodeAkun: s.kodeAkun, jumlah: s.jumlah, toko: s.toko, jam: lastTx ? lastTx.Waktu.substr(11, 5) : ''}, frek: s.frek, interval: s.interval, mulai: s.terakhir, akhir: '', terakhir: s.terakhir, aktif: true, key: s.key};
       rc.save('berulang', data).then(function () { X.toast(t('rt.made')); S._sugKey = null; X.render(); }).catch(function (e) { X.toast(X.srvErr(e)); });
     },
     'rt-reject': function (el) {

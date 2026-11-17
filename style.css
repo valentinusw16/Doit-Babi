@@ -269,7 +269,7 @@ button.tile > svg { position: absolute; right: 10px; top: 12px; width: 16px; hei
 .mnav { display: flex; align-items: center; justify-content: space-between; margin: 0 0 10px; } .mnav b { font-size: 16px; }
 .card.bl { display: block; width: 100%; text-align: left; }
 .card.bl .ah { display: flex; align-items: center; gap: 10px; font-weight: 700; } .card.bl .ah > span:nth-child(2) { flex: 1; min-width: 0; } .card.bl .ah small { display: block; font-weight: 400; }
-.card.bl .gi { width: 30px; height: 30px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; flex: none; } .card.bl .gi svg { width: 17px; height: 17px; }
+.card.bl .gi { width: 30px; height: 30px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; } .card.bl .gi svg { width: 17px; height: 17px; }
 .sr { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; }
 .subrow { margin-top: 10px; } .sub2 { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
 .hero .big { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
@@ -279,8 +279,8 @@ button.tile > svg { position: absolute; right: 10px; top: 12px; width: 16px; hei
 .tog i { width: 40px; height: 24px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 20%, transparent); position: relative; flex: none; transition: background .2s; }
 .tog i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .2s; }
 .tog.on i { background: var(--accent); } .tog.on i::after { left: 19px; }
-.link { background: none; border: 0; color: var(--accent-ink); font: inherit; font-weight: 600; padding: 6px 0; cursor: pointer; }
-.tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 9px; font-size: 11px; font-weight: 700; background: var(--accent-soft); color: var(--accent-ink); }
+.link { background: none; border: 0; color: var(--accent); font: inherit; font-weight: 600; padding: 6px 0; cursor: pointer; }
+.tag { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 9px; font-size: 11px; font-weight: 700; background: var(--accent-soft); color: var(--accent); }
 .tag.bad { background: var(--err-soft); color: var(--out); } .tag.ok { background: color-mix(in srgb, var(--in) 18%, transparent); color: var(--in); }
 .note { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
 .lbl2 { display: block; margin: 12px 0 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -301,3 +301,46 @@ button.tile > svg { position: absolute; right: 10px; top: 12px; width: 16px; hei
 .dnet { margin-left: 6px; }
 .bars rect, .bars text { stroke: none; } .bars text { font-weight: 600; }
 .frow-r { display: flex; gap: 6px; align-items: center; }
+
+/* ---------- v2.1 ---------- */
+.ddrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.dd { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px 7px 13px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-size: 13.5px; font-weight: 600; max-width: 100%; }
+.dd span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.dd span svg { width: 15px; height: 15px; }
+.dd i { display: inline-flex; color: var(--muted); } .dd i svg { width: 15px; height: 15px; }
+.stick .search { margin-top: 2px; }
+.card.choice { padding: 0 14px; } .card.choice .row { width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; font: inherit; color: var(--ink); }
+.card.choice .row:first-child { border-top: 0; } .card.choice .row.on .t { color: var(--accent); font-weight: 700; } .card.choice .row svg { width: 18px; height: 18px; color: var(--accent); }
+.fromrec { margin: 10px 0 2px; }
+.optbox { margin-top: 18px; padding-top: 4px; border-top: 1px dashed var(--line); } .opth { margin-top: 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.acw { position: relative; } .acl { position: absolute; left: 0; right: 0; top: 100%; z-index: 5; background: var(--card); border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.18); overflow: hidden; }
+.acl:empty { display: none; }
+.aci { display: flex; justify-content: space-between; width: 100%; padding: 10px 14px; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; color: var(--ink); text-align: left; }
+.aci:first-child { border-top: 0; } .aci small { color: var(--muted); }
+.hero .inout { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.hero .inout button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 5%, transparent); border: 0; font: inherit; color: var(--ink); text-align: left; }
+.hero .inout span { font-size: 12px; color: var(--muted); } .hero .inout b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.card.tap { display: block; width: 100%; text-align: left; font: inherit; color: var(--ink); }
+.rgrid .ah, .sankey .ah, .pend .ah { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-weight: 700; margin-bottom: 10px; }
+.rgrid .ah svg { width: 16px; height: 16px; color: var(--muted); }
+.rg { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ri { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.ri small { display: block; color: var(--muted); font-size: 12px; } .ri b { font-size: 16px; }
+.dot2 { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; background: var(--muted); flex: none; } .dot2.ok { background: var(--in); } .dot2.bad { background: var(--out); }
+.sankey svg { width: 100%; height: auto; display: block; } .sankey .skl { font-size: 10px; fill: var(--ink); font-weight: 600; } .sankey .skv { fill: var(--muted); font-weight: 500; }
+.ratio.tap { cursor: pointer; } .ratio .calc { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); } .ratio .calc .sr { font-size: 13.5px; } .ratio .calc .res { font-weight: 700; padding-top: 6px; border-top: 1px solid var(--line); }
+.ch.sm { font-size: 13px; margin-bottom: 4px; }
+.wd { display: grid; grid-template-columns: 34px 1fr 54px; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; } .wd .bar { margin-top: 0; } .wd b { text-align: right; font-variant-numeric: tabular-nums; } .wd.top span, .wd.top b { color: var(--out); font-weight: 700; }
+.bar.red > i { background: var(--out); } .bar.green > i { background: var(--in); }
+.seg.sm button { padding: 5px 10px; font-size: 12.5px; } .nseg { display: inline-grid; width: auto; margin-bottom: 10px; }
+.h2row .nseg { margin: 0; }
+.bdg2 { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--out); color: #fff; font-size: 10px; margin-left: 4px; }
+.alert.new { box-shadow: 0 0 0 2px var(--accent-soft); } .alert .ah .dot { margin-left: auto; }
+.pend { border: 1px solid var(--warn); } .pend .gi { color: var(--warn); } .pend .row .btn { margin-left: 6px; }
+.pend1 { display: flex !important; justify-content: space-between; align-items: center; gap: 10px; border: 1px solid var(--warn); } .pend1 b { color: var(--accent); }
+.card.cf .ah { display: flex; justify-content: space-between; font-weight: 700; } .card.cf .row .a { text-align: right; line-height: 1.35; }
+.homebud { margin-top: 12px; }
+.sec { margin-top: 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; } .sec.in { color: var(--in); } .sec.out { color: var(--out); }
+.sankey svg path, .sankey svg rect, .sankey svg text { stroke: none; } .sankey svg text { stroke-width: 0; }
+.spark path[fill="none"] { fill: none; } .spark circle { stroke: none; }
+#formbody { padding-bottom: 240px; }

@@ -90,8 +90,9 @@
     return {dasar: dasar, bawa: bawa, tersedia: tersedia, terpakai: terpakai, sisa: tersedia - terpakai, pct: tersedia > 0 ? terpakai / tersedia : (terpakai > 0 ? 9.99 : 0)};
   }
   function budgetMonth(lines, txMap, k, owner) {
-    var rows = lines.filter(function (l) { return l.aktif !== false && (!l.mulai || l.mulai <= k); }).map(function (l) {
-      var d = monthDetail(l, k, spentByMonth(txMap, l, owner));
+    var one = owner && owner !== 'Semua';
+    var rows = lines.filter(function (l) { return l.aktif !== false && (!l.mulai || l.mulai <= k) && (!one || !l.pemilik || l.pemilik === owner); }).map(function (l) {
+      var d = monthDetail(l, k, spentByMonth(txMap, l, l.pemilik || owner));
       return Object.assign({line: l}, d);
     });
     var tot = rows.reduce(function (a, r) { a.tersedia += r.tersedia; a.terpakai += r.terpakai; a.dasar += r.dasar; return a; }, {tersedia: 0, terpakai: 0, dasar: 0});
@@ -109,12 +110,13 @@
   /** Budget vs Actual untuk laporan: gabung per baris + kategori tanpa anggaran. */
   function budgetVsActual(lines, txMap, k, owner) {
     var bm = budgetMonth(lines, txMap, k, owner), covered = {}, extra = {};
-    bm.rows.forEach(function (r) { if (r.line.scope === 'grup') covered['g:' + r.line.key] = 1; else covered['s:' + r.line.key] = 1; });
+    bm.rows.forEach(function (r) { var o = r.line.pemilik || '*'; covered[(r.line.scope === 'grup' ? 'g:' : 's:') + r.line.key + '|' + o] = 1; });
+    function cov(x) { return ['*', x.PemilikDompet].some(function (o) { return covered['g:' + x.Kategori + '|' + o] || covered['s:' + x.KodeAkun + '|' + o]; }); }
     for (var id in txMap) {
       var x = txMap[id];
       if (x.Status !== 'Aktif' || x.Jenis !== 'Expense' || monthKey(x.Waktu) !== k) continue;
       if (owner && owner !== 'Semua' && x.PemilikDompet !== owner) continue;
-      if (covered['g:' + x.Kategori] || covered['s:' + x.KodeAkun]) continue;
+      if (cov(x) || x.Kategori === 'Di Luar Operasional') continue;
       extra[x.Kategori] = (extra[x.Kategori] || 0) + (+x.Jumlah || 0);
     }
     var tanpa = Object.keys(extra).map(function (g) { return {nama: g, terpakai: extra[g]}; }).sort(function (a, b) { return b.terpakai - a.terpakai; });
