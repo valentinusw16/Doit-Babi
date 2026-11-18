@@ -437,3 +437,26 @@ button.dtbig { display: block; width: 100%; }
 .pst.bad { background: color-mix(in srgb, var(--out) 14%, transparent); color: var(--out); }
 .pbar.good i { background: var(--in); }
 .alert.note { border-left: 4px solid var(--accent); }
+
+/* v2.4: anggaran per kategori + laporan anggaran vs realisasi */
+.card.bl.cat .ah.tap { cursor: pointer; }
+.morebtn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 8px; padding: 7px 0 2px; border: 0; border-top: 1px solid var(--line); background: none; color: var(--accent); font: inherit; font-size: 13px; font-weight: 700; }
+.morebtn i { font-style: normal; display: inline-block; transition: transform .2s; } .morebtn i.up { transform: rotate(180deg); }
+.subs { margin-top: 6px; }
+.subln { padding: 9px 2px; border-top: 1px solid var(--line); }
+.subln .sr { gap: 8px; } .subln.empty > .sr b { font-weight: 600; }
+.subln .pbar { margin-top: 4px; }
+.rep.bva { table-layout: fixed; font-size: 11.5px; letter-spacing: -.02em; }
+.rep.bva th { text-align: right; font-weight: 700; color: var(--muted); padding: 4px 2px; font-size: 11.5px; }
+.rep.bva th:first-child { width: 25%; }
+.rep.bva td:first-child { font-size: 12.5px; letter-spacing: 0; }
+.rep.bva td { text-align: right; padding: 7px 1px; font-variant-numeric: tabular-nums; word-break: keep-all; }
+.rep.bva td:first-child { text-align: left; word-break: normal; }
+.rep.bva td.ind { padding-left: 16px; color: var(--muted); }
+.rep.bva tr.hdr { border-bottom: 1px solid var(--line); }
+.rep.bva tr.tot td { font-weight: 800; border-top: 2px solid var(--ink); }
+.rep.bva tr.tot.net td { background: var(--accent-soft); }
+.rep.bva tr.sub td { font-weight: 700; background: none; }
+.rep.bva tr.sub.tap { cursor: pointer; }
+.rep.bva tr.ln td { font-size: 12px; }
+.rep.bva .car { display: inline-block; font-style: normal; margin-right: 4px; font-size: 10px; transition: transform .2s; } .rep.bva .car.up { transform: rotate(90deg); }

@@ -78,6 +78,20 @@
         });
         return;
       }
+      if (b.k === 'cols') {
+        var cs = b.cols || [], lw = inner * 0.34, cw = (inner - lw) / 3, ind0 = b.ind ? 24 : 0, csz = b.hdr ? 21 : 23, cwt = b.tot || b.b ? 800 : (b.hdr ? 700 : 500);
+        var lw2 = wrap(b.l || '', lw - ind0 - 6, font(b.tot ? 26 : 24, cwt)), hh = Math.max(lw2.length * 34, 40) + 16;
+        add(hh, function (oy) {
+          if (b.tot) { x.strokeStyle = K.ink; x.lineWidth = 3; x.beginPath(); x.moveTo(0, oy + 2); x.lineTo(inner, oy + 2); x.stroke(); }
+          else if (!b.hdr) { x.strokeStyle = K.line; x.lineWidth = 2; x.beginPath(); x.moveTo(0, oy + hh - 1); x.lineTo(inner, oy + hh - 1); x.stroke(); }
+          x.textBaseline = 'top'; x.textAlign = 'left'; x.fillStyle = b.hdr ? K.muted : K.ink; x.font = font(b.tot ? 26 : 24, cwt);
+          lw2.forEach(function (s2, i) { x.fillText(s2, ind0, oy + 10 + i * 34); });
+          x.textAlign = 'right'; x.font = font(csz, cwt);
+          cs.forEach(function (c, i) { x.fillStyle = b.hdr ? K.muted : colOf((b.cc || [])[i]); x.fillText(c, lw + cw * (i + 1) - 4, oy + 12); });
+          x.textAlign = 'left';
+        });
+        return;
+      }
       // row / total
       var tot = b.k === 'total', sz = tot ? 30 : 28, wt = tot || b.b ? 800 : 500, ind = b.ind ? 28 : 0;
       var ll = wrap(b.l, inner * 0.62 - ind, font(sz, wt)), ss = b.s ? wrap(b.s, inner * 0.62 - ind, font(22, 500)) : [];

@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '2.3.1';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '2.4.0';
 /* Do it v2.1 - analisis: Tren (6/12 bulan, per kategori, tahun lalu, naik/turun, per hari), Rasio + rincian hitungan,
    Peringatan (di lonceng), Sankey Beranda, Arus Kas, Anggaran vs Realisasi. Semua memakai garis operasional
    (tanpa "Di Luar Operasional" = untung/rugi belum terealisasi). */
@@ -297,26 +297,52 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '2.3.1'
 
   // ---------------------------------------------------------------- Anggaran vs Realisasi
   function bvaMonth() { return S.bvam || C.todayLocal().substr(0, 7); }
-  function bvaData(cx) { return C2.budgetVsActual(X.plan.budgetLines(), S.tx, bvaMonth(), cx.R.who); }
-  function lname(l) { var nm = l.scope === 'sub' ? ((S.M.katByKode[l.key] || {}).SubKategori || l.key) : l.key; return dn(nm) + (l.pemilik && S.rep.who === 'Semua' ? ' (' + l.pemilik + ')' : ''); }
+  function bvaData(cx) { return C2.budgetReport(X.plan.allBudgetLines(), S.tx, bvaMonth(), cx.R.who, S.M.kategori, X.NONOP_G); }
+  function sgn(n) { n = Math.round(n); return n > 0 ? '+' + C.fmtNum(n) : (n < 0 ? '-' + C.fmtNum(-n) : '0'); }
+  function selCls(n) { return Math.round(n) < 0 ? 'out' : (Math.round(n) > 0 ? 'in' : ''); }
+  function bvaOpen() { return S.bvaOpen = S.bvaOpen || {}; }
+  /** Baris sub untuk satu kelompok: [{l, bud|null, act, sel|null}] */
+  function bvaSubs(g) {
+    var out = [];
+    if (g.subBud && g.umum) out.push({l: t('bl.whole'), bud: g.umum, act: null, sel: null});
+    g.subs.forEach(function (s) { out.push({l: dn(s.nama), bud: g.subBud ? s.bud : null, act: s.act, sel: g.subBud ? s.sel : null}); });
+    return out;
+  }
   function bvaRender(cx) {
-    var k = bvaMonth(), d = bvaData(cx), T = d.total, today = C.todayLocal(), h = '';
+    var k = bvaMonth(), d = bvaData(cx), h = '', op = bvaOpen();
     h += '<div class="mnav"><button class="hb" data-act="bva-prev">' + ICON.back + '</button><b>' + esc(C.namaBulan(+k.substr(5, 2)) + ' ' + k.substr(0, 4)) + '</b><button class="hb" data-act="bva-next">' + ICON.chev + '</button></div>';
-    if (!d.rows.length) return h + '<div class="card"><div class="empty">' + t('bva.empty') + '</div></div>';
-    var diff = T.tersedia - T.terpakai;
-    h += '<div class="card hero"><div class="sr"><span>' + t('bva.budget') + '</span><b>' + esc(fm(T.tersedia)) + '</b></div><div class="sr"><span>' + t('bva.actual') + '</span><b>' + esc(fm(T.terpakai)) + '</b></div><div class="sr"><span>' + t('bva.diff') + '</span><b class="' + (diff < 0 ? 'out' : 'in') + '">' + esc(fm(diff)) + '</b></div>' + pbar(T.tersedia ? T.terpakai / T.tersedia : 0) +
-      (k === today.substr(0, 7) && T.terpakai ? '<div class="sub2">' + esc(t('bl.proj', fm(C2.projection(T.terpakai, k, today)))) + '</div>' : '') + '</div>';
-    h += '<div class="card"><table class="tbl"><tr><th></th><th>' + t('bva.budget') + '</th><th>' + t('bva.actual') + '</th><th>%</th></tr>' + d.rows.map(function (r) {
-      return '<tr><td>' + esc(lname(r.line)) + '</td><td>' + esc(C.fmtNum(r.tersedia)) + '</td><td>' + esc(C.fmtNum(r.terpakai)) + '</td><td class="' + (r.pct > 1 ? 'out' : '') + '">' + Math.round(r.pct * 100) + '%</td></tr>';
-    }).join('') + '</table></div>';
-    if (d.tanpaAnggaran.length) h += '<h2>' + t('bva.nobudget') + ' · ' + esc(C.fmtNum(d.totalTanpa)) + '</h2><div class="card">' + d.tanpaAnggaran.map(function (r) { return '<div class="row"><div class="grow"><div class="t">' + esc(dn(r.nama)) + '</div></div><div class="a out">' + esc(C.fmtNum(r.terpakai)) + '</div></div>'; }).join('') + '</div>';
+    if (!d.income.groups.length && !d.expense.groups.length) return h + '<div class="card"><div class="empty">' + t('bva.empty') + '</div></div>';
+    function sec(title, jn, P) {
+      var o = '<tr class="tot"><td>' + esc(title) + '</td><td>' + esc(C.fmtNum(P.bud)) + '</td><td>' + esc(C.fmtNum(P.act)) + '</td><td class="' + selCls(P.sel) + '">' + esc(sgn(P.sel)) + '</td></tr>';
+      P.groups.forEach(function (g) {
+        var key = jn + ':' + g.nama, isOpen = !!op[key], has = g.subs.length > 0;
+        o += '<tr class="sub' + (has ? ' tap' : '') + '"' + (has ? ' data-act="bva-tog" data-g="' + esc(key) + '"' : '') + '><td>' + (has ? '<i class="car' + (isOpen ? ' up' : '') + '">▸</i>' : '') + esc(dn(g.nama)) + '</td><td>' + esc(C.fmtNum(g.bud)) + '</td><td>' + esc(C.fmtNum(g.act)) + '</td><td class="' + selCls(g.sel) + '">' + esc(sgn(g.sel)) + '</td></tr>';
+        if (isOpen) bvaSubs(g).forEach(function (r) {
+          o += '<tr class="ln"><td class="ind">' + esc(r.l) + '</td><td>' + (r.bud == null ? '–' : esc(C.fmtNum(r.bud))) + '</td><td>' + (r.act == null ? '–' : esc(C.fmtNum(r.act))) + '</td><td class="' + (r.sel == null ? '' : selCls(r.sel)) + '">' + (r.sel == null ? '–' : esc(sgn(r.sel))) + '</td></tr>';
+        });
+      });
+      return o;
+    }
+    h += '<div class="card"><table class="rep bva"><tr class="hdr"><th></th><th>' + t('bva.budget') + '</th><th>' + t('bva.actual') + '</th><th>' + t('bva.diff') + '</th></tr>' +
+      sec(t('bl.j.inc'), 'I', d.income) + sec(t('bl.j.exp'), 'E', d.expense) +
+      '<tr class="tot net"><td>' + t('bva.surplus') + '</td><td>' + esc(sgn(d.surplus.bud)) + '</td><td class="' + selCls(d.surplus.act) + '">' + esc(sgn(d.surplus.act)) + '</td><td class="' + selCls(d.surplus.sel) + '">' + esc(sgn(d.surplus.sel)) + '</td></tr></table></div>' +
+      '<div class="muted sm" style="margin:6px 2px">' + t('bva.note') + '</div>';
     return h;
   }
   function bvaDoc(cx) {
-    var k = bvaMonth(), d = bvaData(cx), b = [];
-    d.rows.forEach(function (r) { b.push({k: 'row', l: lname(r.line), s: C.fmtNum(r.terpakai) + ' / ' + C.fmtNum(r.tersedia), r: Math.round(r.pct * 100) + '%', c: r.pct > 1 ? 'out' : ''}, {k: 'prog', v: r.pct}); });
-    b.push({k: 'total', l: t('bva.diff'), r: C.fmtNum(d.total.tersedia - d.total.terpakai)});
-    return {title: t('r.bva'), sub: C.namaBulan(+k.substr(5, 2)) + ' ' + k.substr(0, 4), blocks: b, foot: 'Do it'};
+    var k = bvaMonth(), d = bvaData(cx), b = [], op = bvaOpen();
+    b.push({k: 'cols', hdr: true, l: '', cols: [t('bva.budget'), t('bva.actual'), t('bva.diff')]});
+    function sec(title, jn, P) {
+      b.push({k: 'cols', tot: true, l: title, cols: [C.fmtNum(P.bud), C.fmtNum(P.act), sgn(P.sel)], cc: ['', '', selCls(P.sel)]});
+      P.groups.forEach(function (g) {
+        b.push({k: 'cols', b: true, l: dn(g.nama), cols: [C.fmtNum(g.bud), C.fmtNum(g.act), sgn(g.sel)], cc: ['', '', selCls(g.sel)]});
+        if (op[jn + ':' + g.nama]) bvaSubs(g).forEach(function (r) { b.push({k: 'cols', ind: 1, l: r.l, cols: [r.bud == null ? '–' : C.fmtNum(r.bud), r.act == null ? '–' : C.fmtNum(r.act), r.sel == null ? '–' : sgn(r.sel)], cc: ['', '', r.sel == null ? '' : selCls(r.sel)]}); });
+      });
+    }
+    sec(t('bl.j.inc'), 'I', d.income); sec(t('bl.j.exp'), 'E', d.expense);
+    b.push({k: 'cols', tot: true, l: t('bva.surplus'), cols: [sgn(d.surplus.bud), sgn(d.surplus.act), sgn(d.surplus.sel)], cc: ['', selCls(d.surplus.act), selCls(d.surplus.sel)]});
+    b.push({k: 'text', l: t('bva.note')});
+    return {title: t('r.bva'), sub: C.namaBulan(+k.substr(5, 2)) + ' ' + k.substr(0, 4) + ' · ' + (cx.R.who === 'Semua' ? t('r.combined') : cx.R.who), blocks: b, foot: 'Do it · ' + C.fmtTgl(C.todayLocal())};
   }
 
   X.ddOpts = X.ddOpts || {};
@@ -325,6 +351,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '2.3.1'
   X.repKinds.bva = {render: bvaRender, doc: bvaDoc, period: false, dim: false, label: function () { return ''; }};
   X.repKinds.cf = {render: cfRender, doc: cfDoc, dim: false, label: function (cx) { return C.fmtTgl(cx.per.start) + ' – ' + C.fmtTgl(cx.end); }};
   Object.assign(A, {
+    'bva-tog': function (el) { var o = bvaOpen(); o[el.dataset.g] = !o[el.dataset.g]; X.render(); },
     'bva-prev': function () { S.bvam = C2.addMonthKey(bvaMonth(), -1); X.render(); },
     'bva-next': function () { S.bvam = C2.addMonthKey(bvaMonth(), 1); X.render(); },
     'tr-n': function (el) { S.trN = +el.dataset.v; X.render(); },

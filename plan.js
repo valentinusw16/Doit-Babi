@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '2.3.1';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '2.4.0';
 /* Do it v2.0 - Rencana: anggaran bulanan (+rincian, rollover, realokasi), anggaran event (tag), dana tujuan, transaksi rutin.
    Data disimpan di sheet Rencana (lewat DoIt.rc), dihitung oleh core2.js. */
 (function () {
@@ -62,36 +62,95 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '2.3.1';
   // ---------------------------------------------------------------- ANGGARAN
   function lineName(l) { if (l.scope === 'sub') { var k = S.M.katByKode[l.key]; return k ? dn(k.SubKategori) : l.key; } return dn(l.key); }
   function lineGroup(l) { return l.scope === 'sub' ? ((S.M.katByKode[l.key] || {}).Kategori || '') : l.key; }
-  function budgetLines() { return rc.list('anggaran').filter(function (l) { return l.aktif !== false; }); }
+  function lineJenis(l) { return l.jenis === 'Income' ? 'Income' : 'Expense'; }
+  function allBudgetLines() { return rc.list('anggaran').filter(function (l) { return l.aktif !== false; }); }
+  // anggaran pengeluaran (dipakai kartu Rencana, peringatan, realokasi); pemasukan dipisah supaya tidak tercampur total
+  function budgetLines() { return allBudgetLines().filter(function (l) { return lineJenis(l) === 'Expense'; }); }
+  function incomeLines() { return allBudgetLines().filter(function (l) { return lineJenis(l) === 'Income'; }); }
+  function curJenis() { return S.bjenis === 'Income' ? 'Income' : 'Expense'; }
+  function groupsOf(jenis) {
+    var order = [], by = {};
+    S.M.kategori.forEach(function (c) {
+      if (c.Jenis !== jenis || c.Kategori === X.NONOP_G) return;
+      if (!by[c.Kategori]) { by[c.Kategori] = {nama: c.Kategori, subs: []}; order.push(c.Kategori); }
+      by[c.Kategori].subs.push(c);
+    });
+    return order.map(function (n) { return by[n]; });
+  }
+  function actualMaps(jenis, k, owner) {
+    var m = {g: {}, s: {}}, one = owner && owner !== 'Semua';
+    for (var id in S.tx) {
+      var x = S.tx[id];
+      if (x.Status !== 'Aktif' || x.Jenis !== jenis || C2.monthKey(x.Waktu) !== k) continue;
+      if (one && x.PemilikDompet !== owner) continue;
+      var v = +x.Jumlah || 0; m.g[x.Kategori] = (m.g[x.Kategori] || 0) + v; m.s[x.KodeAkun] = (m.s[x.KodeAkun] || 0) + v;
+    }
+    return m;
+  }
+  function ownerNow() { return S.owner !== 'Semua' ? S.owner : S.cfg.user; }
+  function newLine(scope, key, jenis) {
+    return {scope: scope, key: key, jenis: jenis, pemilik: ownerNow(), rincian: [], jumlah: 0, rollover: jenis === 'Expense', mulai: curMonth(), ov: {}, ovm: 0};
+  }
+  function lineRow(r, k, sub) {
+    var l = r.line, notes = [];
+    if (r.bawa) notes.push(t('bl.carry', fm(r.bawa)));
+    if (l.rincian && l.rincian.length) notes.push(t('bl.detail', l.rincian.length));
+    if (l.ov && l.ov[k] != null) notes.push(t('bl.ov'));
+    var inc = lineJenis(l) === 'Income', neg = inc ? r.terpakai < r.tersedia : r.sisa < 0;
+    return '<div class="subln tap" data-act="bl-open" data-id="' + esc(l.id) + '"><div class="sr"><span>' + esc(sub || t('bl.whole')) + (l.pemilik && S.owner === 'Semua' ? '<span class="tag">' + esc(l.pemilik) + '</span>' : '') + '</span><b>' + esc(C.fmtNum(r.tersedia)) + '</b></div>' +
+      '<div class="sr muted sm"><span>' + esc(t('bl.used.of', C.fmtNum(r.terpakai), C.fmtNum(r.tersedia))) + (notes.length ? ' · ' + esc(notes.join(' · ')) : '') + '</span><b class="' + (neg && !inc ? 'out' : '') + '">' + pct(r.pct) + '</b></div>' + pbar(r.pct, inc ? (r.pct >= 1 ? 'good' : '') : null) + '</div>';
+  }
   function vAnggaran() {
-    var k = curMonth(), lines = budgetLines(), bm = C2.budgetMonth(lines, S.tx, k, S.owner), today = C.todayLocal(), isNow = k === today.substr(0, 7);
+    var k = curMonth(), J = curJenis(), inc = J === 'Income', lines = allBudgetLines().filter(function (l) { return lineJenis(l) === J; }), bm = C2.budgetMonth(lines, S.tx, k, S.owner), today = C.todayLocal(), isNow = k === today.substr(0, 7);
     var h = '<div class="mnav"><button class="hb" data-act="bm-prev" aria-label="‹">' + ICON.back + '</button><b>' + esc(monthLabel(k)) + '</b><button class="hb" data-act="bm-next" aria-label="›">' + '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>' + '</button></div>';
+    h += '<div class="seg sm" style="margin-bottom:10px">' + [['Expense', 'bl.j.exp'], ['Income', 'bl.j.inc']].map(function (x) { return '<button class="' + (J === x[0] ? 'on' : '') + '" data-act="bl-jenis" data-v="' + x[0] + '">' + t(x[1]) + '</button>'; }).join('') + '</div>';
     h += '<div class="stick"><div class="ddrow">' + X.ownerChips(S.owner, 'owner') + '</div></div>';
     var T = bm.total, p = T.tersedia ? T.terpakai / T.tersedia : 0;
-    h += '<div class="card hero"><div class="lbl">' + t('bl.total') + '</div><div class="big">' + esc(fm(T.tersedia)) + '</div>' +
-      '<div class="sr" style="margin-top:6px"><span>' + esc(t('bl.used', fm(T.terpakai))) + '</span><b class="' + (T.sisa < 0 ? 'out' : 'in') + '">' + esc(t(T.sisa < 0 ? 'bl.over' : 'bl.left', fm(Math.abs(T.sisa)))) + '</b></div>' + pbar(p) +
-      (isNow && T.terpakai ? '<div class="sub2">' + esc(t('bl.proj', fm(C2.projection(T.terpakai, k, today)))) + '</div>' : '') + '</div>';
-    h += '<div class="btnrow"><button class="btn" data-act="bl-new">' + ICON.plus + t('bl.add') + '</button>' + (bm.rows.length > 1 ? '<button class="btn" data-act="bl-realok">' + ICON.swap + t('bl.realok') + '</button>' : '') + '</div>';
-    if (!bm.rows.length) return h + '<div class="card"><div class="empty">' + t('bl.empty') + '</div></div>';
-    h += bm.rows.slice().sort(function (a, b) { return b.pct - a.pct; }).map(function (r) {
-      var l = r.line, notes = [];
-      if (r.bawa) notes.push(t('bl.carry', fm(r.bawa)));
-      if (l.rincian && l.rincian.length) notes.push(t('bl.detail', l.rincian.length));
-      if (l.ov && l.ov[k] != null) notes.push(t('bl.ov'));
-      return '<div class="card bl tap" data-act="bl-open" data-id="' + esc(l.id) + '"><div class="ah"><span class="gi">' + X.catIcon(lineGroup(l)) + '</span><span>' + esc(lineName(l)) + (l.pemilik && S.owner === 'Semua' ? '<span class="tag">' + esc(l.pemilik) + '</span>' : '') + '</span><b class="' + (r.sisa < 0 ? 'out' : '') + '">' + esc(fm(r.sisa)) + '</b></div>' +
-        '<div class="sr"><span class="muted">' + esc(t('bl.used.of', C.fmtNum(r.terpakai), C.fmtNum(r.tersedia))) + '</span><b>' + pct(r.pct) + '</b></div>' + pbar(r.pct) +
-        (notes.length ? '<div class="s muted sm" style="margin-top:6px">' + esc(notes.join(' · ')) + '</div>' : '') + '</div>';
+    h += '<div class="card hero"><div class="lbl">' + t(inc ? 'bl.total.inc' : 'bl.total') + '</div><div class="big">' + esc(fm(T.tersedia)) + '</div>' +
+      '<div class="sr" style="margin-top:6px"><span>' + esc(t(inc ? 'bl.got' : 'bl.used', fm(T.terpakai))) + '</span><b class="' + (inc ? (T.terpakai >= T.tersedia ? 'in' : '') : (T.sisa < 0 ? 'out' : 'in')) + '">' + esc(inc ? t(T.terpakai >= T.tersedia ? 'bl.inc.over' : 'bl.inc.short', fm(Math.abs(T.sisa))) : t(T.sisa < 0 ? 'bl.over' : 'bl.left', fm(Math.abs(T.sisa)))) + '</b></div>' + pbar(p, inc ? (p >= 1 ? 'good' : '') : null) +
+      (!inc && isNow && T.terpakai ? '<div class="sub2">' + esc(t('bl.proj', fm(C2.projection(T.terpakai, k, today)))) + '</div>' : '') + '</div>';
+    if (!inc && bm.rows.length > 1) h += '<div class="btnrow"><button class="btn" data-act="bl-realok">' + ICON.swap + t('bl.realok') + '</button></div>';
+    h += '<div class="muted sm" style="margin:2px 2px 10px">' + t('bl.cat.hint') + '</div>';
+    var act = actualMaps(J, k, S.owner), open = S.bopen || {};
+    var cards = groupsOf(J).map(function (g) {
+      var rows = bm.rows.filter(function (r) { return lineGroup(r.line) === g.nama; }), bud = 0, spentLine = 0;
+      rows.forEach(function (r) { bud += r.tersedia; });
+      var a = act.g[g.nama] || 0, pc = bud > 0 ? a / bud : (a > 0 ? 9.99 : 0), subRows = rows.filter(function (r) { return r.line.scope === 'sub'; }), grupRows = rows.filter(function (r) { return r.line.scope !== 'sub'; });
+      return {g: g, rows: rows, bud: bud, a: a, pc: pc, subRows: subRows, grupRows: grupRows};
+    });
+    cards.sort(function (x, y) { return (y.bud > 0) - (x.bud > 0) || (x.bud > 0 ? y.pc - x.pc : y.a - x.a); });
+    h += cards.map(function (c) {
+      var g = c.g, isOpen = !!open[J + ':' + g.nama], sisa = c.bud - c.a, neg = inc ? false : sisa < 0;
+      var out = '<div class="card bl cat"><div class="ah tap" data-act="bl-cat" data-g="' + esc(g.nama) + '"><span class="gi">' + X.catIcon(g.nama) + '</span><span>' + esc(dn(g.nama)) + '</span>' +
+        (c.bud > 0 ? '<b class="' + (neg ? 'out' : '') + '">' + esc(fm(inc ? c.bud - c.a < 0 ? c.a - c.bud : c.bud - c.a : sisa)) + '</b>' : '<b class="muted sm">' + esc(t('bl.none')) + '</b>') + '</div>';
+      if (c.bud > 0) out += '<div class="sr"><span class="muted">' + esc(t('bl.used.of', C.fmtNum(c.a), C.fmtNum(c.bud))) + '</span><b>' + pct(c.pc) + '</b></div>' + pbar(c.pc, inc ? (c.pc >= 1 ? 'good' : '') : null);
+      else out += '<div class="sr"><span class="muted">' + esc(c.a ? t(inc ? 'bl.got' : 'bl.used', fm(c.a)) : t('bl.tap.set')) + '</span></div>';
+      out += '<button class="morebtn" data-act="bl-tog" data-g="' + esc(g.nama) + '">' + esc(t(isOpen ? 'bl.less' : 'bl.more', g.subs.length)) + ' <i class="' + (isOpen ? 'up' : '') + '">▾</i></button>';
+      if (isOpen) {
+        out += '<div class="subs">';
+        c.grupRows.forEach(function (r) { out += lineRow(r, k, null); });
+        g.subs.forEach(function (sc) {
+          var rs = c.subRows.filter(function (r) { return r.line.key === sc.KodeAkun; });
+          if (rs.length) rs.forEach(function (r) { out += lineRow(r, k, dn(sc.SubKategori)); });
+          else {
+            var av = act.s[sc.KodeAkun] || 0;
+            out += '<div class="subln empty tap" data-act="bl-sub" data-g="' + esc(g.nama) + '" data-k="' + esc(sc.KodeAkun) + '"><div class="sr"><span>' + esc(dn(sc.SubKategori)) + '</span><b class="muted sm">' + esc(t('bl.fill')) + '</b></div>' + (av ? '<div class="sr muted sm"><span>' + esc(t(inc ? 'bl.got' : 'bl.used', C.fmtNum(av))) + '</span></div>' : '') + '</div>';
+          }
+        });
+        out += '</div>';
+      }
+      return out + '</div>';
     }).join('');
     return h;
   }
   function blPick() {
-    var own = S.owner !== 'Semua' ? S.owner : S.cfg.user, have = {}; var cm = curMonth(); budgetLines().forEach(function (l) { if ((l.pemilik || own) === own && (!l.sampai || l.sampai >= cm)) have[l.scope + ':' + l.key] = 1; });
+    var J = curJenis(), own = ownerNow(), have = {}; var cm = curMonth(); allBudgetLines().forEach(function (l) { if (lineJenis(l) === J && (l.pemilik || own) === own && (!l.sampai || l.sampai >= cm)) have[l.scope + ':' + l.key] = 1; });
     var items = [];
-    expenseGroups().forEach(function (g) { if (!have['grup:' + g]) items.push({v: 'grup:' + g, l: dn(g), g: t('bl.grp'), ico: X.catIcon(g)}); });
-    S.M.kategori.forEach(function (c) { if (c.Jenis === 'Expense' && !have['sub:' + c.KodeAkun]) items.push({v: 'sub:' + c.KodeAkun, l: dn(c.SubKategori), g: dn(c.Kategori), s: t('bl.sub'), ico: X.catIcon(c.Kategori)}); });
+    groupsOf(J).forEach(function (g) { if (!have['grup:' + g.nama]) items.push({v: 'grup:' + g.nama, l: dn(g.nama), g: t('bl.grp'), ico: X.catIcon(g.nama)}); });
+    S.M.kategori.forEach(function (c) { if (c.Jenis === J && c.Kategori !== X.NONOP_G && !have['sub:' + c.KodeAkun]) items.push({v: 'sub:' + c.KodeAkun, l: dn(c.SubKategori), g: dn(c.Kategori), s: t('bl.sub'), ico: X.catIcon(c.Kategori)}); });
     X.openPicker({title: t('bl.pick'), items: items, onPick: function (it) {
       var sp = it.v.split(':'); X.closePicker();
-      openForm('bl', null, {scope: sp[0], key: sp.slice(1).join(':'), pemilik: own, rincian: [], jumlah: 0, rollover: true, mulai: curMonth(), ov: {}, ovm: 0});
+      openForm('bl', null, newLine(sp[0], sp.slice(1).join(':'), J));
     }});
   }
   var FORMS = {
@@ -109,7 +168,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '2.3.1';
         h += '<button class="link" data-act="pf-radd" data-list="rincian">+ ' + t('bl.r.add') + '</button>';
         if (d.rincian && d.rincian.length) h += '<div class="card sumline"><span>' + t('bl.r.total') + '</span><b id="pf-total">' + esc(fm(rincianTotal(d.rincian))) + '</b></div>';
         else h += money(t('bl.amount'), 'jumlah', d.jumlah);
-        h += '<div style="margin-top:14px">' + toggle(t('bl.rollover'), 'rollover', d.rollover) + '<div class="muted sm" style="margin:4px 2px 0">' + t('bl.rollover.hint') + '</div></div>';
+        if (lineJenis(d) === 'Expense') h += '<div style="margin-top:14px">' + toggle(t('bl.rollover'), 'rollover', d.rollover) + '<div class="muted sm" style="margin:4px 2px 0">' + t('bl.rollover.hint') + '</div></div>';
+        if (d.scope === 'sub' && PF.grupId) h += '<div class="muted sm" style="margin-top:12px">' + t('bl.replace.hint') + '</div>';
         h += money(t('bl.month.only', monthLabel(k)), 'ovm', d.ovm, t('bl.month.ph'));
         return h;
       },
@@ -381,7 +441,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '2.3.1';
     });
     return out;
   }
-  X.plan = {planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
+  X.plan = {planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
 
   // ---------------------------------------------------------------- aksi
   function saveVia(promise, done) { PF.busy = true; PF.err = ''; renderForm(); promise.then(function () { PF = null; X.closeOverlays(); X.toast(t('saved')); X.render(); if (done) done(); }).catch(fail); }
@@ -391,18 +451,41 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '2.3.1';
     'bm-prev': function () { S.bm = C2.addMonthKey(curMonth(), -1); X.render(); },
     'bm-next': function () { S.bm = C2.addMonthKey(curMonth(), 1); X.render(); },
     'bl-new': function () { blPick(); },
-    'bl-open': function (el) { var l = rc.list('anggaran').filter(function (x) { return x.id === el.dataset.id; })[0]; if (!l) return; var k = curMonth(); openForm('bl', l.id, Object.assign({rincian: [], ov: {}}, JSON.parse(JSON.stringify(l)), {ovm: l.ov && l.ov[k] != null ? l.ov[k] : 0})); },
+    'bl-jenis': function (el) { S.bjenis = el.dataset.v; X.render(); },
+    'bl-tog': function (el) { S.bopen = S.bopen || {}; var key = curJenis() + ':' + el.dataset.g; S.bopen[key] = !S.bopen[key]; X.render(); },
+    'bl-cat': function (el) {
+      var J = curJenis(), g = el.dataset.g, ls = allBudgetLines().filter(function (l) { return lineJenis(l) === J && lineGroup(l) === g; });
+      var mine = ls.filter(function (l) { return l.scope === 'grup' && (S.owner === 'Semua' || l.pemilik === S.owner); });
+      if (ls.some(function (l) { return l.scope === 'sub'; })) { S.bopen = S.bopen || {}; S.bopen[J + ':' + g] = !S.bopen[J + ':' + g]; X.render(); return; }
+      if (mine.length === 1) { A['bl-open']({dataset: {id: mine[0].id}}); return; }
+      var own = ls.filter(function (l) { return l.scope === 'grup' && l.pemilik === ownerNow(); })[0];
+      if (own) { A['bl-open']({dataset: {id: own.id}}); return; }
+      openForm('bl', null, newLine('grup', g, J));
+    },
+    'bl-sub': function (el) {
+      var J = curJenis(), d = newLine('sub', el.dataset.k, J), grup = allBudgetLines().filter(function (l) { return l.scope === 'grup' && lineJenis(l) === J && l.key === el.dataset.g && l.pemilik === d.pemilik; })[0];
+      openForm('bl', null, d, {grupId: grup ? grup.id : null});
+    },
+    'bl-open': function (el) {
+      var l = rc.list('anggaran').filter(function (x) { return x.id === el.dataset.id; })[0]; if (!l) return; var k = curMonth();
+      var grup = l.scope === 'sub' ? allBudgetLines().filter(function (g) { return g.scope === 'grup' && lineJenis(g) === lineJenis(l) && g.key === lineGroup(l) && g.pemilik === l.pemilik; })[0] : null;
+      openForm('bl', l.id, Object.assign({rincian: [], ov: {}}, JSON.parse(JSON.stringify(l)), {ovm: l.ov && l.ov[k] != null ? l.ov[k] : 0}), {grupId: grup ? grup.id : null});
+    },
     'bl-save': function () {
       var d = PF.d, k = curMonth(), rin = (d.rincian || []).filter(function (r) { return (r.n || '').trim() || +r.j; }).map(function (r) { return {n: (r.n || '').trim(), j: +r.j || 0, k: +r.k || 1}; });
       var jumlah = rin.length ? rincianTotal(rin) : (+d.jumlah || 0);
       if (!(jumlah > 0)) { PF.err = t('bl.err.amount'); renderForm(); return; }
       var ov = Object.assign({}, d.ov || {}); if (+d.ovm > 0) ov[k] = +d.ovm; else delete ov[k];
       if (!d.pemilik) { PF.err = t('bl.err.owner'); renderForm(); return; }
-      var dup = budgetLines().some(function (l) { return l.id !== PF.id && l.scope === d.scope && l.key === d.key && l.pemilik === d.pemilik; });
+      var dup = allBudgetLines().some(function (l) { return l.id !== PF.id && lineJenis(l) === lineJenis(d) && l.scope === d.scope && l.key === d.key && l.pemilik === d.pemilik; });
       if (dup) { PF.err = t('bl.err.dup', d.pemilik); renderForm(); return; }
-      var data = {scope: d.scope, key: d.key, pemilik: d.pemilik, rincian: rin, jumlah: jumlah, rollover: !!d.rollover, mulai: d.mulai || k, ov: ov, aktif: true};
+      var data = {scope: d.scope, key: d.key, pemilik: d.pemilik, rincian: rin, jumlah: jumlah, rollover: lineJenis(d) === 'Expense' && !!d.rollover, mulai: d.mulai || k, ov: ov, aktif: true};
+      if (lineJenis(d) === 'Income') data.jenis = 'Income';
       if (d.sampai) data.sampai = d.sampai; if (d.sumber) data.sumber = d.sumber;
-      saveVia(rc.save('anggaran', data, PF.id));
+      // v2.4: mengisi subkategori menggantikan nominal kategori (jumlah kategori = jumlah subkategori)
+      var grup = d.scope === 'sub' ? allBudgetLines().filter(function (l) { return l.scope === 'grup' && lineJenis(l) === lineJenis(d) && l.key === lineGroup(d) && l.pemilik === d.pemilik; })[0] : null;
+      if (grup) saveVia(rc.batch([{op: 'simpan', tipe: 'anggaran', id: PF.id || undefined, data: data}, {op: 'hapus', id: grup.id}]));
+      else saveVia(rc.save('anggaran', data, PF.id));
     },
     'bl-del': function () { if (!confirm(t('bl.del.q'))) return; var id = PF.id; saveVia(rc.remove(id)); },
     'bl-owner': function (el) { PF.d.pemilik = el.dataset.v; renderForm(); },

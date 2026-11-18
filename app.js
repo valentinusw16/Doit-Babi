@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '2.3.1', APP_NAME = 'Do it';
+  var VERSION = '2.4.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -595,7 +595,7 @@
   }
 
   // ---------------------------------------------------------------- Laporan
-  var REP_KINDS = ['is', 'bs', 'cf', 'tb', 'jr', 'tren', 'rasio', 'bva'];
+  var REP_KINDS = ['is', 'bs', 'cf', 'bva', 'tb', 'jr', 'tren', 'rasio'];
   var DIMS = ['pemilik', 'pencatat'];
   function repCtx() {
     var R = S.rep, today = C.todayLocal(), per = periodOf(R.period);

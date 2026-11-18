@@ -22,7 +22,12 @@
     'w.pl.gl.done': 'Tujuan {0} tercapai: terkumpul Rp {1}.', 'a.pl.gl.done': 'Tandai selesai atau naikkan targetnya di menu Rencana.',
     'w.pl.gl.near': 'Tujuan {0} hampir tercapai ({1}%). Kurang Rp {2}.', 'a.pl.gl.near': 'Sedikit lagi.',
     'w.pl.gl.late': 'Tenggat tujuan {0} sudah lewat, masih kurang Rp {1}.', 'a.pl.gl.late': 'Perpanjang tenggat atau tambah setoran.'
-
+    , 'bl.j.exp': 'Pengeluaran', 'bl.j.inc': 'Pemasukan', 'bl.total.inc': 'Target pemasukan', 'bl.got': 'Terealisasi {0}', 'bl.inc.over': 'Lebih {0}', 'bl.inc.short': 'Kurang {0}',
+    'bl.cat.hint': 'Isi anggaran per kategori. Ketuk "Lainnya" untuk merinci per subkategori.', 'bl.none': 'Belum dianggarkan', 'bl.tap.set': 'Ketuk untuk mengisi anggaran',
+    'bl.more': 'Lainnya ({0} subkategori)', 'bl.less': 'Tutup', 'bl.fill': 'Isi anggaran', 'bl.whole': 'Seluruh kategori',
+    'bl.replace.hint': 'Mengisi subkategori menggantikan nominal anggaran kategori ini. Jumlah kategori mengikuti jumlah subkategorinya.',
+    'bva.surplus': 'Surplus', 'bva.note': 'Selisih positif berarti menguntungkan: pemasukan di atas anggaran atau pengeluaran di bawah anggaran. Kategori tanpa anggaran dihitung 0.'
+    , 'bva.diff': 'Selisih'
   });
   I.add('en', {
     'f.dt': 'Date & time', 'f.d.0': 'Today', 'f.d.1': 'Yesterday', 'f.d.2': '2 days ago', 'f.d.pick': 'Pick date', 'f.d.clear': 'Clear',
@@ -45,6 +50,11 @@
     'w.pl.gl.done': 'Goal {0} reached: Rp {1} saved.', 'a.pl.gl.done': 'Mark it done or raise the target in Plan.',
     'w.pl.gl.near': 'Goal {0} is almost there ({1}%). Rp {2} to go.', 'a.pl.gl.near': 'Nearly done.',
     'w.pl.gl.late': 'Goal {0} is past its deadline, Rp {1} still to go.', 'a.pl.gl.late': 'Extend the deadline or add deposits.'
-
+    , 'bl.j.exp': 'Expenses', 'bl.j.inc': 'Income', 'bl.total.inc': 'Income target', 'bl.got': 'Received {0}', 'bl.inc.over': 'Over by {0}', 'bl.inc.short': '{0} short',
+    'bl.cat.hint': 'Set budgets per category. Tap "More" to break them down by subcategory.', 'bl.none': 'No budget', 'bl.tap.set': 'Tap to set a budget',
+    'bl.more': 'More ({0} subcategories)', 'bl.less': 'Close', 'bl.fill': 'Set budget', 'bl.whole': 'Whole category',
+    'bl.replace.hint': 'Filling a subcategory replaces this category\'s own amount. The category total follows the sum of its subcategories.',
+    'bva.surplus': 'Surplus', 'bva.note': 'A positive difference is favourable: income above budget or spending below budget. Categories without a budget count as 0.'
+    , 'bva.diff': 'Difference'
   });
 })(window);

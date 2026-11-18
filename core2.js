@@ -60,6 +60,7 @@
   // ------------------------------------------------------------ anggaran bulanan
   // line: {id, scope:'grup'|'sub', key, jumlah, ov:{'YYYY-MM':n}, rollover:bool, mulai:'YYYY-MM', sampai:'YYYY-MM' (opsional), pemilik}
   function lineMatch(line, x) {
+    if ((line.jenis || 'Expense') !== x.Jenis) return false;
     if (line.scope === 'sub') return x.KodeAkun === line.key;
     return x.Kategori === line.key;
   }
@@ -68,7 +69,7 @@
     var m = {};
     for (var id in txMap) {
       var x = txMap[id];
-      if (x.Status !== 'Aktif' || x.Jenis !== 'Expense' || !lineMatch(line, x)) continue;
+      if (x.Status !== 'Aktif' || !lineMatch(line, x)) continue;
       if (owner && owner !== 'Semua' && x.PemilikDompet !== owner) continue;
       var k = monthKey(x.Waktu); m[k] = (m[k] || 0) + (+x.Jumlah || 0);
     }
@@ -121,6 +122,40 @@
     }
     var tanpa = Object.keys(extra).map(function (g) { return {nama: g, terpakai: extra[g]}; }).sort(function (a, b) { return b.terpakai - a.terpakai; });
     return {rows: bm.rows, total: bm.total, tanpaAnggaran: tanpa, totalTanpa: tanpa.reduce(function (a, r) { return a + r.terpakai; }, 0)};
+  }
+  /** v2.4: Laporan anggaran vs realisasi gaya laba rugi. jenis 'Income'|'Expense' per kategori + subkategori.
+   *  lines = semua baris anggaran (pemasukan & pengeluaran). Selisih: positif = menguntungkan
+   *  (pemasukan: realisasi - anggaran; pengeluaran: anggaran - realisasi). */
+  function budgetReport(lines, txMap, k, owner, kategori, nonopG) {
+    var one = owner && owner !== 'Semua';
+    function part(jenis) {
+      var act = {g: {}, s: {}}, rows = budgetMonth(lines.filter(function (l) { return (l.jenis || 'Expense') === jenis; }), txMap, k, owner).rows;
+      for (var id in txMap) {
+        var x = txMap[id];
+        if (x.Status !== 'Aktif' || x.Jenis !== jenis || monthKey(x.Waktu) !== k) continue;
+        if (one && x.PemilikDompet !== owner) continue;
+        var v = +x.Jumlah || 0; act.g[x.Kategori] = (act.g[x.Kategori] || 0) + v; act.s[x.KodeAkun] = (act.s[x.KodeAkun] || 0) + v;
+      }
+      var order = [], by = {};
+      kategori.forEach(function (c) { if (c.Jenis !== jenis || c.Kategori === nonopG) return; if (!by[c.Kategori]) { by[c.Kategori] = {nama: c.Kategori, bud: 0, act: 0, subs: [], umum: 0, subBud: false}; order.push(c.Kategori); } by[c.Kategori].subs.push({kode: c.KodeAkun, nama: c.SubKategori, bud: 0, act: act.s[c.KodeAkun] || 0}); });
+      rows.forEach(function (r) {
+        var l = r.line, g = l.scope === 'sub' ? ((kategori.filter(function (c) { return c.KodeAkun === l.key; })[0] || {}).Kategori) : l.key;
+        if (!g || !by[g]) return;
+        by[g].bud += r.tersedia;
+        if (l.scope === 'sub') { by[g].subBud = true; by[g].subs.forEach(function (s) { if (s.kode === l.key) s.bud += r.tersedia; }); } else by[g].umum += r.tersedia;
+      });
+      var groups = [], tb = 0, ta = 0;
+      order.forEach(function (n) {
+        var g = by[n]; g.act = act.g[n] || 0;
+        if (!g.bud && !g.act) return;
+        g.subs = g.subs.filter(function (s) { return s.bud || s.act; }); g.sel = jenis === 'Income' ? g.act - g.bud : g.bud - g.act;
+        g.subs.forEach(function (s) { s.sel = jenis === 'Income' ? s.act - s.bud : s.bud - s.act; });
+        groups.push(g); tb += g.bud; ta += g.act;
+      });
+      return {groups: groups, bud: tb, act: ta, sel: jenis === 'Income' ? ta - tb : tb - ta};
+    }
+    var inc = part('Income'), exp = part('Expense');
+    return {income: inc, expense: exp, surplus: {bud: inc.bud - exp.bud, act: inc.act - exp.act, sel: (inc.act - exp.act) - (inc.bud - exp.bud)}};
   }
   /** Proyeksi akhir bulan: laju harian x hari dalam bulan. */
   function projection(terpakai, k, today) {
@@ -359,7 +394,7 @@
   return {
     addDays: addDays, addMonthsKeep: addMonthsKeep, daysBetween: daysBetween, monthKey: monthKey, addMonthKey: addMonthKey, monthEnd: monthEnd, monthsBetween: monthsBetween,
     nextDue: nextDue, dueDates: dueDates, recTxId: recTxId, nextAfterToday: nextAfterToday,
-    spentByMonth: spentByMonth, monthDetail: monthDetail, budgetMonth: budgetMonth, reallocate: reallocate, budgetVsActual: budgetVsActual, projection: projection,
+    spentByMonth: spentByMonth, monthDetail: monthDetail, budgetMonth: budgetMonth, reallocate: reallocate, budgetVsActual: budgetVsActual, budgetReport: budgetReport, projection: projection,
     eventActual: eventActual, goalProgress: goalProgress,
     isFixed: isFixed, accrued: accrued, position: position, portfolio: portfolio, xirr: xirr,
     monthlySeries: monthlySeries, ratios: ratios, insights: insights, slope: slope, avg: avg, TARGET: TARGET,
