@@ -58,7 +58,7 @@
   function recTxId(recId, date) { return ('R' + String(recId).replace(/[^A-Za-z0-9]/g, '').slice(-8) + date.replace(/-/g, '')).substr(0, 40); }
 
   // ------------------------------------------------------------ anggaran bulanan
-  // line: {id, scope:'grup'|'sub', key, jumlah, ov:{'YYYY-MM':n}, rollover:bool, mulai:'YYYY-MM', pemilik}
+  // line: {id, scope:'grup'|'sub', key, jumlah, ov:{'YYYY-MM':n}, rollover:bool, mulai:'YYYY-MM', sampai:'YYYY-MM' (opsional), pemilik}
   function lineMatch(line, x) {
     if (line.scope === 'sub') return x.KodeAkun === line.key;
     return x.Kategori === line.key;
@@ -91,7 +91,7 @@
   }
   function budgetMonth(lines, txMap, k, owner) {
     var one = owner && owner !== 'Semua';
-    var rows = lines.filter(function (l) { return l.aktif !== false && (!l.mulai || l.mulai <= k) && (!one || !l.pemilik || l.pemilik === owner); }).map(function (l) {
+    var rows = lines.filter(function (l) { return l.aktif !== false && (!l.mulai || l.mulai <= k) && (!l.sampai || l.sampai >= k) && (!one || !l.pemilik || l.pemilik === owner); }).map(function (l) {
       var d = monthDetail(l, k, spentByMonth(txMap, l, l.pemilik || owner));
       return Object.assign({line: l}, d);
     });

@@ -391,3 +391,49 @@ button.dtbig { display: block; width: 100%; }
 .hero.cprev { margin: 12px 0 4px; }
 .seg.cpw button { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 4px; }
 .seg.cpw button b { font-size: 13.5px; } .seg.cpw button small { font-size: 11.5px; font-weight: 500; opacity: .8; }
+
+/* ================================================================ v2.3 */
+/* keypad nominal */
+.amt.kpa { display: flex; align-items: center; gap: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.amt.kpa.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.amt.kpa .amtv { flex: 1; min-width: 0; text-align: right; }
+.amt.kpa .amtx { min-height: 17px; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.amt.kpa .amtx i { font-style: normal; }
+.amt.kpa .amtn { font-size: 34px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.amt.kpa .amtn.ph { color: var(--muted); opacity: .55; }
+.sheet-f.kpf { padding: 8px 10px calc(10px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--ink) 4%, var(--bg)); }
+.kp { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.kp .kb { height: 50px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 21px; font-weight: 600; display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.kp .kb:active { transform: scale(.96); background: var(--accent-soft); }
+.kp .kb svg { width: 24px; height: 24px; }
+.kp .kb.op { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-size: 23px; }
+.kp .kb.eq { grid-column: span 2; }
+.kp .kb.go { grid-column: span 2; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-size: 17px; }
+#f-next + * { transition: box-shadow .3s; border-radius: 12px; }
+.flash { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 4px var(--accent); }
+/* jam */
+.dtrow .dtbig.tm { flex: none; width: 82px; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dtrow .dtbig.tm.live { color: var(--muted); }
+.sheet.tp .sheet-b { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+.whw { position: relative; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.whsel { position: absolute; left: 50%; top: 80px; width: 210px; height: 40px; transform: translateX(-50%); border-radius: 12px; background: var(--accent-soft); pointer-events: none; }
+.wh { position: relative; height: 200px; width: 90px; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.wh::-webkit-scrollbar { display: none; }
+.whp { height: 80px; }
+.wi { display: block; width: 100%; height: 40px; scroll-snap-align: center; font-size: 22px; color: var(--muted); font-variant-numeric: tabular-nums; background: none; border: 0; }
+.wi.on { color: var(--ink); font-weight: 800; }
+.whc { font-size: 24px; position: relative; }
+/* kartu Rencana */
+.card.plan { padding: 14px 16px 8px; }
+.card.plan h3 { margin: 0; font-size: 16px; }
+.plr { display: block; width: 100%; text-align: left; padding: 10px 0; border: 0; border-top: 1px solid var(--line); background: none; color: var(--ink); font: inherit; }
+.card.plan .h2row + .plr { border-top: 0; }
+.plr .plt { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.plr .sr { gap: 8px; }
+.pst { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 7%, transparent); color: var(--muted); }
+.pst i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pst.ok { background: color-mix(in srgb, var(--in) 14%, transparent); color: var(--in); }
+.pst.warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.pst.bad { background: color-mix(in srgb, var(--out) 14%, transparent); color: var(--out); }
+.pbar.good i { background: var(--in); }
+.alert.note { border-left: 4px solid var(--accent); }

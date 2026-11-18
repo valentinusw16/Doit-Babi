@@ -84,7 +84,7 @@
     return h;
   }
   function blPick() {
-    var own = S.owner !== 'Semua' ? S.owner : S.cfg.user, have = {}; budgetLines().forEach(function (l) { if ((l.pemilik || own) === own) have[l.scope + ':' + l.key] = 1; });
+    var own = S.owner !== 'Semua' ? S.owner : S.cfg.user, have = {}; var cm = curMonth(); budgetLines().forEach(function (l) { if ((l.pemilik || own) === own && (!l.sampai || l.sampai >= cm)) have[l.scope + ':' + l.key] = 1; });
     var items = [];
     expenseGroups().forEach(function (g) { if (!have['grup:' + g]) items.push({v: 'grup:' + g, l: dn(g), g: t('bl.grp'), ico: X.catIcon(g)}); });
     S.M.kategori.forEach(function (c) { if (c.Jenis === 'Expense' && !have['sub:' + c.KodeAkun]) items.push({v: 'sub:' + c.KodeAkun, l: dn(c.SubKategori), g: dn(c.Kategori), s: t('bl.sub'), ico: X.catIcon(c.Kategori)}); });
@@ -309,22 +309,84 @@
     return '<div class="rutinbox">' + due.map(dueCard).join('') + sg.map(function (s, i) { return sugCard(s, i); }).join('') + '</div>';
   };
   X.hooks.homeTop = function () { var due = dueList().slice(0, 2); return due.length ? '<div class="rutinbox">' + due.map(dueCard).join('') + '</div>' : ''; };
-  X.hooks.homeMid = function () {
-    var h = '', lines = budgetLines();
+  // ---------------------------------------------------------------- v2.3: ringkasan Rencana (anggaran, acara, tujuan) + status
+  function stBud(p) { return p > 1 ? 'bad' : (p >= 0.8 ? 'warn' : 'ok'); }
+  function planState(owner) {
+    var today = C.todayLocal(), k = today.substr(0, 7), out = {bud: null, ev: [], gl: []};
+    var lines = budgetLines();
     if (lines.length) {
-      var k = C.todayLocal().substr(0, 7), bm = C2.budgetMonth(lines, S.tx, k, S.owner), T = bm.total, p = T.tersedia ? T.terpakai / T.tersedia : 0;
-      if (!bm.rows.length) return '';
-      h += '<button class="card tap bl homebud" data-act="page" data-v="rencana"><div class="ah"><span class="gi">' + ICON.plan + '</span><span>' + t('home.budget') + '</span><b class="' + (T.sisa < 0 ? 'out' : '') + '">' + esc(fm(T.sisa)) + '</b></div>' +
-        '<div class="sr"><span class="muted">' + esc(t('bl.used.of', C.fmtNum(T.terpakai), C.fmtNum(T.tersedia))) + '</span><b>' + pct(p) + '</b></div>' + pbar(p) + '</button>';
+      var bm = C2.budgetMonth(lines, S.tx, k, owner || 'Semua');
+      if (bm.rows.length) {
+        var T = bm.total, p = T.tersedia ? T.terpakai / T.tersedia : 0;
+        var tight = bm.rows.filter(function (r) { return r.tersedia > 0 || r.terpakai > 0; }).sort(function (a, b) { return b.pct - a.pct; });
+        out.bud = {T: T, p: p, st: stBud(p), rows: bm.rows, worst: tight[0] && tight[0].pct >= 0.8 ? tight[0] : null, nWarn: tight.filter(function (r) { return r.pct >= 0.8; }).length};
+      }
     }
-    return h;
+    rc.list('event').filter(function (e) { return e.aktif !== false; }).forEach(function (e) {
+      var a = C2.eventActual(e, S.tx), bud = +e.anggaran || 0, p = bud ? a.total / bud : 0;
+      var phase = e.mulai && e.mulai > today ? 1 : (e.selesai && e.selesai < today ? 2 : 0);
+      out.ev.push({e: e, a: a, bud: bud, p: p, st: bud ? stBud(p) : 'ok', phase: phase});
+    });
+    out.ev.sort(function (x, y) { return (x.phase - y.phase) || ((x.phase === 2 ? -1 : 1) * String(x.e.mulai || '').localeCompare(String(y.e.mulai || ''))); });
+    var wm = walletMap();
+    rc.list('tujuan').filter(function (g) { return g.aktif !== false; }).forEach(function (g) {
+      var p = C2.goalProgress(g, wm, today), st = p.selesai ? 'done' : (p.status === 'lewat' ? 'late' : (p.pct >= 0.9 ? 'near' : 'go'));
+      out.gl.push({g: g, p: p, st: st});
+    });
+    var rank = {late: 0, near: 1, go: 2, done: 3};
+    out.gl.sort(function (a, b) { return (rank[a.st] - rank[b.st]) || String(a.g.tenggat || '9999').localeCompare(String(b.g.tenggat || '9999')); });
+    return out;
+  }
+  var BADGE = {ok: ['ok', 'pl.st.ok'], warn: ['warn', 'pl.st.warn'], bad: ['bad', 'pl.st.bad'], done: ['ok', 'pl.st.done'], near: ['ok', 'pl.st.near'], late: ['warn', 'pl.st.late'], go: ['', 'pl.st.go']};
+  function badge(st) { var b = BADGE[st]; return '<span class="pst ' + b[0] + '"><i></i>' + esc(t(b[1])) + '</span>'; }
+  function planRow(tab, title, sub, p, st, more) {
+    return '<button class="plr tap" data-act="home-plan" data-v="' + tab + '"><div class="sr"><span class="plt">' + esc(title) + '</span>' + badge(st) + '</div>' +
+      '<div class="sr"><span class="muted sm">' + esc(sub) + '</span>' + (p != null ? '<b class="sm">' + pct(p) + '</b>' : '') + '</div>' + (p != null ? pbar(p, st === 'done' || st === 'near' ? 'good' : (st === 'late' ? 'warn' : '')) : '') +
+      (more ? '<div class="muted sm" style="margin-top:4px">' + esc(more) + '</div>' : '') + '</button>';
+  }
+  X.hooks.homeMid = function () {
+    var P = planState(S.owner), rows = [];
+    if (P.bud) {
+      var B = P.bud, more = B.worst ? t('pl.tight', lineName(B.worst.line) + (B.worst.line.pemilik && S.owner === 'Semua' ? ' (' + B.worst.line.pemilik + ')' : ''), pct(B.worst.pct)) + (B.nWarn > 1 ? ' · ' + t('pl.more.bud', B.nWarn - 1) : '') : '';
+      var bst = B.worst && B.worst.pct > 1 ? 'bad' : (B.worst && B.st === 'ok' ? 'warn' : B.st);
+      rows.push(planRow('anggaran', t('home.budget'), t('bl.used.of', X.shortRp(B.T.terpakai), X.shortRp(B.T.tersedia)), B.p, bst, more));
+    }
+    if (P.ev.length) {
+      var E = P.ev[0];
+      rows.push(planRow('event', t('pl.ev', E.e.nama), E.bud ? t('bl.used.of', X.shortRp(E.a.total), X.shortRp(E.bud)) : t('ev.spent', fm(E.a.total)), E.bud ? E.p : null, E.st, P.ev.length > 1 ? t('pl.more', P.ev.length - 1) : ''));
+    }
+    if (P.gl.length) {
+      var G = P.gl[0];
+      rows.push(planRow('tujuan', t('pl.gl', G.g.nama), t('bl.used.of', X.shortRp(G.p.terkumpul), X.shortRp(G.p.target)) + (G.g.tenggat ? ' · ' + t('gl.by', C.fmtTgl(G.g.tenggat)) : ''), G.p.pct, G.st, P.gl.length > 1 ? t('pl.more', P.gl.length - 1) : ''));
+    }
+    if (!rows.length) return '';
+    return '<div class="card plan"><div class="h2row" style="margin:0 0 4px"><h3>' + t('pl.title') + '</h3><button class="link" data-act="home-plan" data-v="' + (P.bud ? 'anggaran' : (P.ev.length ? 'event' : 'tujuan')) + '">' + t('see.all') + '</button></div>' + rows.join('') + '</div>';
   };
-  X.plan = {markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
+  /** Peringatan rencana untuk lonceng (gabungan semua pemilik). */
+  function planAlerts() {
+    var P = planState('Semua'), out = [];
+    if (P.bud) P.bud.rows.forEach(function (r) {
+      if (r.pct >= 0.8 && r.pct <= 1) out.push({level: 'warn', kode: 'pl.bud.near', id: r.line.id, args: [lineName(r.line) + (r.line.pemilik ? ' (' + r.line.pemilik + ')' : ''), Math.round(r.pct * 100), r.sisa]});
+    });
+    P.ev.forEach(function (E) {
+      if (!E.bud || E.phase === 2) return;
+      if (E.p > 1) out.push({level: 'bad', kode: 'pl.ev.over', id: E.e.id, args: [E.e.nama, E.a.total - E.bud]});
+      else if (E.p >= 0.8) out.push({level: 'warn', kode: 'pl.ev.near', id: E.e.id, args: [E.e.nama, Math.round(E.p * 100)]});
+    });
+    P.gl.forEach(function (G) {
+      if (G.st === 'done') out.push({level: 'note', kode: 'pl.gl.done', id: G.g.id, args: [G.g.nama, G.p.terkumpul]});
+      else if (G.st === 'near') out.push({level: 'note', kode: 'pl.gl.near', id: G.g.id, args: [G.g.nama, Math.round(G.p.pct * 100), G.p.sisa]});
+      else if (G.st === 'late') out.push({level: 'warn', kode: 'pl.gl.late', id: G.g.id, args: [G.g.nama, G.p.sisa]});
+    });
+    return out;
+  }
+  X.plan = {planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
 
   // ---------------------------------------------------------------- aksi
   function saveVia(promise, done) { PF.busy = true; PF.err = ''; renderForm(); promise.then(function () { PF = null; X.closeOverlays(); X.toast(t('saved')); X.render(); if (done) done(); }).catch(fail); }
   Object.assign(A, {
     'rn-tab': function (el) { S.rtab = el.dataset.v; X.render(); },
+    'home-plan': function (el) { S.rtab = el.dataset.v; X.openPage('rencana'); },
     'bm-prev': function () { S.bm = C2.addMonthKey(curMonth(), -1); X.render(); },
     'bm-next': function () { S.bm = C2.addMonthKey(curMonth(), 1); X.render(); },
     'bl-new': function () { blPick(); },
@@ -338,6 +400,7 @@
       var dup = budgetLines().some(function (l) { return l.id !== PF.id && l.scope === d.scope && l.key === d.key && l.pemilik === d.pemilik; });
       if (dup) { PF.err = t('bl.err.dup', d.pemilik); renderForm(); return; }
       var data = {scope: d.scope, key: d.key, pemilik: d.pemilik, rincian: rin, jumlah: jumlah, rollover: !!d.rollover, mulai: d.mulai || k, ov: ov, aktif: true};
+      if (d.sampai) data.sampai = d.sampai; if (d.sumber) data.sumber = d.sumber;
       saveVia(rc.save('anggaran', data, PF.id));
     },
     'bl-del': function () { if (!confirm(t('bl.del.q'))) return; var id = PF.id; saveVia(rc.remove(id)); },

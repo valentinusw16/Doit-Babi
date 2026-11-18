@@ -4,7 +4,7 @@
   'use strict';
   var X = window.DoIt;
   // Bila app.js yang termuat versi lama (cache/GitHub Pages belum sinkron), modul foto dilewati supaya aplikasi tetap jalan.
-  if (!X || !X.DB || !X.A || !X.rc || !X.savePref || !/^2\.2\./.test(X.VERSION || '')) return;
+  if (!X || !X.DB || !X.A || !X.rc || !X.savePref || !(function (v) { v = String(v || '0').split('.').map(Number); return v[0] > 2 || (v[0] === 2 && v[1] >= 2); })(X.VERSION)) return;
   var S = X.S, t = X.t, esc = X.esc, $ = X.$;
   var card = {url: null, loaded: false};
 

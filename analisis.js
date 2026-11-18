@@ -221,17 +221,20 @@
   // ---------------------------------------------------------------- peringatan (di lonceng)
   function warnList() {
     var key = (S._lines && S._lines.length) + '|' + S.rev + '|' + S.rencana.length + '|' + C.todayLocal();
-    if (S._wKey !== key) { S._wKey = key; try { S._w = C2.insights(snapshot(null)); } catch (e) { S._w = []; } }
+    if (S._wKey !== key) {
+      S._wKey = key; try { S._w = C2.insights(snapshot(null)); } catch (e) { S._w = []; }
+      try { if (X.plan && X.plan.planAlerts) { var pa = X.plan.planAlerts(), ord = {bad: 0, warn: 1, note: 2, good: 3}; S._w = S._w.concat(pa).sort(function (a, b) { return ord[a.level] - ord[b.level]; }); } } catch (e) {}
+    }
     return S._w;
   }
-  function sig(i) { return i.kode + ':' + i.level; }
+  function sig(i) { return i.kode + ':' + i.level + (i.id ? ':' + i.id : ''); }
   X.analisis = {
     newWarnCount: function () { if (!S.cfg) return 0; var seen = S.prefs.warnSeen || {}; return warnList().filter(function (i) { return i.level !== 'good' && !seen[sig(i)]; }).length; },
     markWarnSeen: function () { var m = {}; warnList().forEach(function (i) { m[sig(i)] = 1; }); S.prefs.warnSeen = m; X.persist(); },
     warnView: function () {
       var list = warnList(), seen = S.prefs.warnSeen || {}, bad = list.filter(function (i) { return i.level !== 'good'; }), good = list.filter(function (i) { return i.level === 'good'; });
       if (!list.length) return '<div class="card"><div class="empty">' + t('al.empty') + '</div></div>';
-      function card(i) { var tx = insightText(i), nw = i.level !== 'good' && !seen[sig(i)]; return '<div class="card alert ' + i.level + (nw ? ' new' : '') + '"><div class="ah"><span class="gi">' + (i.level === 'good' ? ICON.check : ICON.alert) + '</span><span>' + esc(tx.w) + '</span>' + (nw ? '<i class="dot"></i>' : '') + '</div>' + (i.level !== 'good' && tx.a ? '<div class="adv"><b>' + t('al.action') + '</b> ' + esc(tx.a) + '</div>' : '') + '</div>'; }
+      function card(i) { var tx = insightText(i), nw = i.level !== 'good' && !seen[sig(i)]; return '<div class="card alert ' + i.level + (nw ? ' new' : '') + '"><div class="ah"><span class="gi">' + (i.level === 'good' ? ICON.check : (i.level === 'note' ? ICON.target : ICON.alert)) + '</span><span>' + esc(tx.w) + '</span>' + (nw ? '<i class="dot"></i>' : '') + '</div>' + (i.level !== 'good' && tx.a && t('a.' + i.kode) !== 'a.' + i.kode ? '<div class="adv"><b>' + t('al.action') + '</b> ' + esc(tx.a) + '</div>' : '') + '</div>'; }
       return '<div class="muted sm" style="margin:0 4px 8px">' + t('al.note') + '</div>' + (bad.length ? bad.map(card).join('') : '<div class="card"><div class="empty">' + t('al.none') + '</div></div>') +
         (good.length ? '<h2>' + t('al.good') + '</h2>' + good.map(card).join('') : '') + '<div style="margin-top:8px"><button class="link" data-act="home-ratio">' + t('al.toratio') + '</button></div>';
     }
