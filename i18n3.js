@@ -13,7 +13,7 @@
     'cp.blur': 'Blur', 'cp.blur.0': 'Tidak', 'cp.blur.1': 'Sedikit', 'cp.blur.2': 'Kuat', 'cp.dim': 'Lapisan gelap', 'cp.dim.0': 'Tipis', 'cp.dim.1': 'Sedang', 'cp.dim.2': 'Tebal',
     'cp.pos': 'Posisi foto', 'cp.pos.top': 'Atas', 'cp.pos.center': 'Tengah', 'cp.pos.bottom': 'Bawah', 'cp.saved': 'Foto kartu disimpan', 'cp.deleted': 'Foto kartu dihapus', 'cp.fail': 'Foto tidak bisa dibuka.',
     'set.photos': 'Foto',
-    'f.t.done': 'Selesai', 'f.t.live.s': 'waktu saat disimpan', 'kp.next': 'Lanjut', 'kp.del': 'Hapus', 'kp.err.amt': 'Isi nominal lebih dari 0', 'kp.err.res': 'Hasil harus lebih dari 0'
+    'f.t.done': 'Selesai', 'set.hard': 'Muat ulang aplikasi (bersih)', 'set.hard.s': 'Ambil ulang semua file aplikasi dari server. Data transaksi tidak terhapus.', 'f.t.live.s': 'waktu saat disimpan', 'kp.next': 'Lanjut', 'kp.del': 'Hapus', 'kp.err.amt': 'Isi nominal lebih dari 0', 'kp.err.res': 'Hasil harus lebih dari 0'
     , 'pl.title': 'Rencana', 'pl.ev': 'Acara · {0}', 'pl.gl': 'Tujuan · {0}', 'pl.tight': 'Paling mepet: {0} {1}', 'pl.more': '+{0} lainnya', 'pl.more.bud': '{0} pos lain juga perlu dicek',
     'pl.st.ok': 'Aman', 'pl.st.warn': 'Hampir', 'pl.st.bad': 'Lewat', 'pl.st.done': 'Tercapai', 'pl.st.near': 'Hampir tercapai', 'pl.st.late': 'Terlambat', 'pl.st.go': 'Berjalan',
     'w.pl.bud.near': 'Anggaran {0} sudah terpakai {1}%. Sisa Rp {2}.', 'a.pl.bud.near': 'Tahan pengeluaran di pos ini, atau realokasi dari pos lain.',
@@ -36,7 +36,7 @@
     'cp.blur': 'Blur', 'cp.blur.0': 'None', 'cp.blur.1': 'Light', 'cp.blur.2': 'Strong', 'cp.dim': 'Dark overlay', 'cp.dim.0': 'Light', 'cp.dim.1': 'Medium', 'cp.dim.2': 'Heavy',
     'cp.pos': 'Photo position', 'cp.pos.top': 'Top', 'cp.pos.center': 'Center', 'cp.pos.bottom': 'Bottom', 'cp.saved': 'Card photo saved', 'cp.deleted': 'Card photo removed', 'cp.fail': 'Could not open the photo.',
     'set.photos': 'Photos',
-    'f.t.done': 'Done', 'f.t.live.s': 'time of saving', 'kp.next': 'Next', 'kp.del': 'Delete', 'kp.err.amt': 'Enter an amount above 0', 'kp.err.res': 'Result must be above 0'
+    'f.t.done': 'Done', 'set.hard': 'Reload app (clean)', 'set.hard.s': 'Fetch all app files again from the server. Your data is not deleted.', 'f.t.live.s': 'time of saving', 'kp.next': 'Next', 'kp.del': 'Delete', 'kp.err.amt': 'Enter an amount above 0', 'kp.err.res': 'Result must be above 0'
     , 'pl.title': 'Plan', 'pl.ev': 'Event · {0}', 'pl.gl': 'Goal · {0}', 'pl.tight': 'Tightest: {0} {1}', 'pl.more': '+{0} more', 'pl.more.bud': '{0} more lines to check',
     'pl.st.ok': 'On track', 'pl.st.warn': 'Close', 'pl.st.bad': 'Over', 'pl.st.done': 'Reached', 'pl.st.near': 'Almost there', 'pl.st.late': 'Late', 'pl.st.go': 'In progress',
     'w.pl.bud.near': 'Budget {0} is {1}% used. Rp {2} left.', 'a.pl.bud.near': 'Hold spending here, or reallocate from another line.',

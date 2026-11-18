@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '2.3.0', APP_NAME = 'Do it';
+  var VERSION = '2.3.1', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -590,7 +590,7 @@
         (o.error ? '<button class="btn sm danger" data-act="q-drop" data-id="' + esc(o.id) + '">' + t('d.drop') + '</button>' : '') + '</div>';
     }).join('');
     h += '</div><h2>' + t('set.device') + '</h2><div class="card"><dl class="kv"><dt>' + t('set.user') + '</dt><dd>' + esc(S.cfg.user) + '</dd><dt>' + t('set.server') + '</dt><dd>…' + esc(S.cfg.url.slice(-18)) + '</dd><dt>' + t('set.version') + '</dt><dd>' + VERSION + '</dd></dl>' +
-      '<div class="btnrow2"><button class="btn" data-act="full-sync">' + t('set.reload') + '</button><button class="btn danger" data-act="logout">' + t('set.logout') + '</button></div></div>';
+      '<button class="btn" style="margin-top:10px" data-act="hard-reload">' + t('set.hard') + '</button><div class="muted sm" style="margin:6px 2px 10px">' + t('set.hard.s') + '</div>' + '<div class="btnrow2"><button class="btn" data-act="full-sync">' + t('set.reload') + '</button><button class="btn danger" data-act="logout">' + t('set.logout') + '</button></div></div>';
     return h + '<div class="note2">' + t('set.note') + '</div>';
   }
 
@@ -1386,6 +1386,7 @@
     menu: showMenu, 'ov-close': function () { closeOverlays(); },
     add: function () { openForm({jenis: 'Expense'}); },
     sync: function () { S.authFail = false; syncNow({force: true}); },
+    'hard-reload': function () { if (window.doitRescue) window.doitRescue(); else location.reload(); },
     'full-sync': function () { syncNow({full: true, master: true, force: true}); toast(t('set.reloading')); },
     'theme-cycle': function () { S.pref.mode = {auto: 'light', light: 'dark', dark: 'auto'}[S.pref.mode] || 'auto'; savePref(); render(); toast(t('theme.' + S.pref.mode)); },
     'lang-toggle': function () { S.pref.lang = S.pref.lang === 'en' ? 'id' : 'en'; savePref(); render(); },
