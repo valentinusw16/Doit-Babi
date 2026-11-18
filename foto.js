@@ -2,7 +2,10 @@
    dan foto latar kartu Kekayaan bersih (hanya di HP ini, IndexedDB). */
 (function () {
   'use strict';
-  var X = window.DoIt, S = X.S, t = X.t, esc = X.esc, $ = X.$;
+  var X = window.DoIt;
+  // Bila app.js yang termuat versi lama (cache/GitHub Pages belum sinkron), modul foto dilewati supaya aplikasi tetap jalan.
+  if (!X || !X.DB || !X.A || !X.rc || !X.savePref || !/^2\.2\./.test(X.VERSION || '')) return;
+  var S = X.S, t = X.t, esc = X.esc, $ = X.$;
   var card = {url: null, loaded: false};
 
   // ---------------------------------------------------------------- olah gambar
@@ -129,6 +132,9 @@
     el.value = '';
   });
   var start0 = X.start;
-  X.start = function () { loadCard().then(function () { if (S.cfg) X.render(); }); start0(); };
+  X.start = function () {
+    start0();
+    try { loadCard().then(function () { if (card.url && S.cfg && S.master) X.render(); }).catch(function () {}); } catch (e) {}
+  };
   X.foto = {avImg: avImg, avHTML: avHTML, avatarData: avatarData, loadCard: loadCard};
 })();

@@ -21,7 +21,7 @@ d.setAttribute('data-theme',p.theme||'rose');d.setAttribute('lang',p.lang||'id')
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="app"><div class="splash">Memuat…</div></div>
+<div id="app"><div class="splash">Memuat…<div id="rescue" style="display:none;margin-top:18px;font-size:14px;line-height:1.5;padding:0 24px">Aplikasi belum tampil. Biasanya karena file lama masih tersimpan di HP.<br><button onclick="doitRescue()" style="margin-top:12px;padding:11px 18px;border-radius:12px;border:0;background:#c0275f;color:#fff;font:inherit;font-weight:700">Muat ulang bersih</button></div></div></div>
 <div id="overlay"></div>
 <div id="overlay2"></div>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -36,6 +36,20 @@ d.setAttribute('data-theme',p.theme||'rose');d.setAttribute('lang',p.lang||'id')
 <script src="port.js"></script>
 <script src="analisis.js"></script>
 <script src="foto.js"></script>
-<script>DoIt.start();</script>
+<script>
+(function () {
+  window.doitRescue = function () {
+    var done = function () { location.replace(location.pathname + '?r=' + Date.now()); };
+    try {
+      var jobs = [];
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+      if (window.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+      Promise.all(jobs).then(done, done);
+    } catch (e) { done(); }
+  };
+  setTimeout(function () { var s = document.querySelector('.splash'), r = document.getElementById('rescue'); if (s && r) r.style.display = 'block'; }, 8000);
+  try { DoIt.start(); } catch (e) { var r = document.getElementById('rescue'); if (r) r.style.display = 'block'; }
+})();
+</script>
 </body>
 </html>
