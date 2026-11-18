@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '2.1.0', APP_NAME = 'Do it';
+  var VERSION = '2.2.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -24,6 +24,7 @@
     sun: sv('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
     moon: sv('<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'),
     auto: sv('<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" fill="currentColor" stroke="none"/>'),
+    cal: sv('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'),
     copy: sv('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h9"/>'),
     wallet: sv('<path d="M3 7a2 2 0 0 1 2-2h13v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 13.5h.01"/>'),
     people: sv('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.3-5.5 6.5-5.5s5.9 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.2 2.5 3.5 5.2"/>'),
@@ -363,7 +364,8 @@
     if (S.authFail) h += '<div class="err">' + t('home.authfail') + '</div>';
     h += '<div class="ddrow">' + ownerChips(S.owner, 'owner') + '</div>';
     h += X.hooks.homeTop ? X.hooks.homeTop() : '';
-    h += '<div class="card hero"><div class="lbl">' + t('home.net') + (S.owner !== 'Semua' ? ' · ' + esc(S.owner) : '') + '</div><div class="big">' + esc(C.fmtRp(A.bs.aset.total - A.bs.liabilitas.total)) + '</div>' +
+    var hbg = X.hooks.heroBg ? X.hooks.heroBg() : null;
+    h += '<div class="card hero' + (hbg ? ' photo ' + hbg.cls : '') + '">' + (hbg ? hbg.html : '') + '<div class="lbl">' + t('home.net') + (S.owner !== 'Semua' ? ' · ' + esc(S.owner) : '') + '</div><div class="big">' + esc(C.fmtRp(A.bs.aset.total - A.bs.liabilitas.total)) + '</div>' +
       '<div class="sub2">' + esc(t('home.assets', C.fmtRp(A.bs.aset.total))) + ' · ' + esc(t('home.debt', C.fmtRp(A.bs.liabilitas.total))) + '</div>' +
       '<div class="inout"><button class="tap" data-act="page" data-v="income"><span>' + t('home.in') + '</span><b class="in">' + esc(C.fmtRp(is.pendapatan.total)) + '</b></button><button class="tap" data-act="page" data-v="expense"><span>' + t('home.out') + '</span><b class="out">' + esc(C.fmtRp(is.beban.total)) + '</b></button></div></div>';
     h += X.hooks.homeRatio ? X.hooks.homeRatio(f) : '';
@@ -572,7 +574,7 @@
   }
   var THEMES = [['rose', ['#fbf3f4', '#c0275f', '#fbe1e8']], ['navy', ['#f5efeb', '#2f4156', '#c8d9e6']], ['mono', ['#f4f4f4', '#111111', '#ebebeb']]];
   function vSettings() {
-    var h = '<h2>' + t('set.look') + '</h2><div class="card"><div class="lbl3">' + t('set.mode') + '</div><div class="seg">' +
+    var h = (X.hooks.settingsTop ? X.hooks.settingsTop() : '') + '<h2>' + t('set.look') + '</h2><div class="card"><div class="lbl3">' + t('set.mode') + '</div><div class="seg">' +
       ['auto', 'light', 'dark'].map(function (m) { return '<button class="' + (S.pref.mode === m ? 'on' : '') + '" data-act="pref-mode" data-v="' + m + '">' + t('set.mode.' + m) + '</button>'; }).join('') + '</div>' +
       '<div class="lbl3">' + t('set.palette') + '</div><div class="themes">' + THEMES.map(function (x) {
         return '<button class="theme' + (S.pref.theme === x[0] ? ' on' : '') + '" data-act="pref-theme" data-v="' + x[0] + '"><div class="sw">' + x[1].map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('') + '</div><b>' + t('set.pal.' + x[0]) + '</b></button>';
@@ -770,7 +772,7 @@
     if (S.tab !== 'beranda') { S.anim = 'back'; S.tab = 'beranda'; S.limit = 80; render(); window.scrollTo(0, 0); pushSentinel(); return; }
     pushSentinel(); exitDialog();
   });
-  function closeOverlays() { $('#overlay').innerHTML = ''; $('#overlay2').innerHTML = ''; F = null; FX = null; D = null; P = null; W = null; K = null; PR = null; }
+  function closeOverlays() { $('#overlay').innerHTML = ''; $('#overlay2').innerHTML = ''; CAL = null; F = null; FX = null; D = null; P = null; W = null; K = null; PR = null; }
 
   // geser kiri/kanan untuk pindah menu bawah (tidak aktif di atas barisan yang bisa digulir ke samping)
   function hScrollable(el) {
@@ -810,7 +812,7 @@
     var cur = p ? 'menu' : S.tab, unread = unreadCount();
     var nav = [['beranda', 'nav.home', ICON.home], ['transaksi', 'nav.tx', ICON.list], ['add'], ['laporan', 'nav.report', ICON.chart], ['menu', 'nav.menu', ICON.grid]];
     $('#app').innerHTML = '<div class="app"><header class="top">' +
-      (p ? '<button class="hb back" data-act="back" aria-label="' + t('back') + '">' + ICON.back + '</button>' : '') +
+      (p ? '<button class="hb back" data-act="back" aria-label="' + t('back') + '">' + ICON.back + '</button>' : (X.hooks.avatar ? X.hooks.avatar() : '')) +
       '<div class="title"><span class="tt">' + esc(title) + '</span><button id="sync" class="sync" data-act="sync"><i></i></button></div>' +
       '<button class="hb bell" data-act="page" data-v="notif" aria-label="' + t('pg.notif') + '" title="' + t('pg.notif') + '">' + ICON.bell + (unread ? '<b class="bdg">' + (unread > 9 ? '9+' : unread) + '</b>' : '') + '</button>' +
       '<button class="hb" data-act="theme-cycle" aria-label="' + t('theme.' + mode) + '" title="' + t('theme.' + mode) + '">' + mIco + '</button>' +
@@ -897,7 +899,7 @@
     var opts = [['f.due.2w', d14.toISOString().substr(0, 10)], ['f.due.3m', C.addMonths(base, 3)], ['f.due.1y', C.addMonths(base, 12)], ['f.due.2y', C.addMonths(base, 24)]];
     var jg = ''; try { jg = C.jangka(base, F.jatuhTempo); } catch (e) { jg = ''; }
     return '<label class="lbl2">' + t('f.due') + '</label><div class="chips">' + opts.map(function (o) { return '<button class="chip sm' + (F.jatuhTempo === o[1] ? ' on' : '') + '" data-act="f-due" data-v="' + o[1] + '">' + t(o[0]) + '</button>'; }).join('') + '</div>' +
-      '<input class="input" type="date" style="margin-top:8px" value="' + esc(F.jatuhTempo) + '" data-bind="jatuhTempo" data-rerender="1">' +
+      '<button class="dtbig" style="margin-top:8px" data-act="f-cal" data-target="jatuhTempo">' + ICON.cal + '<span>' + esc(F.jatuhTempo ? dayName(F.jatuhTempo) + ', ' + C.fmtTgl(F.jatuhTempo) : t('f.d.pick')) + '</span></button>' +
       (jg ? '<div class="muted sm" style="margin-top:6px">' + esc(t('f.tenor', t('jg.' + jg))) + '</div>' : '');
   }
   function loanCards(kind) {
@@ -919,6 +921,70 @@
       return '<button class="chip' + (F[field] === i.v ? ' on' : '') + '" data-act="f-wallet" data-field="' + field + '" data-v="' + esc(i.v) + '">' + esc(i.l) + '</button>';
     }).join('') + '<button class="chip more" data-act="f-wallet-all" data-field="' + field + '">' + t('f.wallet.more') + '</button></div>';
   }
+  // ---- v2.2: tanggal & jam tanpa pemilih bawaan HP (iPhone menutup pemilih bila formulir digambar ulang)
+  function addDays(ymd, n) { var d = new Date(ymd + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().substr(0, 10); }
+  function dayOff(n) { return addDays(C.todayLocal(), n); }
+  function dayName(ymd) { var d = new Date(ymd + 'T00:00:00Z'), i = (d.getUTCDay() + 6) % 7; return t('an.days.full').split(',')[i]; }
+  function fDate() { return F.waktu ? F.waktu.substr(0, 10) : C.todayLocal(); }
+  function fTime() { return F.waktu ? F.waktu.substr(11, 5) : ''; }
+  function setWaktu(d, tm) {
+    if (F.jenis === 'Saldo awal') { F.waktu = d + 'T00:00'; return; }
+    if (!tm && d === C.todayLocal()) { F.waktu = ''; return; }
+    F.waktu = d + 'T' + (tm || C.nowLocal().substr(11, 5));
+  }
+  function parseTime(v) {
+    v = String(v || '').trim(); if (!v) return '';
+    var m = /^(\d{1,2})[:.](\d{1,2})$/.exec(v), hh, mm;
+    if (m) { hh = +m[1]; mm = +m[2]; }
+    else { var d = v.replace(/\D/g, ''); if (!d || d.length > 4) return null; if (d.length <= 2) { hh = +d; mm = 0; } else { hh = +d.slice(0, d.length - 2); mm = +d.slice(-2); } }
+    if (hh > 23 || mm > 59) return null;
+    return C.pad(hh) + ':' + C.pad(mm);
+  }
+  function dtBlock() {
+    var d = fDate(), tm = fTime(), now = C.nowLocal().substr(11, 5), h = '<div id="f-dt"><label class="lbl2">' + t('f.dt') + '</label>';
+    if (FX.copy && FX.orig) {
+      var o = FX.orig;
+      h += '<div class="seg cpw"><button class="' + (F.waktu === o ? 'on' : '') + '" data-act="f-copyt" data-v="orig"><b>' + t('f.copy.orig') + '</b><small>' + esc(C.fmtTgl(o.substr(0, 10)) + ' · ' + o.substr(11, 5)) + '</small></button>' +
+        '<button class="' + (!F.waktu ? 'on' : '') + '" data-act="f-copyt" data-v="now"><b>' + t('f.copy.now') + '</b><small>' + esc(C.fmtTgl(C.todayLocal()) + ' · ' + C.nowLocal().substr(11, 5)) + '</small></button></div>';
+    }
+    h += '<div class="chips">' + [0, -1, -2].map(function (n) { return '<button class="chip sm' + (d === dayOff(n) ? ' on' : '') + '" data-act="f-day" data-v="' + n + '">' + t('f.d.' + (-n)) + '</button>'; }).join('') +
+      '<button class="chip sm more" data-act="f-cal" data-target="waktu">' + ICON.cal + t('f.d.pick') + '</button></div>';
+    h += '<div class="dtrow"><button class="ib" data-act="f-dshift" data-v="-1" aria-label="' + t('f.d.prev') + '">‹</button><button class="dtbig" data-act="f-cal" data-target="waktu"><span>' + esc(dayName(d) + ', ' + C.fmtTgl(d)) + '</span></button>' +
+      '<button class="ib" data-act="f-dshift" data-v="1" aria-label="' + t('f.d.next') + '">›</button>' +
+      '<input class="input tm" id="f-time" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="' + now + '" value="' + esc(tm) + '" data-time="1" aria-label="' + t('f.t') + '"></div>';
+    h += '<div class="chips tmchips"><button class="chip sm' + (!tm ? ' on' : '') + '" data-act="f-time" data-v="now">' + t('f.t.now') + '</button>' +
+      [['07:00', 'f.t.pagi'], ['12:00', 'f.t.siang'], ['17:00', 'f.t.sore'], ['20:00', 'f.t.malam']].map(function (x) { return '<button class="chip sm' + (tm === x[0] ? ' on' : '') + '" data-act="f-time" data-v="' + x[0] + '">' + t(x[1]) + ' ' + x[0] + '</button>'; }).join('') +
+      '<button class="chip sm" data-act="f-time" data-v="-15">−15 ' + t('f.t.min') + '</button><button class="chip sm" data-act="f-time" data-v="15">+15 ' + t('f.t.min') + '</button></div>';
+    if (!tm) h += '<div class="muted sm" style="margin-top:6px">' + t('f.t.live') + '</div>';
+    return h + '</div>';
+  }
+  // ---- kalender buatan aplikasi
+  var CAL = null;
+  function openCal(target) {
+    var v = target === 'jatuhTempo' ? (F.jatuhTempo || addDays(fDate(), 30)) : fDate();
+    CAL = {target: target, sel: target === 'jatuhTempo' ? F.jatuhTempo : v, y: +v.substr(0, 4), m: +v.substr(5, 2)};
+    renderCal();
+  }
+  function renderCal() {
+    var y = CAL.y, m = CAL.m, first = new Date(Date.UTC(y, m - 1, 1)), lead = (first.getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, m, 0)).getUTCDate(), today = C.todayLocal(), cells = '';
+    t('an.days').split(',').forEach(function (d) { cells += '<div class="cw">' + esc(d) + '</div>'; });
+    for (var i = 0; i < lead; i++) cells += '<div></div>';
+    for (var dd2 = 1; dd2 <= days; dd2++) {
+      var ymd = y + '-' + C.pad(m) + '-' + C.pad(dd2);
+      cells += '<button class="cd' + (ymd === CAL.sel ? ' on' : '') + (ymd === today ? ' td' : '') + '" data-act="cal-pick" data-v="' + ymd + '">' + dd2 + '</button>';
+    }
+    var ttl = CAL.target === 'jatuhTempo' ? t('f.due') : t('f.date');
+    $('#overlay2').innerHTML = '<div class="scrim" data-act="cal-close"></div><div class="sheet cal"><div class="sheet-h"><div class="sh-t">' + esc(ttl) + '</div><button class="x" data-act="cal-close" aria-label="' + t('close') + '">' + ICON.x + '</button></div>' +
+      '<div class="sheet-b"><div class="calh"><button class="ib" data-act="cal-nav" data-v="-1">‹</button><b>' + esc(C.namaBulan(m) + ' ' + y) + '</b><button class="ib" data-act="cal-nav" data-v="1">›</button></div>' +
+      '<div class="calg">' + cells + '</div><div class="btnrow2" style="margin-top:12px"><button class="btn" data-act="cal-pick" data-v="' + (CAL.target === 'jatuhTempo' ? '' : today) + '">' + t(CAL.target === 'jatuhTempo' ? 'f.d.clear' : 'f.d.0') + '</button><button class="btn" data-act="cal-close">' + t('close') + '</button></div></div></div>';
+  }
+  function pickCal(v) {
+    var tg = CAL.target; CAL = null; $('#overlay2').innerHTML = '';
+    if (!F) return;
+    if (tg === 'jatuhTempo') F.jatuhTempo = v;
+    else if (v) setWaktu(v, fTime());
+    renderForm();
+  }
   function formHTML() {
     var f = F, h = '', title = FX.edit ? t('f.fix') : (f.jenis === 'Saldo awal' ? t('f.opening') : (FX.copy ? t('f.copy') : t('f.new')));
     h += '<div class="sheet-h"><div class="sh-t">' + title + '</div><button class="x" data-act="f-close" aria-label="' + t('close') + '">' + ICON.x + '</button></div><div class="sheet-b" id="formbody">';
@@ -929,6 +995,7 @@
     }
     if (!FX.edit && f.jenis !== 'Saldo awal' && X.plan && X.plan.myRecs().length) h += '<div class="fromrec"><button class="dd" data-act="f-rec"><span>' + ICON.repeat + ' ' + esc(FX.recName || t('f.fromrec')) + '</span><i>' + ICON.chevd + '</i></button></div>';
     h += '<label class="amt"><span>Rp</span><input id="f-jumlah" inputmode="numeric" autocomplete="off" placeholder="0" value="' + (f.jumlah ? C.fmtNum(f.jumlah) : '') + '" data-amt="1"></label>';
+    if (f.jenis !== 'Saldo awal') h += dtBlock();
     if (f.jenis === 'Expense' || f.jenis === 'Income') {
       h += '<label class="lbl2">' + t('f.cat') + '</label><div class="chips">' + topKat(f.jenis).map(function (i) {
         var k = S.M.katByKode[i.v];
@@ -951,7 +1018,7 @@
         h += '<label class="lbl2">' + t('f.party') + '</label>' + pihakChips() + dueChips();
         h += '<label class="lbl2">' + t('f.owner') + '</label>' + chips(S.M.users.map(function (u) { return {v: u, l: u}; }), f.pemilik || S.cfg.user, 'f-owner');
       }
-      h += '<label class="lbl2">' + t('f.date') + '</label><input class="input" type="date" value="' + esc((f.waktu || '').substr(0, 10)) + '" data-date="1" data-rerender="1">';
+      h += '<label class="lbl2">' + t('f.date') + '</label><div class="dtrow"><button class="ib" data-act="f-dshift" data-v="-1">‹</button><button class="dtbig" data-act="f-cal" data-target="open">' + ICON.cal + '<span>' + esc(dayName(fDate()) + ', ' + C.fmtTgl(fDate())) + '</span></button><button class="ib" data-act="f-dshift" data-v="1">›</button></div>';
     }
     if (f.jenis !== 'Saldo awal') {
       function acIn(key, col, ph) { return '<div class="acw"><input class="input" data-bind="' + key + '" data-ac="' + col + '" value="' + esc(f[key]) + '" autocomplete="off"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + '><div class="acl"></div></div>'; }
@@ -962,8 +1029,7 @@
         if (f.jenis === 'Expense') h += '<label class="lbl2">' + t('f.item') + '</label>' + acIn('barang', 'Barang') + (f.barang || !f.toko ? '' : sugChips('Barang', 'barang'));
       }
       h += '<label class="lbl2">' + t('f.tag') + '</label>' + acIn('tag', 'Tag', t('f.tag.ph'));
-      h += '<label class="lbl2">' + t('f.note') + '</label>' + acIn('catatan', 'Catatan');
-      h += '<label class="lbl2">' + t('f.when') + '</label><input class="input" type="datetime-local" value="' + esc(f.waktu) + '" data-bind="waktu" data-rerender="1"></div>';
+      h += '<label class="lbl2">' + t('f.note') + '</label>' + acIn('catatan', 'Catatan') + '</div>';
     }
     h += '</div><div class="sheet-f">' + (FX.err ? '<div class="err">' + esc(FX.err) + '</div>' : '') + '<button class="btn primary" data-act="f-save">' + (FX.edit ? t('f.save.fix') : t('save')) + '</button></div>';
     return h;
@@ -1102,10 +1168,10 @@
       }).join('') : '<div class="empty sm">' + t('d.norepay') + '</div>') + '</div>';
   }
   function copyTx(x) {
-    var f = rowToForm(x); f.waktu = '';
+    var f = rowToForm(x);
     if (C.isRepay(x)) { f.referensi = ''; f.jumlah = Number(x.Jumlah); }
     if (C.loanKind(x)) f.jatuhTempo = '';
-    openForm(f, {copy: true});
+    openForm(f, {copy: true, orig: x.Waktu});
   }
   function cancelTx(id) {
     var x = S.tx[id]; if (!x) return;
@@ -1326,6 +1392,20 @@
       openPicker({title: t('f.party.title'), items: items, allowAdd: true, onPick: function (it) { F.pihak = it.v; closePicker(); renderForm(); }, onAdd: function (nama) { addPihak(nama); F.pihak = nama; closePicker(); renderForm(); }});
     },
     'f-due': function (el) { F.jatuhTempo = el.dataset.v; renderForm(); },
+    'f-day': function (el) { setWaktu(dayOff(+el.dataset.v), fTime()); renderForm(); },
+    'f-dshift': function (el) { setWaktu(addDays(fDate(), +el.dataset.v), fTime()); renderForm(); },
+    'f-cal': function (el) { openCal(el.dataset.target); },
+    'cal-nav': function (el) { var m = CAL.m + (+el.dataset.v); CAL.y += m < 1 ? -1 : (m > 12 ? 1 : 0); CAL.m = m < 1 ? 12 : (m > 12 ? 1 : m); renderCal(); },
+    'cal-pick': function (el) { pickCal(el.dataset.v); },
+    'cal-close': function () { CAL = null; $('#overlay2').innerHTML = ''; },
+    'f-copyt': function (el) { F.waktu = el.dataset.v === 'orig' ? FX.orig : ''; renderForm(); },
+    'f-time': function (el) {
+      var v = el.dataset.v, d = fDate();
+      if (v === 'now') setWaktu(d, d === C.todayLocal() ? '' : C.nowLocal().substr(11, 5));
+      else if (/^[-\d]+$/.test(v)) { var base = fTime() || C.nowLocal().substr(11, 5), mi = Math.max(0, Math.min(1439, +base.substr(0, 2) * 60 + +base.substr(3, 2) + (+v))); setWaktu(d, C.pad(Math.floor(mi / 60)) + ':' + C.pad(mi % 60)); }
+      else setWaktu(d, v);
+      renderForm();
+    },
     'f-loan': function (el) {
       var l = C.openLoans(S.tx, FX.edit).filter(function (x) { return x.id === el.dataset.v; })[0]; if (!l) return;
       F.referensi = l.id; F.pihak = l.pihak; if (!F.jumlah || F.jumlah > l.sisa) F.jumlah = l.sisa; renderForm();
@@ -1376,16 +1456,18 @@
     }
     if (el.dataset.pr && PR) { PR.nama = el.value; return; }
     if (el.dataset.k && K) { K[el.dataset.k] = el.value; return; }
+    if (el.dataset.time && F) { var pt = parseTime(el.value); if (pt) setWaktu(fDate(), pt); return; }
     if (el.dataset.amt && F) { var d = el.value.replace(/\D/g, '').substr(0, 13); F.jumlah = d ? Number(d) : 0; el.value = d ? C.fmtNum(d) : ''; return; }
     if (el.dataset.money && F) { var m = el.value.replace(/\D/g, '').substr(0, 11); F[el.dataset.money] = m ? Number(m) : ''; el.value = m ? C.fmtNum(m) : ''; return; }
     if (el.dataset.bind && F && !el.dataset.rerender) { F[el.dataset.bind] = el.value; if (el.dataset.ac) acShow(el); }
   });
+  document.addEventListener('focusin', function (e) { var el = e.target; if (F && el.dataset && el.dataset.time) { el._prev = F.waktu; el.placeholder = el.value || C.nowLocal().substr(11, 5); el.value = ''; } });
+  document.addEventListener('focusout', function (e) { var el = e.target; if (F && el.dataset && el.dataset.time) { var pt = parseTime(el.value); if (pt === null) { toast(t('f.t.bad')); if (el._prev !== undefined) F.waktu = el._prev; } el.value = fTime(); el.placeholder = C.nowLocal().substr(11, 5); } });
   document.addEventListener('focusin', function (e) { var el = e.target; if (F && el.dataset && el.dataset.ac) { setTimeout(function () { try { el.scrollIntoView({block: 'start', behavior: 'smooth'}); } catch (x) {} }, 250); acShow(el); } });
   document.addEventListener('focusout', function (e) { var el = e.target; if (el.dataset && el.dataset.ac) setTimeout(function () { var l = el.nextElementSibling; if (l && document.activeElement !== el) l.innerHTML = ''; }, 200); });
   document.addEventListener('change', function (e) {
     var el = e.target;
     if (!F) return;
-    if (el.dataset.date) { F.waktu = el.value ? el.value + 'T00:00' : ''; renderForm(); return; }
     if (el.dataset.bind && el.dataset.rerender) { F[el.dataset.bind] = el.value; renderForm(); }
   });
 
@@ -1452,7 +1534,7 @@
     donut: donut, legend: legend, sparkline: sparkline, shortRp: shortRp, perChips: perChips, rangeOf: rangeOf, periodOf: periodOf, prevOf: prevOf, ownerChips: ownerChips, fObj: fObj, getLines: getLines, kodeToDompet: kodeToDompet,
     assetGroups: assetGroups, byTimeDesc: byTimeDesc, catIcon: catIcon, chips: chips, enqueue: enqueue, syncNow: syncNow, persist: persist, touch: touch, srvErr: srvErr, waitMaster: waitMaster,
     isNonOp: isNonOp, getOpLines: getOpLines, splitIS: splitIS, dd: dd, openChoice: openChoice, vAsset: vAsset, NONOP_G: NONOP_G, newForm: newForm, defaultWallet: defaultWallet,
-    rc: {list: rcList, save: rcSave, remove: rcRemove, batch: rcBatch}, shareDoc: shareDoc, pushSentinelOnce: pushSentinelOnce, signAmt: signAmt, debtPeople: debtPeople, unreadCount: unreadCount, VERSION: VERSION});
+    DB: DB, lsGet: lsGet, lsSet: lsSet, savePref: savePref, parseTime: parseTime, rc: {list: rcList, save: rcSave, remove: rcRemove, batch: rcBatch}, shareDoc: shareDoc, pushSentinelOnce: pushSentinelOnce, signAmt: signAmt, debtPeople: debtPeople, unreadCount: unreadCount, VERSION: VERSION});
   X.jpg = window.DoItJpg;
   X.start = start;
 })();

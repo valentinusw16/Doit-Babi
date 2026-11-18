@@ -344,3 +344,50 @@ button.tile > svg { position: absolute; right: 10px; top: 12px; width: 16px; hei
 .sankey svg path, .sankey svg rect, .sankey svg text { stroke: none; } .sankey svg text { stroke-width: 0; }
 .spark path[fill="none"] { fill: none; } .spark circle { stroke: none; }
 #formbody { padding-bottom: 240px; }
+
+/* ================================================================ v2.2 */
+/* tanggal & jam */
+#f-dt .chips { margin-bottom: 8px; }
+.chip.more svg, .dtbig svg { width: 16px; height: 16px; vertical-align: -3px; margin-right: 5px; }
+.dtrow { display: flex; align-items: center; gap: 6px; }
+.dtrow .ib, .calh .ib { flex: none; width: 40px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-size: 22px; line-height: 1; color: var(--ink); }
+.dtbig { flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 15px; font-weight: 600; padding: 0 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+button.dtbig { display: block; width: 100%; }
+.dtrow .dtbig { width: auto; }
+.dtrow .input.tm { flex: none; width: 82px; height: 44px; text-align: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; padding: 0 6px; }
+.tmchips { margin-top: 8px; }
+.seg.cpw { margin-bottom: 8px; }
+.seg.cpw button { font-size: 12.5px; padding: 8px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* kalender */
+.sheet.cal .sheet-b { padding-bottom: 18px; }
+.calh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.calh b { font-size: 16px; }
+.calg { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.calg .cw { text-align: center; font-size: 12px; color: var(--muted); padding: 4px 0; }
+.calg .cd { aspect-ratio: 1; border-radius: 12px; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--ink); background: transparent; }
+.calg .cd.td { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.calg .cd.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+/* foto profil */
+.avbtn { flex: none; padding: 0; border: 0; background: none; margin-right: 2px; }
+.av { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; overflow: hidden; background: var(--accent-soft); color: var(--accent); flex: none; box-shadow: 0 0 0 2px var(--card); }
+.av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.av b { font-size: 15px; font-weight: 800; }
+.av.lg { width: 64px; height: 64px; } .av.lg b { font-size: 26px; }
+.avrow { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.avrow .t { font-weight: 700; }
+/* foto kartu utama */
+.hero.photo { position: relative; overflow: hidden; isolation: isolate; color: #fff; border-color: transparent; }
+.hero.photo .hbg { position: absolute; inset: -24px; z-index: -2; background-size: cover; background-repeat: no-repeat; }
+.hero.photo .hdim { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.52)); }
+.hero.photo.dm0 .hdim { background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.34)); }
+.hero.photo.dm2 .hdim { background: linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.7)); }
+.hero.photo.bl1 .hbg { filter: blur(6px); }
+.hero.photo.bl2 .hbg { filter: blur(16px); }
+.hero.photo .lbl, .hero.photo .sub2 { color: rgba(255,255,255,.86); }
+.hero.photo .big { color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.35); }
+.hero.photo .inout button { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.22); color: #fff; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.hero.photo .inout span { color: rgba(255,255,255,.85); }
+.hero.photo .inout b.in { color: #b9f6cf; } .hero.photo .inout b.out { color: #ffc9c9; }
+.hero.cprev { margin: 12px 0 4px; }
+.seg.cpw button { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 4px; }
+.seg.cpw button b { font-size: 13.5px; } .seg.cpw button small { font-size: 11.5px; font-weight: 500; opacity: .8; }
