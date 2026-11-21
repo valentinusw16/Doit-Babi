@@ -14,28 +14,29 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <script>(function(){try{var p=JSON.parse(localStorage.getItem('kk.pref')||'{}'),d=document.documentElement,m=p.mode||'auto';
-d.setAttribute('data-theme',p.theme||'rose');d.setAttribute('lang',p.lang||'id');d.setAttribute('data-dark',(m==='dark'||(m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'1':'0');}catch(e){}})();</script>
+d.setAttribute('data-theme',p.theme||'rose');d.setAttribute('data-gaya',p.gaya==='bersih'?'bersih':'kaca');d.setAttribute('data-sb',p.sb||'auto');d.setAttribute('lang',p.lang||'id');d.setAttribute('data-dark',(m==='dark'||(m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches))?'1':'0');}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="style.css?v=2.4.0">
+<link rel="stylesheet" href="style.css?v=3.0.0">
 </head>
 <body>
 <div id="app"><div class="splash">Memuat…<div id="rescue" style="display:none;margin-top:18px;font-size:14px;line-height:1.5;padding:0 24px">Aplikasi belum tampil. Biasanya karena file lama masih tersimpan di HP.<br><button onclick="doitRescue()" style="margin-top:12px;padding:11px 18px;border-radius:12px;border:0;background:#c0275f;color:#fff;font:inherit;font-weight:700">Muat ulang bersih</button></div></div></div>
 <div id="overlay"></div>
 <div id="overlay2"></div>
 <div id="toast" role="status" aria-live="polite"></div>
-<script src="core.js?v=2.4.0"></script>
-<script src="core2.js?v=2.4.0"></script>
-<script src="i18n.js?v=2.4.0"></script>
-<script src="i18n2.js?v=2.4.0"></script>
-<script src="i18n3.js?v=2.4.0"></script>
-<script src="jpg.js?v=2.4.0"></script>
-<script src="app.js?v=2.4.0"></script>
-<script src="plan.js?v=2.4.0"></script>
-<script src="port.js?v=2.4.0"></script>
-<script src="analisis.js?v=2.4.0"></script>
-<script src="foto.js?v=2.4.0"></script>
+<script src="core.js?v=3.0.0"></script>
+<script src="core2.js?v=3.0.0"></script>
+<script src="i18n.js?v=3.0.0"></script>
+<script src="i18n2.js?v=3.0.0"></script>
+<script src="i18n3.js?v=3.0.0"></script>
+<script src="jpg.js?v=3.0.0"></script>
+<script src="app.js?v=3.0.0"></script>
+<script src="plan.js?v=3.0.0"></script>
+<script src="port.js?v=3.0.0"></script>
+<script src="analisis.js?v=3.0.0"></script>
+<script src="foto.js?v=3.0.0"></script>
+<script src="desk.js?v=3.0.0"></script>
 <script>
 (function () {
   window.doitRescue = function () {
@@ -50,7 +51,7 @@ d.setAttribute('data-theme',p.theme||'rose');d.setAttribute('lang',p.lang||'id')
   setTimeout(function () { var s = document.querySelector('.splash'), r = document.getElementById('rescue'); if (s && r) r.style.display = 'block'; }, 8000);
   // Semua modul harus versi sama. Bila ada yang tertinggal (cache lama), bersihkan sekali lalu muat ulang.
   try {
-    var want = window.DoIt && DoIt.VERSION, mods = (window.DoIt && DoIt.ver) || {}, bad = ['plan', 'port', 'analisis', 'foto'].filter(function (k) { return mods[k] !== want; });
+    var want = window.DoIt && DoIt.VERSION, mods = (window.DoIt && DoIt.ver) || {}, bad = ['plan', 'port', 'analisis', 'foto', 'desk'].filter(function (k) { return mods[k] !== want; });
     if (bad.length && !sessionStorage.getItem('doit.fix')) { sessionStorage.setItem('doit.fix', '1'); doitRescue(); return; }
     if (!bad.length) sessionStorage.removeItem('doit.fix');
   } catch (e) {}

@@ -12,7 +12,7 @@
       'saved': 'Tersimpan', 'canceled': 'Dibatalkan', 'need.net': 'Perlu koneksi internet.', 'server.old': 'Server belum diperbarui. Pasang Code.gs versi terbaru dulu.',
       // navigasi
       'nav.home': 'Beranda', 'nav.tx': 'Transaksi', 'nav.add': 'Catat', 'nav.report': 'Laporan', 'nav.menu': 'Menu',
-      'pg.income': 'Pemasukan', 'pg.expense': 'Pengeluaran', 'pg.assets': 'Aset', 'pg.receivable': 'Piutang', 'pg.payable': 'Utang',
+      'pg.income': 'Pendapatan', 'pg.expense': 'Pengeluaran', 'pg.assets': 'Aset', 'pg.receivable': 'Piutang', 'pg.payable': 'Utang',
       'pg.parties': 'Pihak', 'pg.categories': 'Kategori', 'pg.opening': 'Saldo awal', 'pg.settings': 'Pengaturan',
       // periode
       'per.hari': 'Hari ini', 'per.bulan': 'Bulan ini', 'per.lalu': 'Bulan lalu', 'per.tahun': 'Tahun ini', 'per.semua': 'Semua',
@@ -52,7 +52,7 @@
       'f.cat.title': 'Kategori', 'f.wallet.title': 'Pilih aset', 'f.party.title': 'Pilih pihak', 'f.party.add': 'Tambah "{0}"', 'f.party.add.s': 'Sebagai pihak baru',
       'f.wallet.more': 'Lainnya…', 'opening.saved': 'Saldo awal tersimpan',
       // halaman arus
-      'flow.total.in': 'Total pemasukan', 'flow.total.out': 'Total pengeluaran', 'flow.bygroup': 'Per kategori', 'flow.list': 'Transaksi', 'flow.empty': 'Tidak ada transaksi di periode ini.',
+      'flow.total.in': 'Total pendapatan', 'flow.total.out': 'Total pengeluaran', 'flow.bygroup': 'Per kategori', 'flow.list': 'Transaksi', 'flow.empty': 'Tidak ada transaksi di periode ini.',
       'flow.up': 'naik {0}%', 'flow.down': 'turun {0}%', 'flow.same': 'sama',
       // pinjaman
       'loan.total.Piutang': 'Total piutang belum lunas', 'loan.total.Utang': 'Total utang belum lunas', 'loan.overdue': 'lewat tempo', 'loan.due': 'tempo {0}',

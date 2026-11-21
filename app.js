@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '2.4.0', APP_NAME = 'Do it';
+  var VERSION = '3.0.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -96,7 +96,7 @@
     lastSync: 0, online: true, syncing: false, again: false, authFail: false, inflight: null, dirty: false,
     prev: 0, rencana: [], act: [], actReady: false, custom: null, debtF: 'Semua', tab: 'beranda', page: null, stack: [], anim: '', owner: 'Semua', q: '', showVoid: false, limit: 80, txPer: 'bulan', per: 'bulan', katJenis: 'Expense',
     rep: {kind: 'is', period: 'bulan', dim: 'pemilik', who: 'Semua', limit: 50}, _lines: null, flowK: 'expense', ntab: 'notif',
-    pref: Object.assign({theme: 'rose', mode: 'auto', lang: 'id'}, lsGet('kk.pref') || {})
+    pref: Object.assign({theme: 'rose', mode: 'auto', lang: 'id', gaya: 'kaca', sb: 'auto'}, lsGet('kk.pref') || {})
   };
   var persistT = null;
   function persist() {
@@ -122,6 +122,7 @@
   function applyTheme() {
     var d = document.documentElement;
     d.setAttribute('data-theme', S.pref.theme || 'rose'); d.setAttribute('data-dark', isDark() ? '1' : '0'); d.setAttribute('lang', S.pref.lang);
+    d.setAttribute('data-gaya', S.pref.gaya === 'bersih' ? 'bersih' : 'kaca'); d.setAttribute('data-sb', S.pref.sb || 'auto');
     L.set(S.pref.lang); C.setLang(S.pref.lang);
     var bg = getComputedStyle(d).getPropertyValue('--bg').trim(), m = document.querySelector('meta[name=theme-color]');
     if (m && bg) m.setAttribute('content', bg);
@@ -355,38 +356,40 @@
 
   // ---------------------------------------------------------------- Beranda
   function vBeranda() {
+    if (X.hooks.homePre) X.hooks.homePre();
     var f = fObj(S.owner), r = rangeOf('bulan'), lines = getOpLines();
     var A = assetGroups(f), is = C.incomeStatement(lines, S.M, r.start, r.end, f);
     var loans = C.openLoans(S.tx).filter(function (l) { return !f || l.pemilik === f.pemilik; });
     var piutang = sum(loans.filter(function (l) { return l.kind === 'Piutang'; }), function (l) { return l.sisa; });
     var utang = sum(loans.filter(function (l) { return l.kind === 'Utang'; }), function (l) { return l.sisa; });
-    var h = '', failed = opsFailed();
-    if (failed.length) h += '<div class="err tap" data-act="page" data-v="settings">' + t('home.failed', failed.length) + '</div>';
-    if (S.authFail) h += '<div class="err">' + t('home.authfail') + '</div>';
-    h += '<div class="ddrow">' + ownerChips(S.owner, 'owner') + '</div>';
-    h += X.hooks.homeTop ? X.hooks.homeTop() : '';
+    var P = {f: f, is: is, A: A, piutang: piutang, utang: utang}, failed = opsFailed();
+    P.banner = (failed.length ? '<div class="err tap" data-act="page" data-v="settings">' + t('home.failed', failed.length) + '</div>' : '') + (S.authFail ? '<div class="err">' + t('home.authfail') + '</div>' : '');
+    P.owner = '<div class="ddrow">' + ownerChips(S.owner, 'owner') + '</div>';
+    P.top = X.hooks.homeTop ? X.hooks.homeTop() : '';
     var hbg = X.hooks.heroBg ? X.hooks.heroBg() : null;
-    h += '<div class="card hero' + (hbg ? ' photo ' + hbg.cls : '') + '">' + (hbg ? hbg.html : '') + '<div class="lbl">' + t('home.net') + (S.owner !== 'Semua' ? ' · ' + esc(S.owner) : '') + '</div><div class="big">' + esc(C.fmtRp(A.bs.aset.total - A.bs.liabilitas.total)) + '</div>' +
+    P.hero = '<div class="card hero' + (hbg ? ' photo ' + hbg.cls : '') + '">' + (hbg ? hbg.html : '') + '<div class="lbl">' + t('home.net') + (S.owner !== 'Semua' ? ' · ' + esc(S.owner) : '') + '</div><div class="big">' + esc(C.fmtRp(A.bs.aset.total - A.bs.liabilitas.total)) + '</div>' +
       '<div class="sub2">' + esc(t('home.assets', C.fmtRp(A.bs.aset.total))) + ' · ' + esc(t('home.debt', C.fmtRp(A.bs.liabilitas.total))) + '</div>' +
+      (X.hooks.heroExtra ? X.hooks.heroExtra(f) : '') +
       '<div class="inout"><button class="tap" data-act="page" data-v="income"><span>' + t('home.in') + '</span><b class="in">' + esc(C.fmtRp(is.pendapatan.total)) + '</b></button><button class="tap" data-act="page" data-v="expense"><span>' + t('home.out') + '</span><b class="out">' + esc(C.fmtRp(is.beban.total)) + '</b></button></div></div>';
-    h += X.hooks.homeRatio ? X.hooks.homeRatio(f) : '';
-    h += X.hooks.homeSankey ? X.hooks.homeSankey(is) : '';
-    h += X.hooks.homeMid ? X.hooks.homeMid() : '';
-    h += '<div class="h2row"><h2>' + t('home.assets.h') + '</h2><button class="link" data-act="page" data-v="portfolio">' + t('see.all') + '</button></div>';
-    h += A.groups.length ? '<div class="card">' + A.groups.map(function (g) {
-      var pg = isPiutangGroup(g);
-      return '<div class="row tap" ' + (pg ? 'data-act="page" data-v="receivable"' : 'data-act="page" data-v="portfolio" data-g="' + esc(g.nama) + '"') + '><div class="ico">' + catIcon(g.nama) + '</div><div class="grow"><div class="t">' + esc(dn(g.nama)) + '</div><div class="s">' + esc(t('home.grp.n', g.rows.length)) + '</div></div><div class="a">' + esc(C.fmtRp(g.total)) + '</div>' + ICON.chev + '</div>';
-    }).join('') + '</div>' : '<div class="card"><div class="empty">' + t('home.empty.assets') + '</div></div>';
-    h += '<div class="tiles">' +
+    P.ratio = X.hooks.homeRatio ? X.hooks.homeRatio(f) : '';
+    P.sankey = X.hooks.homeSankey ? X.hooks.homeSankey(is) : '';
+    P.mid = X.hooks.homeMid ? X.hooks.homeMid() : '';
+    P.assets = '<div class="h2row"><h2>' + t('home.assets.h') + '</h2><button class="link" data-act="page" data-v="portfolio">' + t('see.all') + '</button></div>' +
+      (A.groups.length ? '<div class="card">' + A.groups.map(function (g) {
+        var pg = isPiutangGroup(g);
+        return '<div class="row tap" ' + (pg ? 'data-act="page" data-v="receivable"' : 'data-act="page" data-v="portfolio" data-g="' + esc(g.nama) + '"') + '><div class="ico">' + catIcon(g.nama) + '</div><div class="grow"><div class="t">' + esc(dn(g.nama)) + '</div><div class="s">' + esc(t('home.grp.n', g.rows.length)) + '</div></div><div class="a">' + esc(C.fmtRp(g.total)) + '</div>' + ICON.chev + '</div>';
+      }).join('') + '</div>' : '<div class="card"><div class="empty">' + t('home.empty.assets') + '</div></div>');
+    P.tiles = '<div class="tiles">' +
       '<button class="tile tap" data-act="page" data-v="receivable"><div class="lbl">' + t('home.recv') + '</div><div class="val">' + esc(C.fmtRp(piutang)) + '</div>' + ICON.chev + '</button>' +
       '<button class="tile tap" data-act="page" data-v="payable"><div class="lbl">' + t('home.pay') + '</div><div class="val">' + esc(C.fmtRp(utang)) + '</div>' + ICON.chev + '</button></div>';
     var recent = C.recent(S.tx, null, 5), today = C.todayLocal();
     var todayAll = Object.keys(S.tx).filter(function (k) { var x = S.tx[k]; return x.Status === 'Aktif' && x.Waktu.substr(0, 10) === today; }).length;
     var shownToday = recent.filter(function (x) { return x.Waktu.substr(0, 10) === today; }).length;
-    h += '<div class="h2row"><h2>' + t('home.recent') + '</h2><button class="link" data-act="tab" data-v="transaksi">' + t('see.all') + '</button></div><div class="card">' +
-      (recent.length ? recent.map(txRow).join('') : '<div class="empty">' + t('home.empty.tx') + '</div>') +
+    P.recentH = '<div class="h2row"><h2>' + t('home.recent') + '</h2><button class="link" data-act="tab" data-v="transaksi">' + t('see.all') + '</button></div>';
+    P.recent = '<div class="card">' + (recent.length ? recent.map(txRow).join('') : '<div class="empty">' + t('home.empty.tx') + '</div>') +
       (todayAll > shownToday ? '<button class="more-row" data-act="tx-today">' + t('home.today.more', todayAll - shownToday) + '</button>' : '') + '</div>';
-    return h;
+    if (X.hooks.homeLayout) return X.hooks.homeLayout(P);
+    return P.banner + P.owner + P.top + P.hero + P.ratio + P.sankey + P.mid + P.assets + P.tiles + P.recentH + P.recent;
   }
 
   // ---------------------------------------------------------------- Transaksi
@@ -413,7 +416,7 @@
     return '<div class="card sumcard"><div><span>' + t('tx.sum.in') + '</span><b class="in">' + esc(C.fmtRp(inn)) + '</b></div><div><span>' + t('tx.sum.out') + '</span><b class="out">' + esc(C.fmtRp(out)) + '</b></div>' +
       '<div><span>' + t('tx.sum.net') + '</span><b class="' + (inn - out < 0 ? 'out' : '') + '">' + esc(C.fmtRp(inn - out)) + '</b></div><small>' + t('tx.sum.count', C.fmtNum(rows.length)) + '</small></div>';
   }
-  function txBody() { var rows = txFiltered(); return txSummary(rows) + txListGrouped(rows, S.limit, 'more'); }
+  function txBody() { var rows = txFiltered(); return txSummary(rows) + (X.hooks.txTable && X.wide && X.wide() ? X.hooks.txTable(rows, S.limit) : txListGrouped(rows, S.limit, 'more')); }
   function vTransaksi() {
     return '<div class="stick"><div class="ddrow">' + perChips(S.txPer, 'txper') + ownerChips(S.owner, 'owner') + '<button class="chip sm' + (S.showVoid ? ' on' : '') + '" data-act="void-toggle">' + t('tx.void') + '</button></div>' +
       '<input class="search" id="q" type="search" placeholder="' + esc(t('tx.search')) + '" value="' + esc(S.q) + '" autocomplete="off"></div>' +
@@ -812,17 +815,18 @@
     var mode = S.pref.mode, mIco = mode === 'light' ? ICON.sun : (mode === 'dark' ? ICON.moon : ICON.auto);
     var cur = p ? 'menu' : S.tab, unread = unreadCount();
     var nav = [['beranda', 'nav.home', ICON.home], ['transaksi', 'nav.tx', ICON.list], ['add'], ['laporan', 'nav.report', ICON.chart], ['menu', 'nav.menu', ICON.grid]];
+    document.documentElement.setAttribute('data-view', p ? p.name : S.tab);
     $('#app').innerHTML = '<div class="app"><header class="top">' +
       (p ? '<button class="hb back" data-act="back" aria-label="' + t('back') + '">' + ICON.back + '</button>' : (X.hooks.avatar ? X.hooks.avatar() : '')) +
       '<div class="title"><span class="tt">' + esc(title) + '</span><button id="sync" class="sync" data-act="sync"><i></i></button></div>' +
-      '<button class="hb bell" data-act="page" data-v="notif" aria-label="' + t('pg.notif') + '" title="' + t('pg.notif') + '">' + ICON.bell + (unread ? '<b class="bdg">' + (unread > 9 ? '9+' : unread) + '</b>' : '') + '</button>' +
+      (X.hooks.topExtra ? X.hooks.topExtra() : '') + '<button class="hb bell" data-act="page" data-v="notif" aria-label="' + t('pg.notif') + '" title="' + t('pg.notif') + '">' + ICON.bell + (unread ? '<b class="bdg">' + (unread > 9 ? '9+' : unread) + '</b>' : '') + '</button>' +
       '<button class="hb" data-act="theme-cycle" aria-label="' + t('theme.' + mode) + '" title="' + t('theme.' + mode) + '">' + mIco + '</button>' +
       '<button class="hb lang" data-act="lang-toggle" aria-label="' + t('lang.switch') + '">' + (S.pref.lang === 'en' ? 'EN' : 'ID') + '</button></header>' +
       '<main class="' + (anim ? 'anim-' + anim : '') + '">' + view + '</main></div>' +
       '<nav class="bottom"><div class="in">' + nav.map(function (n) {
         if (n[0] === 'add') return '<button class="addbtn" data-act="add" aria-label="' + t('nav.add') + '"><span>' + ICON.plus + '</span>' + t('nav.add') + '</button>';
         return '<button class="' + (cur === n[0] ? 'on' : '') + '" data-act="' + (n[0] === 'menu' ? 'menu' : 'tab') + '" data-v="' + n[0] + '"><span class="pill">' + n[2] + '</span>' + t(n[1]) + '</button>';
-      }).join('') + '</div></nav>';
+      }).join('') + '</div></nav>' + (X.hooks.sidebar ? X.hooks.sidebar(cur) : '');
     setBadge();
     if (!anim) window.scrollTo(0, y);
   }
@@ -1599,7 +1603,7 @@
       return r.ids;
     });
   }
-  Object.assign(X, {S: S, C: C, C2: C2, L: L, t: t, esc: esc, $: $, sum: sum, ICON: ICON, A: A, dn: dn, api: api, render: render, openPage: openPage, goBack: goBack, setTab: setTab, toast: toast,
+  Object.assign(X, {isDark: isDark, applyTheme: applyTheme, openMenu: showMenu, openSetup: renderSetup, S: S, C: C, C2: C2, L: L, t: t, esc: esc, $: $, sum: sum, ICON: ICON, A: A, dn: dn, api: api, render: render, openPage: openPage, goBack: goBack, setTab: setTab, toast: toast,
     openForm: openForm, rowToForm: rowToForm, openPicker: openPicker, closePicker: closePicker, closeOverlays: closeOverlays, openDetail: openDetail, txRow: txRow, txView: txView, txListGrouped: txListGrouped,
     donut: donut, legend: legend, sparkline: sparkline, shortRp: shortRp, perChips: perChips, rangeOf: rangeOf, periodOf: periodOf, prevOf: prevOf, ownerChips: ownerChips, fObj: fObj, getLines: getLines, kodeToDompet: kodeToDompet,
     assetGroups: assetGroups, byTimeDesc: byTimeDesc, catIcon: catIcon, chips: chips, enqueue: enqueue, syncNow: syncNow, persist: persist, touch: touch, srvErr: srvErr, waitMaster: waitMaster,

@@ -22,11 +22,11 @@
     'w.pl.gl.done': 'Tujuan {0} tercapai: terkumpul Rp {1}.', 'a.pl.gl.done': 'Tandai selesai atau naikkan targetnya di menu Rencana.',
     'w.pl.gl.near': 'Tujuan {0} hampir tercapai ({1}%). Kurang Rp {2}.', 'a.pl.gl.near': 'Sedikit lagi.',
     'w.pl.gl.late': 'Tenggat tujuan {0} sudah lewat, masih kurang Rp {1}.', 'a.pl.gl.late': 'Perpanjang tenggat atau tambah setoran.'
-    , 'bl.j.exp': 'Pengeluaran', 'bl.j.inc': 'Pemasukan', 'bl.total.inc': 'Target pemasukan', 'bl.got': 'Terealisasi {0}', 'bl.inc.over': 'Lebih {0}', 'bl.inc.short': 'Kurang {0}',
+    , 'bl.j.exp': 'Pengeluaran', 'bl.j.inc': 'Pendapatan', 'bl.total.inc': 'Target pendapatan', 'bl.got': 'Terealisasi {0}', 'bl.inc.over': 'Lebih {0}', 'bl.inc.short': 'Kurang {0}',
     'bl.cat.hint': 'Isi anggaran per kategori. Ketuk "Lainnya" untuk merinci per subkategori.', 'bl.none': 'Belum dianggarkan', 'bl.tap.set': 'Ketuk untuk mengisi anggaran',
     'bl.more': 'Lainnya ({0} subkategori)', 'bl.less': 'Tutup', 'bl.fill': 'Isi anggaran', 'bl.whole': 'Seluruh kategori',
     'bl.replace.hint': 'Mengisi subkategori menggantikan nominal anggaran kategori ini. Jumlah kategori mengikuti jumlah subkategorinya.',
-    'bva.surplus': 'Surplus', 'bva.note': 'Selisih positif berarti menguntungkan: pemasukan di atas anggaran atau pengeluaran di bawah anggaran. Kategori tanpa anggaran dihitung 0.'
+    'bva.surplus': 'Surplus', 'bva.note': 'Selisih positif berarti menguntungkan: pendapatan di atas anggaran atau pengeluaran di bawah anggaran. Kategori tanpa anggaran dihitung 0.'
     , 'bva.diff': 'Selisih'
   });
   I.add('en', {

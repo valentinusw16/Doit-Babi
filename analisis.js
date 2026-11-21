@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '2.4.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.0.0';
 /* Do it v2.1 - analisis: Tren (6/12 bulan, per kategori, tahun lalu, naik/turun, per hari), Rasio + rincian hitungan,
    Peringatan (di lonceng), Sankey Beranda, Arus Kas, Anggaran vs Realisasi. Semua memakai garis operasional
    (tanpa "Di Luar Operasional" = untung/rugi belum terealisasi). */
@@ -200,7 +200,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '2.4.0'
     var right = top(is.beban.groups, 5).map(function (g, i) { return {l: g.other ? g.nama : dn(g.nama), v: g.total, c: CH[Math.min(i, 6)]}; });
     if (I > E) right.push({l: t('sk.save'), v: I - E, c: 'var(--accent)', save: 1});
     if (E > I) left.push({l: t('sk.deficit'), v: E - I, c: '#8d99ae'});
-    var T = Math.max(I, E), W = 340, nw = 8, gap = 6, Hc = 200, mid = (W - nw) / 2;
+    var O = X.sankeyOpt || {}, FM = O.fmt || X.shortRp, T = Math.max(I, E), W = O.W || 340, nw = 8, gap = O.gap || 6, Hc = O.Hc || 200, mid = (W - nw) / 2;
     var nL = left.length, nR = right.length, H = Hc + gap * Math.max(nL, nR) + 30, sc = Hc / T;
     function stack(arr, x) { var y = 22 + (Math.max(nL, nR) - arr.length) * gap / 2; arr.forEach(function (n) { n.x = x; n.y = y; n.h = Math.max(1.5, n.v * sc); y += n.h + gap; }); }
     stack(left, 0); stack(right, W - nw);
@@ -212,10 +212,10 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '2.4.0'
     svg += '<rect x="' + mid + '" y="' + my.toFixed(1) + '" width="' + nw + '" height="' + mh.toFixed(1) + '" rx="2" fill="var(--ink)"/>';
     function lbl(n, right) {
       if (n.h < 9) return ''; var x = right ? W - nw - 4 : nw + 4, y = n.y + Math.min(n.h / 2, 12) + 3.5;
-      return '<text x="' + x + '" y="' + y.toFixed(1) + '" class="skl" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(n.l) + ' <tspan class="skv">' + esc(X.shortRp(n.v)) + '</tspan></text>';
+      return '<text x="' + x + '" y="' + y.toFixed(1) + '" class="skl" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(n.l) + ' <tspan class="skv">' + esc(FM(n.v)) + '</tspan></text>';
     }
     left.forEach(function (n) { svg += lbl(n, false); }); right.forEach(function (n) { svg += lbl(n, true); });
-    svg += '<text x="' + (mid + nw / 2) + '" y="14" class="skl" text-anchor="middle">' + esc(t('sk.mid', X.shortRp(I))) + '</text>';
+    svg += '<text x="' + (mid + nw / 2) + '" y="14" class="skl" text-anchor="middle">' + esc(t('sk.mid', FM(I))) + '</text>';
     return '<div class="card sankey"><div class="ah"><span>' + t('home.flow') + '</span><button class="link" data-act="page" data-v="expense">' + t('see.all') + '</button></div><svg viewBox="0 0 ' + W + ' ' + H.toFixed(0) + '">' + svg + '</svg></div>';
   };
 

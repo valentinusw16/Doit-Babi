@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '2.4.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.0.0';
 /* Do it v2.1 - Portofolio: semua aset dari pembukuan + nilai terkini.
    - Kas: nilai = saldo buku.
    - Investasi (wadah): isi per emiten/produk (lot, harga rata-rata) + sisa kas; deposito/SBN dihitung dari bunga.

@@ -160,7 +160,7 @@
 
   // ---------------------------------------------------------------- v2.1
   I.add('id', {
-    'pg.flow': 'Pemasukan & Pengeluaran', 'n.tab.notif': 'Notifikasi', 'n.tab.warn': 'Peringatan', 'dd.owner': 'Pilih pemilik', 'dd.rep': 'Pilih laporan', 'dd.dim': 'Dasar pemilik',
+    'pg.flow': 'Pendapatan & Pengeluaran', 'n.tab.notif': 'Notifikasi', 'n.tab.warn': 'Peringatan', 'dd.owner': 'Pilih pemilik', 'dd.rep': 'Pilih laporan', 'dd.dim': 'Dasar pemilik',
     'f.opt': 'Detail (opsional)', 'f.source': 'Sumber / toko', 'f.fromrec': 'Isi dari transaksi rutin', 'f.fromrec.g': 'Rutin milikmu',
     'home.ratio': 'Kesehatan keuangan', 'home.flow': 'Aliran uang bulan ini', 'home.grp.n': '{0} akun',
     'sk.other': 'Lainnya', 'sk.save': 'Sisa', 'sk.deficit': 'Dari saldo', 'sk.mid': 'Pendapatan {0}',
