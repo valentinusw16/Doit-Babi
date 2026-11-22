@@ -27,15 +27,9 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['ux'] = '3.3.0';
 
   // ---------------------------------------------------------------- animasi: pengaturan
   var mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-  function animOn() { return S.pref.anim !== 'off' && !(mq && mq.matches); }
+  function animOn() { return false; } /* v3.4.2: semua animasi dimatikan */
   function applyAnim() { document.documentElement.setAttribute('data-anim', animOn() ? 'on' : 'off'); }
   applyAnim(); if (mq && mq.addEventListener) mq.addEventListener('change', applyAnim);
-  var prevSet = X.hooks.settingsTop;
-  X.hooks.settingsTop = function () {
-    var h = prevSet ? prevSet() : '';
-    return h + '<div class="card"><div class="lbl3">' + t('ux.t') + '</div><div class="seg">' + ['on', 'off'].map(function (v) { return '<button class="' + ((S.pref.anim === 'off' ? 'off' : 'on') === v ? 'on' : '') + '" data-act="ux-anim" data-v="' + v + '">' + t('ux.' + v) + '</button>'; }).join('') +
-      '</div><div class="muted sm" style="margin-top:8px">' + t('ux.s') + '</div></div>';
-  };
   A['ux-anim'] = function (el) { S.pref.anim = el.dataset.v === 'off' ? 'off' : 'on'; X.savePref(); applyAnim(); X.render(); };
 
   // ---------------------------------------------------------------- animasi: kartu berurutan + hitung naik

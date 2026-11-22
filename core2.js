@@ -165,16 +165,16 @@
 
   // ------------------------------------------------------------ event
   function eventActual(ev, txMap) {
-    var tag = String(ev.tag || '').toLowerCase().replace(/^#/, ''), total = 0, byGrup = {}, n = 0;
-    if (!tag) return {total: 0, byGrup: {}, n: 0};
+    var tag = String(ev.tag || '').toLowerCase().replace(/^#/, ''), total = 0, byGrup = {}, bySub = {}, n = 0;
+    if (!tag) return {total: 0, byGrup: {}, bySub: {}, n: 0};
     for (var id in txMap) {
       var x = txMap[id];
       if (x.Status !== 'Aktif' || x.Jenis !== 'Expense') continue;
       var tags = String(x.Tag || '').toLowerCase().split(/[\s,]+/).map(function (s) { return s.replace(/^#/, ''); });
       if (tags.indexOf(tag) < 0) continue;
-      total += +x.Jumlah; n++; byGrup[x.Kategori] = (byGrup[x.Kategori] || 0) + (+x.Jumlah);
+      total += +x.Jumlah; n++; byGrup[x.Kategori] = (byGrup[x.Kategori] || 0) + (+x.Jumlah); bySub[x.KodeAkun] = (bySub[x.KodeAkun] || 0) + (+x.Jumlah);
     }
-    return {total: total, byGrup: byGrup, n: n};
+    return {total: total, byGrup: byGrup, bySub: bySub, n: n};
   }
 
   // ------------------------------------------------------------ tujuan (dana goals)

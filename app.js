@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.4.1', APP_NAME = 'Do it';
+  var VERSION = '3.4.2', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -441,18 +441,17 @@
       (cmp ? '<div class="sub2">' + esc(cmp) + ' ' + t('per.vs') + ' (' + esc(C.fmtRp(prevTot)) + ')</div>' : '') + '</div>';
     var trend = X.trendFlow ? X.trendFlow(kind, f) : '';
     if (!part.total) return h + '<div class="card"><div class="empty">' + t('flow.empty') + '</div></div>' + trend;
-    h += '<div class="card pie-one">' + donut(part.groups, part.total, t(isInc ? 'tx.sum.in' : 'tx.sum.out')) + legend(part.groups, part.total) + '</div>' + trend;
-    h += '<h2>' + t('flow.bygroup') + '</h2>' + part.groups.map(function (g, i) {
+    var rows = Object.keys(S.tx).map(function (k) { return S.tx[k]; }).filter(function (x) {
+      var d = x.Waktu.substr(0, 10); return x.Status === 'Aktif' && !isNonOp(x.KodeAkun) && x.Jenis === (isInc ? 'Income' : 'Expense') && d >= r.start && d <= r.end && (!f || x.PemilikDompet === f.pemilik);
+    }).sort(byTimeDesc);
+    h += '<div class="card pie-one">' + donut(part.groups, part.total, t(isInc ? 'tx.sum.in' : 'tx.sum.out')) + legend(part.groups, part.total) + '</div>' + (X.viz ? X.viz.flow(part, isInc, rows) : '') + trend;
+    h += '<h2>' + t('flow.bygroup') + '</h2><div class="ggrid">' + part.groups.map(function (g, i) {
       var mx = g.rows[0] ? g.rows[0].jumlah : 1;
       return '<div class="card grp"><div class="ah"><span class="gi" style="color:' + CHART[Math.min(i, 6)] + '">' + catIcon(g.nama) + '</span><span>' + esc(dn(g.nama)) + '</span><b>' + esc(C.fmtRp(g.total)) + '</b></div>' +
         g.rows.map(function (x) {
-          return '<div class="subrow"><div class="sr"><span>' + esc(dn(x.nama)) + '</span><b>' + esc(C.fmtNum(x.jumlah)) + '</b></div><div class="bar ' + (isInc ? 'green' : 'red') + '"><i style="width:' + Math.max(3, Math.round(x.jumlah / mx * 100)) + '%"></i></div></div>';
+          return '<div class="subrow"><div class="sr"><span><span class="gi sm">' + catIcon(g.nama, x.nama, x.kode) + '</span>' + esc(dn(x.nama)) + '</span><b>' + esc(C.fmtNum(x.jumlah)) + ' <em class="pcx">' + (g.total ? Math.round(x.jumlah / g.total * 100) : 0) + '%</em></b></div><div class="bar ' + (isInc ? 'green' : 'red') + '"><i style="width:' + Math.max(3, Math.round(x.jumlah / mx * 100)) + '%"></i></div></div>';
         }).join('') + '</div>';
-    }).join('');
-    var rows = Object.keys(S.tx).map(function (k) { return S.tx[k]; }).filter(function (x) {
-      var d = x.Waktu.substr(0, 10);
-      return x.Status === 'Aktif' && !isNonOp(x.KodeAkun) && x.Jenis === (isInc ? 'Income' : 'Expense') && d >= r.start && d <= r.end && (!f || x.PemilikDompet === f.pemilik);
-    }).sort(byTimeDesc);
+    }).join('') + '</div>';
     h += '<h2>' + t('flow.list') + '</h2>' + txListGrouped(rows, S.limit, 'more');
     return h;
   }
@@ -484,6 +483,7 @@
       '<div class="sub2">' + esc(t('debt.sum', C.fmtRp(D.tp), C.fmtRp(D.tu))) + '</div></div>';
     h += '<div class="btnrow"><button class="btn" data-act="loan-new" data-v="Piutang">' + ICON.plus + t('loan.new.Piutang').replace('+ ', '') + '</button><button class="btn" data-act="loan-new" data-v="Utang">' + ICON.plus + t('loan.new.Utang').replace('+ ', '') + '</button>' +
       '<button class="btn" data-act="debt-share" data-p="" aria-label="' + t('jpg.share') + '">' + ICON.share + t('debt.share') + '</button></div>';
+    if (X.viz) h += X.viz.debt(f);
     var ppl = D.people.filter(function (p) { return F2 === 'Piutang' ? p.piutang.length : (F2 === 'Utang' ? p.utang.length : true); });
     if (!ppl.length) return h + '<div class="card"><div class="empty">' + t('debt.empty') + '</div></div>';
     h += ppl.map(function (p) {
@@ -518,13 +518,14 @@
     ownerChips(S.owner, 'owner'); var h = '';
     h += '<div class="card hero"><div class="lbl">' + t('as.total') + '</div><div class="big">' + esc(C.fmtRp(A.bs.aset.total)) + '</div></div>';
     h += '<div class="btnrow"><button class="btn" data-act="w-open">' + ICON.plus + t('as.add') + '</button></div>';
-    h += A.groups.map(function (g) {
+    if (X.viz) h += X.viz.dist(A.groups.map(function (g) { return {nama: dn(g.nama), total: g.rows.reduce(function (s, r) { return s + Math.max(0, r.jumlah); }, 0), ico: X.genericIco ? X.genericIco(g.nama, g.nama) : '', items: g.rows.map(function (r) { var d = k2d[r.kode]; return {nama: d ? d.Nama : dn(r.nama), v: r.jumlah}; })}; }), A.bs.aset.total, t('as.total'));
+    h += '<div class="ggrid">' + A.groups.map(function (g) {
       var pg = isPiutangGroup(g), rows = g.rows.slice().sort(function (a, b) { return b.jumlah - a.jumlah; });
       return '<div class="card agrp' + (focus === g.nama ? ' hl' : '') + '" id="g-' + esc(g.nama.replace(/\W/g, '')) + '"><div class="ah"><span>' + esc(dn(g.nama)) + '</span><b>' + esc(C.fmtRp(g.total)) + '</b></div>' + rows.map(function (r) {
         var d = k2d[r.kode];
         return '<div class="row tap" ' + (pg ? 'data-act="page" data-v="receivable"' : 'data-act="asset" data-v="' + esc(r.kode) + '"') + '>' + (X.hooks.assetIco && d && !pg ? X.hooks.assetIco(d, g.nama) : '') + '<div class="grow"><div class="t">' + esc(d ? d.Nama : dn(r.nama)) + '</div><div class="s">' + esc((d ? d.Pemilik + ' · ' : '') + r.kode) + '</div></div><div class="a ' + (r.jumlah < 0 ? 'out' : '') + '">' + esc(C.fmtRp(r.jumlah)) + '</div>' + ICON.chev + '</div>';
       }).join('') + '</div>';
-    }).join('');
+    }).join('') + '</div>';
     return h + '<div class="note2">' + t('as.note') + '</div>';
   }
   function sparkline(pts) {

@@ -127,7 +127,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
   X.hooks.sidebar = function () {
     pullGaya(); setSbs();
     var cur = S.page ? (MAPP[S.page.name] || S.page.name) : S.tab, unread = X.unreadCount ? X.unreadCount() : 0, open = sbState() === 'open';
-    var h = '<aside class="side" aria-label="Menu"><div class="sb-brand">' + (X.hooks.avatarMe ? X.hooks.avatarMe() : '<span class="logo">D</span>') + '<div class="who lbl"><b>Do it</b><small>' + esc(S.cfg ? S.cfg.user : '') + '</small></div></div><nav class="sb-nav">';
+    var h = '<aside class="side" aria-label="Menu"><div class="sb-brand">' + (X.hooks.avatarMe ? X.hooks.avatarMe() : '<span class="logo">D</span>') + '<div class="who lbl"><b>Do it</b><small>' + esc(S.owner && S.owner !== 'Semua' ? S.owner : (S.cfg ? S.cfg.user : '')) + '</small></div></div><nav class="sb-nav">';
     NAV.forEach(function (g) {
       if (g[0]) h += '<div class="sb-grp"><span class="lbl">' + t(g[0]) + '</span></div>';
       g[1].forEach(function (n) {

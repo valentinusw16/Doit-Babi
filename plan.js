@@ -76,7 +76,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
   document.addEventListener('change', function (e) {
     var el = e.target; if (!PF || !PF.d) return;
     if (el.dataset.phf) { var f = el.files && el.files[0]; el.value = ''; if (f) photoShrink(f).then(function (img) { PF.d.foto = img; renderForm(); }).catch(function () { PF.err = t('ph.fail'); renderForm(); }); return; }
-    if (el.dataset.pfr === 'g') PF.d[el.dataset.list][+el.dataset.i].g = el.value;
+    if (el.dataset.pfr === 'g') { var it = PF.d[el.dataset.list][+el.dataset.i]; it.g = el.value; if (el.dataset.list === 'items') { it.k = ''; renderForm(); } }
+    if (el.dataset.pfr === 'k') PF.d[el.dataset.list][+el.dataset.i].k = el.value;
   });
   function rincianTotal(r) { return (r || []).reduce(function (a, x) { return a + (+x.j || 0) * (+x.k || 1); }, 0); }
 
@@ -112,13 +113,13 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
   function newLine(scope, key, jenis) {
     return {scope: scope, key: key, jenis: jenis, pemilik: ownerNow(), rincian: [], jumlah: 0, rollover: jenis === 'Expense', mulai: curMonth(), ov: {}, ovm: 0};
   }
-  function lineRow(r, k, sub) {
+  function lineRow(r, k, sub, sc, gname) {
     var l = r.line, notes = [];
     if (r.bawa) notes.push(t('bl.carry', fm(r.bawa)));
     if (l.rincian && l.rincian.length) notes.push(t('bl.detail', l.rincian.length));
     if (l.ov && l.ov[k] != null) notes.push(t('bl.ov'));
     var inc = lineJenis(l) === 'Income', neg = inc ? r.terpakai < r.tersedia : r.sisa < 0;
-    return '<div class="subln tap" data-act="bl-open" data-id="' + esc(l.id) + '"><div class="sr"><span>' + esc(sub || t('bl.whole')) + (l.pemilik && S.owner === 'Semua' ? '<span class="tag">' + esc(l.pemilik) + '</span>' : '') + '</span><b>' + esc(C.fmtNum(r.tersedia)) + '</b></div>' +
+    return '<div class="subln tap" data-act="bl-open" data-id="' + esc(l.id) + '"><div class="sr"><span>' + (sc ? '<span class="gi sm">' + X.catIcon(gname, sc.SubKategori, sc.KodeAkun) + '</span>' : '') + esc(sub || t('bl.whole')) + (l.pemilik && S.owner === 'Semua' ? '<span class="tag">' + esc(l.pemilik) + '</span>' : '') + '</span><b>' + esc(C.fmtNum(r.tersedia)) + '</b></div>' +
       '<div class="sr muted sm"><span>' + esc(t('bl.used.of', C.fmtNum(r.terpakai), C.fmtNum(r.tersedia))) + (notes.length ? ' · ' + esc(notes.join(' · ')) : '') + '</span><b class="' + (neg && !inc ? 'out' : '') + '">' + pct(r.pct) + '</b></div>' + pbar(r.pct, inc ? (r.pct >= 1 ? 'good' : '') : null) + '</div>';
   }
   function vAnggaran() {
@@ -152,10 +153,10 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
         c.grupRows.forEach(function (r) { out += lineRow(r, k, null); });
         g.subs.forEach(function (sc) {
           var rs = c.subRows.filter(function (r) { return r.line.key === sc.KodeAkun; });
-          if (rs.length) rs.forEach(function (r) { out += lineRow(r, k, dn(sc.SubKategori)); });
+          if (rs.length) rs.forEach(function (r) { out += lineRow(r, k, dn(sc.SubKategori), sc, g.nama); });
           else {
             var av = act.s[sc.KodeAkun] || 0;
-            out += '<div class="subln empty tap" data-act="bl-sub" data-g="' + esc(g.nama) + '" data-k="' + esc(sc.KodeAkun) + '"><div class="sr"><span>' + esc(dn(sc.SubKategori)) + '</span><b class="muted sm">' + esc(t('bl.fill')) + '</b></div>' + (av ? '<div class="sr muted sm"><span>' + esc(t(inc ? 'bl.got' : 'bl.used', C.fmtNum(av))) + '</span></div>' : '') + '</div>';
+            out += '<div class="subln empty tap" data-act="bl-sub" data-g="' + esc(g.nama) + '" data-k="' + esc(sc.KodeAkun) + '"><div class="sr"><span><span class="gi sm">' + X.catIcon(g.nama, sc.SubKategori, sc.KodeAkun) + '</span>' + esc(dn(sc.SubKategori)) + '</span><b class="muted sm">' + esc(t('bl.fill')) + '</b></div>' + (av ? '<div class="sr muted sm"><span>' + esc(t(inc ? 'bl.got' : 'bl.used', C.fmtNum(av))) + '</span></div>' : '') + '</div>';
           }
         });
         out += '</div>';
@@ -202,7 +203,9 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
         var d = p.d, h = photoBlock(d) + inp(t('ev.name'), 'nama', d.nama, t('ev.name.ph')) +
           '<div class="two">' + dateIn(t('ev.from'), 'mulai', d.mulai) + dateIn(t('ev.to'), 'selesai', d.selesai) + '</div>' + money(t('ev.budget'), 'anggaran', d.anggaran);
         h += '<label class="lbl2">' + t('ev.items') + '</label>' + (d.items || []).map(function (r, i) {
-          return '<div class="rrow"><select class="input" data-pfr="g" data-list="items" data-i="' + i + '">' + expenseGroups().map(function (g) { return '<option value="' + esc(g) + '"' + (g === r.g ? ' selected' : '') + '>' + esc(dn(g)) + '</option>'; }).join('') + '</select>' +
+          var subs = S.M.kategori.filter(function (k) { return k.Jenis === 'Expense' && k.Kategori === r.g; });
+          return '<div class="rrow ev3"><select class="input" data-pfr="g" data-list="items" data-i="' + i + '">' + expenseGroups().map(function (g) { return '<option value="' + esc(g) + '"' + (g === r.g ? ' selected' : '') + '>' + esc(dn(g)) + '</option>'; }).join('') + '</select>' +
+            '<select class="input" data-pfr="k" data-list="items" data-i="' + i + '"><option value="">' + esc(t('ev.allsub')) + '</option>' + subs.map(function (k) { return '<option value="' + esc(k.KodeAkun) + '"' + (k.KodeAkun === r.k ? ' selected' : '') + '>' + esc(dn(k.SubKategori)) + '</option>'; }).join('') + '</select>' +
             '<input class="input" inputmode="numeric" data-pfr="j" data-list="items" data-i="' + i + '" value="' + (r.j ? C.fmtNum(r.j) : '') + '" placeholder="Rp"><button class="hb" data-act="pf-rdel" data-list="items" data-i="' + i + '" aria-label="' + t('delete') + '">' + ICON.x + '</button></div>';
         }).join('') + '<button class="link" data-act="pf-radd" data-list="items">+ ' + t('ev.items.add') + '</button>';
         h += '<details class="adv"' + (d.tag ? ' open' : '') + '><summary>' + t('pf.adv') + '</summary>' + inp(t('ev.tag'), 'tag', d.tag, '#liburan-bali') + '<div class="muted sm" style="margin:4px 2px 0">' + t('ev.tag.hint') + '</div></details>';
@@ -263,13 +266,16 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       var rows = Object.keys(a.byGrup).sort(function (x, y) { return a.byGrup[y] - a.byGrup[x]; });
       var itemBud = {}; (e.items || []).forEach(function (i) { itemBud[i.g] = (itemBud[i.g] || 0) + (+i.j || 0); });
       Object.keys(itemBud).forEach(function (g) { if (rows.indexOf(g) < 0) rows.push(g); });
+      var subBud = {}; (e.items || []).forEach(function (i) { if (i.k) subBud[i.k] = (subBud[i.k] || 0) + (+i.j || 0); });
       return '<div class="card bl' + (e.foto ? ' hasph' : '') + '">' + cover(e) + '<div class="ah"><span class="gi">' + ICON.tag + '</span><span>' + esc(e.nama) + '<small class="muted sm dnet">#' + esc(norm(e.tag)) + (e.mulai ? ' · ' + esc(C.fmtTgl(e.mulai)) + (e.selesai ? ' – ' + esc(C.fmtTgl(e.selesai)) : '') : '') + '</small></span>' +
         '<button class="hb sm" data-act="ev-open" data-id="' + esc(e.id) + '" aria-label="' + t('ev.edit') + '">' + ICON.edit + '</button></div>' +
         '<div class="sr"><span class="muted">' + esc(bud ? t('bl.used.of', C.fmtNum(a.total), C.fmtNum(bud)) : t('ev.spent', fm(a.total))) + '</span>' + (bud ? '<b>' + pct(p) + '</b>' : '') + '</div>' + (bud ? pbar(p) : '') +
         (bud ? '<div class="s ' + (bud - a.total < 0 ? 'out' : 'muted') + ' sm" style="margin-top:6px">' + esc(bud - a.total < 0 ? t('bl.over', fm(a.total - bud)) : t('bl.left', fm(bud - a.total))) + '</div>' : '') +
         rows.map(function (g) {
           var v = a.byGrup[g] || 0, b = itemBud[g] || 0;
-          return '<div class="subrow"><div class="sr"><span>' + esc(dn(g)) + '</span><b>' + esc(C.fmtNum(v)) + (b ? ' / ' + esc(C.fmtNum(b)) : '') + '</b></div>' + (b ? pbar(v / b) : '') + '</div>';
+          var subs = S.M.kategori.filter(function (k) { return k.Jenis === 'Expense' && k.Kategori === g && ((a.bySub && a.bySub[k.KodeAkun]) || subBud[k.KodeAkun]); }).sort(function (x, y) { return ((a.bySub && a.bySub[y.KodeAkun]) || 0) - ((a.bySub && a.bySub[x.KodeAkun]) || 0); });
+          return '<div class="subrow"><div class="sr"><span><span class="gi sm">' + X.catIcon(g) + '</span>' + esc(dn(g)) + '</span><b>' + esc(C.fmtNum(v)) + (b ? ' / ' + esc(C.fmtNum(b)) : '') + '</b></div>' + (b ? pbar(v / b) : '') +
+            subs.map(function (k) { var sv = (a.bySub && a.bySub[k.KodeAkun]) || 0, sb = subBud[k.KodeAkun] || 0; return '<div class="evsub"><div class="sr"><span><span class="gi sm">' + X.catIcon(g, k.SubKategori, k.KodeAkun) + '</span>' + esc(dn(k.SubKategori)) + '</span><b>' + esc(C.fmtNum(sv)) + (sb ? ' / ' + esc(C.fmtNum(sb)) : '') + '</b></div>' + (sb ? pbar(sv / sb) : '') + '</div>'; }).join('') + '</div>';
         }).join('') + '<div style="margin-top:8px"><button class="link" data-act="ev-tx" data-id="' + esc(e.id) + '">' + t('ev.tx', a.n) + '</button></div></div>';
     }).join('');
   }
@@ -527,7 +533,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       } catch (e) { PF.err = e.message; renderForm(); }
     },
     'pf-toggle': function (el) { PF.d[el.dataset.k] = !(PF.d[el.dataset.k] === undefined ? true : PF.d[el.dataset.k]); renderForm(); },
-    'pf-radd': function (el) { var l = el.dataset.list; PF.d[l] = PF.d[l] || []; PF.d[l].push(l === 'items' ? {g: expenseGroups()[0], j: 0} : {n: '', j: 0, k: 1}); renderForm(); },
+    'pf-radd': function (el) { var l = el.dataset.list; PF.d[l] = PF.d[l] || []; PF.d[l].push(l === 'items' ? {g: expenseGroups()[0], k: '', j: 0} : {n: '', j: 0, k: 1}); renderForm(); },
     'pf-rdel': function (el) { PF.d[el.dataset.list].splice(+el.dataset.i, 1); renderForm(); },
     // event
     'ev-new': function () { openForm('ev', null, {nama: '', tag: '', mulai: '', selesai: '', anggaran: 0, items: []}); },
@@ -535,7 +541,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     'ev-save': function () {
       var d = PF.d, nama = (d.nama || '').trim(), tag = norm(d.tag || nama);
       if (nama.length < 2) { PF.err = t('w.short'); renderForm(); return; }
-      var items = (d.items || []).filter(function (i) { return +i.j > 0; }).map(function (i) { return {g: i.g, j: +i.j}; });
+      var items = (d.items || []).filter(function (i) { return +i.j > 0; }).map(function (i) { return {g: i.g, k: i.k || '', j: +i.j}; });
       saveVia(rc.save('event', {nama: nama, tag: '#' + tag, mulai: d.mulai || '', selesai: d.selesai || '', anggaran: +d.anggaran || rincianTotal(items.map(function (i) { return {j: i.j, k: 1}; })), items: items, foto: d.foto || '', aktif: true}, PF.id));
     },
     'ph-pick': function () { var i = document.getElementById('file-ph'); if (i) i.click(); },

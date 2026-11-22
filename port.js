@@ -133,21 +133,13 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
   }
   function pc(v, tot) { var p = tot ? v / tot * 100 : 0; return (p >= 10 ? Math.round(p) : Math.round(p * 10) / 10).toString().replace('.', S.pref.lang === 'en' ? '.' : ',') + '%'; }
   function distHTML(rows, tot) {
-    var tr = distTree(rows); if (!tr.length) return '';
-    var lvl = S.poLvl || 'sub', h = '<div class="card"><div class="ch">' + t('po.dist') + '</div><div class="seg" style="margin:6px 0 10px">' + [['kel', 'po.d.kel'], ['sub', 'po.d.sub']].map(function (x) { return '<button class="' + (lvl === x[0] ? 'on' : '') + '" data-act="po-lvl" data-v="' + x[0] + '">' + t(x[1]) + '</button>'; }).join('') + '</div>';
-    var segs = lvl === 'kel' ? tr.map(function (g) { return {nama: g.nama, total: g.total}; }) : [].concat.apply([], tr.map(function (g) { return g.subList.map(function (s) { return {nama: s.nama + (tr.length > 1 ? ' · ' + g.nama : ''), total: s.total}; }); })).sort(function (a, b) { return b.total - a.total; });
-    var colr = function (i) { return PCOL[i % PCOL.length]; };
-    h += '<div class="donutrow pdon">' + X.donut(segs.map(function (g) { return {nama: g.nama, total: g.total}; }), tot, t('po.total')) + '<div class="legend">' + segs.slice(0, 8).map(function (g, i) { return '<div class="lg"><i style="background:' + colr(i) + '"></i><span>' + esc(g.nama) + '</span><b>' + pc(g.total, tot) + '</b></div>'; }).join('') + '</div></div></div>';
-    h += '<div class="card"><div class="ch">' + t('po.tree') + '</div>' + tr.map(function (g, gi) {
-      var si = 0;
-      return '<details class="ptree"' + (gi === 0 ? ' open' : '') + '><summary><span class="pn">' + esc(g.nama) + '</span><b>' + esc(fm(g.total)) + '</b><em>' + pc(g.total, tot) + '</em></summary>' +
-        '<div class="pbar">' + g.subList.map(function (s, i) { return '<i style="width:' + (s.total / g.total * 100) + '%;background:' + colr(i) + '" title="' + esc(s.nama) + '"></i>'; }).join('') + '</div>' +
-        g.subList.map(function (s, i) {
-          return '<details class="psub"><summary><i style="background:' + colr(i) + '"></i><span class="pn">' + esc(s.nama) + '</span><b>' + esc(fm(s.total)) + '</b><em>' + pc(s.total, g.total) + '</em></summary>' +
-            s.itemList.map(function (x) { return '<div class="pit"><span>' + esc(x.nama) + '</span><b>' + esc(fm(x.v)) + '</b><em>' + pc(x.v, s.total) + '</em></div>'; }).join('') + '</details>';
-        }).join('') + '</details>';
-    }).join('') + '</div>';
-    return h;
+    var G = {}, order = [];
+    rows.forEach(function (r) {
+      if (!(r.nilai > 0)) return; var g = G[r.kel] || (G[r.kel] = {nama: dn(r.kel), total: 0, items: [], kel: {}, ico: X.genericIco ? X.genericIco(r.kel, r.kel) : ''}); if (order.indexOf(r.kel) < 0) order.push(r.kel);
+      g.total += r.nilai; g.items.push({nama: r.d.Nama, v: r.nilai});
+      if (r.mode === 'wadah' && r.isi.length) { r.isi.forEach(function (x) { var k = t('po.k.' + x.aset.kelas); g.kel[k] = (g.kel[k] || 0) + x.pos.nilai; }); if (r.kas > 0) g.kel[t('po.kas')] = (g.kel[t('po.kas')] || 0) + r.kas; }
+    });
+    return X.viz.dist(order.map(function (k) { var g = G[k]; g.extra = Object.keys(g.kel).length ? [{title: t('vz.kelas'), items: Object.keys(g.kel).map(function (n) { return {nama: n, v: g.kel[n]}; })}] : []; return g; }), tot, t('po.total'));
   }
   // ---------------------------------------------------------------- halaman Portofolio
   function vPort(p) {

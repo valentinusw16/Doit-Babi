@@ -41,6 +41,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['logo'] = '3.4.0';
     var img = logoOf(kind, key);
     return '<span class="ico aico' + (img ? ' has' : '') + '">' + (img ? '<img src="' + esc(img) + '" alt="">' : generic(nama, kel)) + '</span>';
   };
+  X.genericIco = generic;
   X.hooks.assetIco = function (d, kel) { return d ? X.assetIco('akun', d.Nama, d.Nama, kel) : ''; };
   function strip(o) { var d = Object.assign({}, o); delete d.id; delete d._oleh; return d; }
   function saveLogo(kind, key, img) {

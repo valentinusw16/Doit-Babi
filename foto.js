@@ -52,7 +52,10 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.3.0';
   X.hooks.avatar = function () {
     return '<button class="avbtn" data-act="av-open" aria-label="' + esc(t('av.t')) + '">' + avHTML(currentAv()) + '</button>';
   };
-  X.hooks.avatarMe = function () { return '<button class="avbtn" data-act="av-open" aria-label="' + esc(t('av.t')) + '">' + avHTML(S.cfg.user, 'brand') + '</button>'; };
+  X.hooks.avatarMe = function () {
+    var us = S.M && S.M.users || [], all = (!S.owner || S.owner === 'Semua') && us.length > 1, who = all ? us.slice(0, 2) : [currentAv()];
+    return '<button class="avbtn' + (all ? ' duo' : '') + '" data-act="av-open" aria-label="' + esc(t('av.t')) + '">' + who.map(function (u) { return avHTML(u, 'brand'); }).join('') + '</button>';
+  };
   function avSheet() {
     var me = S.cfg.user, users = (S.M.users && S.M.users.length ? S.M.users : [me]);
     var h = '<div class="scrim" data-act="av-close"></div><div class="sheet"><div class="sheet-h"><div class="sh-t">' + t('av.t') + '</div><button class="x" data-act="av-close" aria-label="' + t('close') + '">' + X.ICON.x + '</button></div><div class="sheet-b">';

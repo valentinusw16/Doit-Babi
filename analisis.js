@@ -8,13 +8,14 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.3.0'
   var fm = function (n) { return C.fmtRp(n); };
   var CH = ['#e4572e', '#f2a541', '#2a9d8f', '#4c6fbf', '#9b5de5', '#e05297', '#8d99ae'];
   var CHI = ['#1b7f4b', '#3aa36a', '#6cc08f', '#a5d9b9', '#8d99ae'];
-  function nM() { return S.trN || 6; }
+  function nM() { return S.trN || 12; }
   function lab(k) { return C.namaBulan(+k.substr(5, 2), true) + ' ' + k.substr(2, 2); }
   function pbar(p) { return '<div class="pbar ' + (p > 1 ? 'bad' : (p >= 0.8 ? 'warn' : '')) + '"><i style="width:' + Math.min(100, Math.round(p * 100)) + '%"></i></div>'; }
   function dec(v) { return typeof v === 'string' && /^-?\d+\.\d$/.test(v) && S.pref.lang !== 'en' ? v.replace('.', ',') : (typeof v === 'number' ? C.fmtNum(v) : v); }
   function pc(v) { return v == null ? '—' : Math.round(v * 100) + '%'; }
   function curKey() { return C.todayLocal().substr(0, 7); }
-  function nSeg() { return '<div class="seg sm nseg">' + [6, 12].map(function (n) { return '<button class="' + (nM() === n ? 'on' : '') + '" data-act="tr-n" data-v="' + n + '">' + t('an.nmonth', n) + '</button>'; }).join('') + '</div>'; }
+  function nSeg() { return ''; /* v3.4.2: pilihan 6/12 bln dihapus, rentang diatur di grafik */ }
+  function nSegOld() { return '<div class="seg sm nseg">' + [6, 12].map(function (n) { return '<button class="' + (nM() === n ? 'on' : '') + '" data-act="tr-n" data-v="' + n + '">' + t('an.nmonth', n) + '</button>'; }).join('') + '</div>'; }
 
   // ---------------------------------------------------------------- grafik
   function bars(ser, keys) {
@@ -114,12 +115,13 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.3.0'
   function trendRender(cx) {
     var f = cx.f, ser = series(f), prev = ser.slice(0, -1), h = nSeg();
     var aI = C2.avg(prev.map(function (s) { return s.pendapatan; })), aO = C2.avg(prev.map(function (s) { return s.beban; })), last = ser[ser.length - 1];
+    h += '<div class="g2">';
     h += '<div class="card"><div class="ch">' + t('an.inout', nM()) + '</div>' + bars(ser) + '</div>';
     h += '<div class="card"><dl class="dl"><dt>' + t('an.avg.in') + '</dt><dd class="in">' + esc(fm(Math.round(aI))) + '</dd><dt>' + t('an.avg.out') + '</dt><dd class="out">' + esc(fm(Math.round(aO))) + '</dd><dt>' + t('an.avg.net') + '</dt><dd>' + esc(fm(Math.round(aI - aO))) + '</dd><dt>' + t('an.this') + '</dt><dd>' + esc(fm(last.net)) + '</dd></dl></div>';
     var nw = C2.netWorthSeries(X.getLines(), S.M, curKey(), X.stockOn && X.stockOn() ? bigN() : nM(), f, C.pass);
     if (nw.length > 1) h += '<div class="card"><div class="ch">' + t('an.networth') + '</div>' + X.sparkline(nw) + '</div>';
-    h += catTrend('Beban', f, 'trcat');
-    h += yoy(f) + movers(f) + weekday(f);
+    h += catTrend('Beban', f, 'trcat') + '</div>';
+    h += '<div class="g3"><div>' + yoy(f) + '</div><div>' + movers(f) + '</div><div>' + weekday(f) + '</div></div>';
     return h;
   }
   function trendDoc(cx) {
