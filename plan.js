@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.2.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.2.1';
 /* Do it v2.0 - Rencana: anggaran bulanan (+rincian, rollover, realokasi), anggaran event (tag), dana tujuan, transaksi rutin.
    Data disimpan di sheet Rencana (lewat DoIt.rc), dihitung oleh core2.js. */
 (function () {

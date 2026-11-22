@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.2.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.2.1';
 /* Do it v3.1 - tampilan responsif: sidebar, Beranda bento (waterfall, kalender, proyeksi), tabel Transaksi desktop,
    gaya Kaca/Bersih (tersinkron lewat Rencana tipe "tampilan"), foto latar per perangkat. */
 (function () {

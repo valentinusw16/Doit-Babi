@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.2.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.2.1';
 /* Do it v2.2 - foto profil (disinkronkan lewat Google Sheet, Rencana tipe "foto", hanya pemilik yang boleh mengganti)
    dan foto latar kartu Kekayaan bersih (hanya di HP ini, IndexedDB). */
 (function () {

@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.2.0', APP_NAME = 'Do it';
+  var VERSION = '3.2.1', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -598,7 +598,7 @@
   }
 
   // ---------------------------------------------------------------- Laporan
-  var REP_KINDS = ['is', 'bs', 'cf', 'bva', 'tb', 'jr', 'tren', 'rasio'];
+  var REP_KINDS = ['ann', 'is', 'bs', 'cf', 'bva', 'tb', 'jr', 'tren', 'rasio', 'ins'];
   var DIMS = ['pemilik', 'pencatat'];
   function repCtx() {
     var R = S.rep, today = C.todayLocal(), per = periodOf(R.period);
@@ -618,7 +618,7 @@
     var cx = repCtx(), R = cx.R, today = cx.today, per = cx.per, end = cx.end, f = cx.f, lines = cx.lines, h = '', reg = X.repKinds[R.kind];
     h += '<div class="ddrow">' + dd(t('r.' + R.kind), 'rep', 'rep-kind', R.kind) + ((!reg || reg.period !== false) ? perChips(R.period, 'rep-period') : '') + ownerChips(R.who, 'rep-who') +
       (reg && reg.dim === false ? '' : dd(t(R.dim === 'pencatat' ? 'r.dim.rec' : 'r.dim.owner'), 'dim', 'rep-dim', R.dim)) +
-      '<button class="hb" data-act="rep-share" aria-label="' + t('jpg.share') + '" title="' + t('jpg.share') + '">' + ICON.share + '</button></div>';
+      '<button class="hb" data-act="rep-share" aria-label="' + t('jpg.share') + '" title="' + t('jpg.share') + '">' + ICON.share + '</button>' + (R.kind === 'ann' ? '' : '<button class="hb csvb" data-act="rep-csv" aria-label="CSV" title="CSV">CSV</button>') + '</div>';
     var labelRange = reg ? (reg.label ? reg.label(cx) : '') : (R.kind === 'is' || R.kind === 'jr' ? (R.period === 'semua' ? t('per.alltime') : C.fmtTgl(per.start) + ' – ' + C.fmtTgl(end)) : t('per.asof', C.fmtTgl(end)));
     h += '<div class="muted sm" style="margin:6px 2px 10px">' + esc(labelRange) + (labelRange ? ' · ' : '') + esc(f ? R.who : t('r.combined')) + '</div>';
     function rows2(groups) {
@@ -1605,7 +1605,7 @@
   }
   Object.assign(X, {isDark: isDark, applyTheme: applyTheme, openMenu: showMenu, openSetup: renderSetup, S: S, C: C, C2: C2, L: L, t: t, esc: esc, $: $, sum: sum, ICON: ICON, A: A, dn: dn, api: api, render: render, openPage: openPage, goBack: goBack, setTab: setTab, toast: toast,
     openForm: openForm, rowToForm: rowToForm, openPicker: openPicker, closePicker: closePicker, closeOverlays: closeOverlays, openDetail: openDetail, txRow: txRow, txView: txView, txListGrouped: txListGrouped,
-    donut: donut, legend: legend, sparkline: sparkline, shortRp: shortRp, perChips: perChips, rangeOf: rangeOf, periodOf: periodOf, prevOf: prevOf, ownerChips: ownerChips, fObj: fObj, getLines: getLines, kodeToDompet: kodeToDompet,
+    donut: donut, legend: legend, sparkline: sparkline, shortRp: shortRp, perChips: perChips, rangeOf: rangeOf, periodOf: periodOf, prevOf: prevOf, ownerChips: ownerChips, fObj: fObj, getLines: getLines, kodeToDompet: kodeToDompet, repCtx: repCtx, repDoc: repDoc,
     assetGroups: assetGroups, byTimeDesc: byTimeDesc, catIcon: catIcon, isNonOp: isNonOp, chips: chips, enqueue: enqueue, syncNow: syncNow, persist: persist, touch: touch, srvErr: srvErr, waitMaster: waitMaster,
     isNonOp: isNonOp, getOpLines: getOpLines, splitIS: splitIS, dd: dd, openChoice: openChoice, vAsset: vAsset, NONOP_G: NONOP_G, newForm: newForm, defaultWallet: defaultWallet,
     DB: DB, lsGet: lsGet, lsSet: lsSet, savePref: savePref, parseTime: parseTime, kpEval: kpEval, rc: {list: rcList, save: rcSave, remove: rcRemove, batch: rcBatch}, shareDoc: shareDoc, pushSentinelOnce: pushSentinelOnce, signAmt: signAmt, debtPeople: debtPeople, unreadCount: unreadCount, VERSION: VERSION});

@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['chart'] = '3.2.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['chart'] = '3.2.1';
 /* Do it v3.2 - grafik gaya saham untuk layar lebar (>= 1100px): pemilih rentang, crosshair + tooltip,
    zoom (Ctrl + gulir atau tombol +/-), geser (seret), panel angka. HP tetap memakai grafik sederhana. */
 (function () {
