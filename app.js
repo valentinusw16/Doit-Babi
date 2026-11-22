@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.3.0', APP_NAME = 'Do it';
+  var VERSION = '3.4.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -977,20 +977,35 @@
   function tpRead() { var a = $('#tp-h'), b = $('#tp-m'); if (a) TP.h = Math.min(23, Math.round(a.scrollTop / 40)); if (b) TP.m = Math.min(59, Math.round(b.scrollTop / 40)); }
   // ---- keypad nominal + kalkulator (buatan aplikasi)
   var OPS = '+−×÷';
-  function kpEval(e) {
-    e = String(e || '').replace(/[+−×÷]+$/, ''); if (!e) return 0;
-    var tk = e.match(/\d+|[+−×÷]/g) || [], st = [], cur = +tk[0];
-    for (var i = 1; i < tk.length; i += 2) {
-      var op = tk[i], n = +tk[i + 1];
-      if (op === '×') cur *= n; else if (op === '÷') cur = n ? cur / n : NaN;
-      else { st.push(cur); st.push(op); cur = n; }
+  /** Evaluator ekspresi: + − × ÷ ( ), desimal '.', prioritas operator, kurung tak tertutup otomatis ditutup, ×/kurung tersirat. Hasil dibulatkan ke rupiah. */
+  function exprEval(e, dec) {
+    e = String(e || '').replace(/[+\-−×÷*/xX(]+$/, ''); if (!e) return 0;
+    var tk = e.replace(/[*xX]/g, '×').replace(/\//g, '÷').replace(/-/g, '−').match(/\d+(?:\.\d+)?|\.\d+|[+−×÷()]/g) || [], p = 0, bad = false;
+    function peek() { return tk[p]; }
+    function factor() {
+      var x = tk[p];
+      if (x === '−') { p++; return -factor(); } if (x === '+') { p++; return factor(); }
+      if (x === '(') { p++; var v = expr(); if (tk[p] === ')') p++; return v; }
+      if (x != null && /^[\d.]/.test(x)) { p++; return parseFloat(x); }
+      bad = true; return NaN;
     }
-    st.push(cur); var r = st[0];
-    for (var j = 1; j < st.length; j += 2) r = st[j] === '+' ? r + st[j + 1] : r - st[j + 1];
-    return isFinite(r) ? Math.round(r) : NaN;
+    function term() {
+      var v = factor();
+      while (p < tk.length) {
+        var o = tk[p];
+        if (o === '×') { p++; v *= factor(); } else if (o === '÷') { p++; var d = factor(); if (!d) { bad = true; return NaN; } v /= d; }
+        else if (o === '(' || (o && /^[\d.]/.test(o))) { v *= factor(); } else break;
+      }
+      return v;
+    }
+    function expr() { var v = term(); while (p < tk.length && (tk[p] === '+' || tk[p] === '−')) { var o = tk[p++], r = term(); v = o === '+' ? v + r : v - r; } return v; }
+    var r = expr(); while (tk[p] === ')') p++;
+    if (bad || p < tk.length) return NaN;
+    return isFinite(r) ? (dec ? Math.round(r * 1e6) / 1e6 : Math.round(r)) : NaN;
   }
-  function kpHasOp(e) { return /[+−×÷]/.test(e || ''); }
-  function kpPretty(e) { return String(e || '').replace(/\d+/g, function (m) { return C.fmtNum(+m); }).replace(/([+−×÷])/g, ' $1 '); }
+  var kpEval = exprEval;
+  function kpHasOp(e) { return /[+−×÷()]/.test(e || ''); }
+  function kpPretty(e) { return String(e || '').replace(/\d+(?:\.\d*)?/g, function (m) { var q = m.split('.'); return C.fmtNum(+q[0]) + (q.length > 1 ? (S.pref.lang === 'en' ? '.' : ',') + q[1] : ''); }).replace(/([+−×÷])/g, ' $1 ').replace(/\( /g, '(').replace(/ \)/g, ')'); }
   function kpSync() { var v = kpEval(FX.kp.e); F.jumlah = v > 0 && v < 1e13 ? v : 0; }
   function kpSettle() { if (!kpHasOp(FX.kp.e)) return true; var v = kpEval(FX.kp.e); if (!(v > 0) || v >= 1e13) return false; FX.kp.e = String(v); FX.kp.eq = true; kpSync(); return true; }
   function amtHTML() {
@@ -999,16 +1014,19 @@
       '<div class="amtn' + (k.e ? '' : ' ph') + '" id="f-amtn">' + (k.e && isFinite(v) ? esc(C.fmtNum(Math.max(0, v))) : '0') + '</div></div></div>';
   }
   function kpPad() {
-    var D = ['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '000', '0', 'del', '+'];
-    return '<div class="kp">' + D.map(function (k) { return '<button class="kb' + (OPS.indexOf(k) >= 0 ? ' op' : '') + '" data-act="kp" data-v="' + k + '"' + (k === 'del' ? ' aria-label="' + t('kp.del') + '"' : '') + '>' + (k === 'del' ? ICON.bksp : k) + '</button>'; }).join('') +
-      '<button class="kb op eq" data-act="kp" data-v="=">=</button><button class="kb go" data-act="kp-next">' + t('kp.next') + ' ›</button></div>';
+    var D = ['(', ')', ',', 'del', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '000', '0', '=', '+'];
+    return '<div class="kp">' + D.map(function (k) { return '<button class="kb' + (OPS.indexOf(k) >= 0 || k === '=' ? ' op' : (/[(),]/.test(k) ? ' par' : '')) + '" data-act="kp" data-v="' + k + '"' + (k === 'del' ? ' aria-label="' + t('kp.del') + '"' : '') + '>' + (k === 'del' ? ICON.bksp : k) + '</button>'; }).join('') +
+      '<button class="kb go wide" data-act="kp-next">' + t('kp.next') + ' ›</button></div>';
   }
   function kpRefresh() { var a = $('#f-jumlah'); if (a) a.outerHTML = amtHTML(); }
   function kpKey(k) {
     var x = FX.kp; x.err = '';
     if (k === 'del') { x.e = x.e.slice(0, -1); x.eq = false; }
-    else if (/^\d+$/.test(k)) { if (x.eq) { x.e = ''; x.eq = false; } if (x.e.length < 40) { var last = (x.e.match(/\d+$/) || [''])[0]; if (k === '000' && !last) k = ''; if (last === '0') x.e = x.e.slice(0, -1); if (last.length + k.length <= 13) x.e += k; } }
-    else if (OPS.indexOf(k) >= 0) { x.eq = false; if (!x.e) return; if (kpHasOp(x.e.slice(-1))) x.e = x.e.slice(0, -1) + k; else x.e += k; }
+    else if (/^\d+$/.test(k)) { if (x.eq) { x.e = ''; x.eq = false; } if (x.e.length < 60) { if (/\)$/.test(x.e)) x.e += '×'; var last = (x.e.match(/[\d.]+$/) || [''])[0]; if (k === '000' && !last) k = ''; if (last === '0') x.e = x.e.slice(0, -1); if (last.replace('.', '').length + k.length <= 13) x.e += k; } }
+    else if (k === ',') { x.eq = false; var lt = (x.e.match(/[\d.]+$/) || [''])[0]; if (lt.indexOf('.') >= 0) return; x.e += lt ? '.' : (/[)]$/.test(x.e) ? '×0.' : '0.'); }
+    else if (k === '(') { if (x.eq) { x.e = ''; x.eq = false; } if (/[\d).]$/.test(x.e)) x.e += '×'; x.e += '('; }
+    else if (k === ')') { x.eq = false; var oc = (x.e.match(/\(/g) || []).length, cc = (x.e.match(/\)/g) || []).length; if (oc > cc && /[\d)]$/.test(x.e)) x.e += ')'; }
+    else if (OPS.indexOf(k) >= 0) { x.eq = false; if (!x.e) { if (k === '−') x.e = '(−'; return kpSync(), kpRefresh(); } if (/[+−×÷]$/.test(x.e)) x.e = x.e.slice(0, -1) + k; else if (/\($/.test(x.e)) { if (k === '−') x.e += k; } else x.e += k; }
     else if (k === '=') { if (!kpSettle()) x.err = t('kp.err.res'); }
     kpSync(); kpRefresh();
   }
@@ -1533,7 +1551,7 @@
   document.addEventListener('keydown', function (e) {
     if (!F || !FX || !FX.kp || !FX.kp.open || e.metaKey || e.ctrlKey || e.altKey) return;
     var a = document.activeElement; if (a && /INPUT|TEXTAREA/.test(a.tagName)) return;
-    var k = e.key, m = {'+': '+', '-': '−', '*': '×', 'x': '×', '/': '÷', 'Backspace': 'del', '=': '='};
+    var k = e.key, m = {'+': '+', '-': '−', '*': '×', 'x': '×', '/': '÷', 'Backspace': 'del', '=': '=', '(': '(', ')': ')', ',': ',', '.': ','};
     if (/^\d$/.test(k)) kpKey(k); else if (m[k]) kpKey(m[k]); else if (k === 'Enter') kpNext(); else return;
     e.preventDefault();
   });
@@ -1608,7 +1626,7 @@
     donut: donut, legend: legend, sparkline: sparkline, shortRp: shortRp, perChips: perChips, rangeOf: rangeOf, periodOf: periodOf, prevOf: prevOf, ownerChips: ownerChips, fObj: fObj, getLines: getLines, kodeToDompet: kodeToDompet, repCtx: repCtx, repDoc: repDoc,
     assetGroups: assetGroups, byTimeDesc: byTimeDesc, catIcon: catIcon, isNonOp: isNonOp, chips: chips, enqueue: enqueue, syncNow: syncNow, persist: persist, touch: touch, srvErr: srvErr, waitMaster: waitMaster,
     isNonOp: isNonOp, getOpLines: getOpLines, splitIS: splitIS, dd: dd, openChoice: openChoice, vAsset: vAsset, NONOP_G: NONOP_G, newForm: newForm, defaultWallet: defaultWallet,
-    DB: DB, lsGet: lsGet, lsSet: lsSet, savePref: savePref, parseTime: parseTime, kpEval: kpEval, rc: {list: rcList, save: rcSave, remove: rcRemove, batch: rcBatch}, shareDoc: shareDoc, pushSentinelOnce: pushSentinelOnce, signAmt: signAmt, debtPeople: debtPeople, unreadCount: unreadCount, VERSION: VERSION});
+    DB: DB, lsGet: lsGet, lsSet: lsSet, savePref: savePref, parseTime: parseTime, kpEval: kpEval, exprEval: exprEval, rc: {list: rcList, save: rcSave, remove: rcRemove, batch: rcBatch}, shareDoc: shareDoc, pushSentinelOnce: pushSentinelOnce, signAmt: signAmt, debtPeople: debtPeople, unreadCount: unreadCount, VERSION: VERSION});
   X.jpg = window.DoItJpg;
   X.start = start;
 })();

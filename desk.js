@@ -149,7 +149,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
     return t({beranda: 'nav.home', transaksi: 'nav.tx', laporan: 'nav.report'}[tab] || 'nav.home');
   };
   X.hooks.topExtra = function () {
-    return '<input class="gsearch" id="gq" type="search" placeholder="' + esc(t('dk.search')) + ' (Ctrl K)" value="" autocomplete="off" aria-label="' + esc(t('dk.search')) + '">';
+    return '<button class="hb palbtn" data-act="pal-open" aria-label="' + esc(t('dk.search')) + '" title="' + esc(t('dk.search')) + '"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button><input class="gsearch" id="gq" type="search" placeholder="' + esc(t('dk.search')) + ' (Ctrl K)" value="" autocomplete="off" aria-label="' + esc(t('dk.search')) + '">';
   };
 
   // ---------------------------------------------------------------- Beranda: kartu-kartu

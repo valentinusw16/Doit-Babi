@@ -202,7 +202,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
       var f = a.fix;
       h += '<div class="card"><dl class="dl"><dt>' + t('po.f.pokok') + '</dt><dd>' + esc(fm(f.pokok)) + '</dd><dt>' + t('po.f.bunga') + '</dt><dd>' + esc(String(f.bunga)) + '% / ' + t('po.year') + '</dd><dt>' + t('po.f.mulai') + '</dt><dd>' + esc(C.fmtTgl(f.mulai)) + '</dd>' +
         '<dt>' + t('po.f.tempo') + '</dt><dd>' + esc(f.tempo ? C.fmtTgl(f.tempo) : '-') + '</dd><dt>' + t('po.f.pajak') + '</dt><dd>' + esc(String(f.pajak == null || f.pajak === '' ? 10 : f.pajak)) + '%</dd><dt>' + t('po.f.accrued') + '</dt><dd>' + esc(fm(C2.accrued(f, today()))) + '</dd></dl></div>';
-      h += '<div class="btnrow">' + (a.cair ? '' : '<button class="btn" data-act="po-cair" data-id="' + esc(a.id) + '">' + t('po.cair') + '</button>') + '<button class="btn" data-act="po-edit" data-id="' + esc(a.id) + '">' + t('edit') + '</button></div>';
+      h += '<div class="btnrow">' + (a.cair || !X.kupon ? '' : '<button class="btn" data-act="po-kupon" data-id="' + esc(a.id) + '">' + t('kp.btn') + '</button>') + (a.cair ? '' : '<button class="btn" data-act="po-cair" data-id="' + esc(a.id) + '">' + t('po.cair') + '</button>') + '<button class="btn" data-act="po-edit" data-id="' + esc(a.id) + '">' + t('edit') + '</button></div>';
       if (a.cair) h += '<div class="note">' + esc(t('po.cair.done', C.fmtTgl(a.cair.tgl), fm(a.cair.nilai))) + '</div>';
       return h;
     }
@@ -279,6 +279,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
   }
 
   Object.assign(A, {
+    'po-kupon': function (el) { var a = findA(el.dataset.id); if (a && X.kupon) X.kupon.open(a.kode || a.nama, a.fix ? C2.accrued(a.fix, today()) : 0); },
     'po-view': function (el) { S.poView = el.dataset.v; X.render(); },
     'po-share': function () { X.shareDoc(docPort(), 'doit-portofolio-' + today()); },
     'po-mode': function (el) { var nama = S._poAcc; akunSave(nama, {mode: el.dataset.v}).then(function () { X.render(); }).catch(function (e) { X.toast(X.srvErr(e)); }); },
