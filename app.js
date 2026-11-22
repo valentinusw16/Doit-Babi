@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.2.1', APP_NAME = 'Do it';
+  var VERSION = '3.3.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util

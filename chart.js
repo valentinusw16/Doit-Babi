@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['chart'] = '3.2.1';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['chart'] = '3.3.0';
 /* Do it v3.2 - grafik gaya saham untuk layar lebar (>= 1100px): pemilih rentang, crosshair + tooltip,
    zoom (Ctrl + gulir atau tombol +/-), geser (seret), panel angka. HP tetap memakai grafik sederhana. */
 (function () {
@@ -67,8 +67,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['chart'] = '3.2.1';
       x: function (i) { return PL + (hasBar ? (i - a + .5) * step : (n === 1 ? iw / 2 : (i - a) / (n - 1) * iw)); },
       y: function (v) { return PT + (1 - (v - nz.lo) / (nz.hi - nz.lo)) * ih; }};
   }
-  function svgHTML(c, id, a, b) {
-    var g = geom(c, a, b), h = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="stk-svg" data-id="' + id + '" role="img" aria-label="' + esc(c.title || '') + '">';
+  function svgHTML(c, id, a, b, first) {
+    var g = geom(c, a, b), h = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="stk-svg' + (first ? ' first' : '') + '" data-id="' + id + '" role="img" aria-label="' + esc(c.title || '') + '">';
     g.nz.ticks.forEach(function (v) { var y = g.y(v).toFixed(1); h += '<line x1="' + PL + '" x2="' + (W - PR) + '" y1="' + y + '" y2="' + y + '" class="gl' + (v === 0 ? ' z' : '') + '"/><text x="' + (PL - 8) + '" y="' + (+y + 3.5) + '" class="yl" text-anchor="end">' + esc(X.shortRp(v)) + '</text>'; });
     var every = Math.max(1, Math.ceil(g.n / Math.floor(g.iw / 62)));
     for (var i = a; i < b; i++) if ((b - 1 - i) % every === 0) h += '<text x="' + g.x(i).toFixed(1) + '" y="' + (H - 8) + '" class="xl" text-anchor="middle">' + esc(c.labels[i]) + '</text>';
@@ -81,7 +81,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['chart'] = '3.2.1';
       } else {
         var d = ''; for (var k = a; k < b; k++) d += (k === a ? 'M' : 'L') + g.x(k).toFixed(1) + ' ' + g.y(s.v[k]).toFixed(1);
         if (s.k === 'area' || (c.series.length === 1)) h += '<path d="' + d + 'L' + g.x(b - 1).toFixed(1) + ' ' + g.y(g.nz.lo).toFixed(1) + 'L' + g.x(a).toFixed(1) + ' ' + g.y(g.nz.lo).toFixed(1) + 'Z" fill="' + s.c + '" opacity=".13"/>';
-        h += '<path d="' + d + '" fill="none" stroke="' + s.c + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
+        h += '<path d="' + d + '" pathLength="1" class="ln" fill="none" stroke="' + s.c + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
         if (g.n <= 24) for (var m = a; m < b; m++) h += '<circle cx="' + g.x(m).toFixed(1) + '" cy="' + g.y(s.v[m]).toFixed(1) + '" r="2.4" fill="var(--card)" stroke="' + s.c + '" stroke-width="1.5"/>';
       }
     });
@@ -110,7 +110,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['chart'] = '3.2.1';
     var pl = pills(c, id).replace('data-m="' + act + '"', 'data-m="' + act + '" class="on"');
     return '<div class="stk-c" data-sid="' + id + '"><div class="stk-top"><div class="stk-p">' + panel(c, a, b) + '</div><div class="stk-ctl">' + pl +
       '<span class="stk-z"><button data-act="st-z" data-id="' + id + '" data-d="1" aria-label="' + esc(t('st.zin')) + '">+</button><button data-act="st-z" data-id="' + id + '" data-d="-1" aria-label="' + esc(t('st.zout')) + '">−</button></span></div></div>' +
-      '<div class="stk-w">' + svgHTML(c, id, a, b) + '<div class="stk-tip" style="display:none"></div></div>' +
+      '<div class="stk-w">' + svgHTML(c, id, a, b, true) + '<div class="stk-tip" style="display:none"></div></div>' +
       (c.series.length > 1 ? '<div class="legend2">' + c.series.map(function (s) { return '<span><i style="background:' + s.c + '"></i>' + esc(s.n) + '</span>'; }).join('') + '</div>' : '') +
       '<div class="stk-h">' + esc(t('st.hint')) + '</div></div>';
   };

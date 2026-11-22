@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.2.1';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.3.0';
 /* Do it v2.1 - analisis: Tren (6/12 bulan, per kategori, tahun lalu, naik/turun, per hari), Rasio + rincian hitungan,
    Peringatan (di lonceng), Sankey Beranda, Arus Kas, Anggaran vs Realisasi. Semua memakai garis operasional
    (tanpa "Di Luar Operasional" = untung/rugi belum terealisasi). */

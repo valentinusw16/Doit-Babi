@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['lap'] = '3.2.1';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['lap'] = '3.3.0';
 /* Do it v3.2b - Laporan Setahun (laba rugi, neraca, anggaran vs realisasi per bulan; satuan Rp/ribuan/jutaan),
    Analisis (komposisi, anomali, kebutuhan/keinginan/tabungan, kontribusi pemilik, proyeksi akhir tahun, kebiasaan belanja),
    serta ekspor CSV untuk semua laporan. */
