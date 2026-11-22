@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.0.0', APP_NAME = 'Do it';
+  var VERSION = '3.1.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -57,7 +57,7 @@
   var CAT_ICON = [[/makan|minum|food/i, 'food'], [/tagihan|bill/i, 'bill'], [/pembelian|perawatan|belanja/i, 'bag'], [/transport/i, 'car'],
     [/gaya hidup|hiburan|lifestyle/i, 'spark'], [/kesehatan|karir|health/i, 'heart'], [/sosial|social/i, 'gift'], [/investasi|tabungan|invest/i, 'trend'],
     [/pekerjaan|gaji|work/i, 'brief'], [/profesi/i, 'star'], [/bisnis|usaha/i, 'store'], [/penerimaan/i, 'gift']];
-  function catIcon(grp) { for (var i = 0; i < CAT_ICON.length; i++) if (CAT_ICON[i][0].test(grp || '')) return ICON[CAT_ICON[i][1]]; return ICON.coins; }
+  function catIcon(grp, sub, kode) { if (X.hooks.subIcon && (sub || kode)) { var si = X.hooks.subIcon(grp, sub, kode); if (si) return si; } for (var i = 0; i < CAT_ICON.length; i++) if (CAT_ICON[i][0].test(grp || '')) return ICON[CAT_ICON[i][1]]; return ICON.coins; }
   var CHART = ['#e4572e', '#f2a541', '#2a9d8f', '#4c6fbf', '#9b5de5', '#e05297', '#8d99ae'];
 
   // ---------------------------------------------------------------- penyimpanan
@@ -288,8 +288,8 @@
   function txView(x) {
     var title, sign = 0, ico = ICON.swap, cls = '';
     switch (x.Jenis) {
-      case 'Income': title = dn(x.SubKategori); sign = 1; ico = catIcon(x.Kategori); cls = 'in'; break;
-      case 'Expense': title = dn(x.SubKategori); sign = -1; ico = catIcon(x.Kategori); cls = 'out'; break;
+      case 'Income': title = dn(x.SubKategori); sign = 1; ico = catIcon(x.Kategori, x.SubKategori, x.KodeAkun); cls = 'in'; break;
+      case 'Expense': title = dn(x.SubKategori); sign = -1; ico = catIcon(x.Kategori, x.SubKategori, x.KodeAkun); cls = 'out'; break;
       case 'Transfer': title = t('tx.to', x.DompetTujuan); break;
       case 'Utang/Piutang':
         title = t('s.' + x.SubJenis) + ' · ' + x.Pihak; ico = ICON.loan;
@@ -572,7 +572,7 @@
     h += '<div class="btnrow"><button class="btn" data-act="k-open">' + ICON.plus + t('k.add') + '</button></div>';
     h += order.map(function (g) {
       return '<div class="card grp"><div class="ah"><span class="gi">' + catIcon(g) + '</span><span>' + esc(dn(g)) + '</span><b class="muted">' + groups[g].length + '</b></div><div class="chips">' +
-        groups[g].map(function (k) { return '<span class="chip sm static">' + esc(dn(k.SubKategori)) + '</span>'; }).join('') + '</div></div>';
+        groups[g].map(function (k) { return X.A['ik-open'] ? '<button class="chip sm ci" data-act="ik-open" data-k="' + esc(k.KodeAkun) + '" title="' + esc(t('ik.t', dn(k.SubKategori))) + '">' + catIcon(g, k.SubKategori, k.KodeAkun) + esc(dn(k.SubKategori)) + '</button>' : '<span class="chip sm static">' + esc(dn(k.SubKategori)) + '</span>'; }).join('') + '</div></div>';
     }).join('');
     return h;
   }
@@ -811,7 +811,7 @@
       title = pageTitle(p);
       view = pg ? pg.render(p) : p.name === 'flow' ? vFlow(S.flowK) : p.name === 'debts' ? vDebts() : p.name === 'notif' ? vNotif() :
         p.name === 'asset' ? vAsset(p.arg) : p.name === 'parties' ? vParties() : p.name === 'categories' ? vCategories() : vSettings();
-    } else view = {beranda: vBeranda, transaksi: vTransaksi, laporan: vLaporan}[S.tab]();
+    } else { view = {beranda: vBeranda, transaksi: vTransaksi, laporan: vLaporan}[S.tab](); if (X.hooks.tabTitle) title = X.hooks.tabTitle(S.tab) || title; }
     var mode = S.pref.mode, mIco = mode === 'light' ? ICON.sun : (mode === 'dark' ? ICON.moon : ICON.auto);
     var cur = p ? 'menu' : S.tab, unread = unreadCount();
     var nav = [['beranda', 'nav.home', ICON.home], ['transaksi', 'nav.tx', ICON.list], ['add'], ['laporan', 'nav.report', ICON.chart], ['menu', 'nav.menu', ICON.grid]];
@@ -1060,12 +1060,12 @@
     if (f.jenis === 'Expense' || f.jenis === 'Income') {
       h += '<label class="lbl2">' + t('f.cat') + '</label><div class="chips">' + topKat(f.jenis).map(function (i) {
         var k = S.M.katByKode[i.v];
-        return '<button class="chip ci' + (f.kodeAkun === i.v ? ' on' : '') + '" data-act="f-kat" data-v="' + esc(i.v) + '">' + catIcon(k && k.Kategori) + esc(i.l) + '</button>';
+        return '<button class="chip ci' + (f.kodeAkun === i.v ? ' on' : '') + '" data-act="f-kat" data-v="' + esc(i.v) + '">' + catIcon(k && k.Kategori, k && k.SubKategori, k && k.KodeAkun) + esc(i.l) + '</button>';
       }).join('') + '<button class="chip more" data-act="f-kat-all">' + t('f.allcat') + '</button></div>';
       h += walletBlock(f.jenis === 'Expense' ? t('f.payfrom') : t('f.payto'), 'dompet');
     } else if (f.jenis === 'Transfer') {
       h += walletBlock(t('f.from'), 'dompet') + walletBlock(t('f.to'), 'dompetTujuan');
-      h += '<label class="lbl2">' + t('f.fee') + '</label><input class="input" inputmode="numeric" placeholder="0" value="' + (f.biayaAdmin ? C.fmtNum(f.biayaAdmin) : '') + '" data-money="biayaAdmin">';
+      h += '<label class="lbl2">' + t('f.fee') + '</label><input class="input" inputmode="numeric" placeholder="0" enterkeyhint="done" value="' + (f.biayaAdmin ? C.fmtNum(f.biayaAdmin) : '') + '" data-money="biayaAdmin">';
     } else if (f.jenis === 'Utang/Piutang') {
       h += '<label class="lbl2">' + t('f.kind') + '</label>' + chips([{v: 'Beri pinjaman', l: t('f.lend')}, {v: 'Terima pelunasan', l: t('f.recv')}, {v: 'Pinjam', l: t('f.borrow')}, {v: 'Bayar utang', l: t('f.repay')}], f.subJenis, 'f-sub');
       if (f.subJenis === 'Pinjam' || f.subJenis === 'Beri pinjaman') h += '<label class="lbl2">' + t('f.party') + '</label>' + pihakChips() + dueChips();
@@ -1082,7 +1082,7 @@
       h += '<label class="lbl2">' + t('f.date') + '</label><div class="dtrow"><button class="ib" data-act="f-dshift" data-v="-1">‹</button><button class="dtbig" data-act="f-cal" data-target="open">' + ICON.cal + '<span>' + esc(fmtD(fDate())) + '</span></button><button class="ib" data-act="f-dshift" data-v="1">›</button></div>';
     }
     if (f.jenis !== 'Saldo awal') {
-      function acIn(key, col, ph) { return '<div class="acw"><input class="input" data-bind="' + key + '" data-ac="' + col + '" value="' + esc(f[key]) + '" autocomplete="off"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + '><div class="acl"></div></div>'; }
+      function acIn(key, col, ph) { return '<div class="acw"><input class="input" data-bind="' + key + '" data-ac="' + col + '" value="' + esc(f[key]) + '" autocomplete="off" enterkeyhint="' + (key === 'catatan' ? 'done' : 'next') + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + '><div class="acl"></div></div>'; }
       h += '<div class="optbox"><div class="opth">' + t('f.opt') + '</div>';
       if (f.jenis === 'Expense' || f.jenis === 'Income') {
         h += '<label class="lbl2">' + t(f.jenis === 'Income' ? 'f.source' : 'f.shop') + '</label>' + acIn('toko', 'Toko') + (f.toko ? '' : sugChips('Toko', 'toko'));
@@ -1435,7 +1435,7 @@
     'f-jenis': function (el) { if (FX.edit) return; resetForJenis(el.dataset.v); renderForm(); },
     'f-kat': function (el) { F.kodeAkun = el.dataset.v; renderForm(); },
     'f-kat-all': function () {
-      var items = S.M.kategori.filter(function (k) { return k.Jenis === F.jenis; }).map(function (k) { return {v: k.KodeAkun, l: dn(k.SubKategori), g: dn(k.Kategori), ico: catIcon(k.Kategori)}; });
+      var items = S.M.kategori.filter(function (k) { return k.Jenis === F.jenis; }).map(function (k) { return {v: k.KodeAkun, l: dn(k.SubKategori), g: dn(k.Kategori), ico: catIcon(k.Kategori, k.SubKategori, k.KodeAkun)}; });
       openPicker({title: t('f.cat.title'), items: items, onPick: function (it) { F.kodeAkun = it.v; closePicker(); renderForm(); }});
     },
     'f-wallet': function (el) { F[el.dataset.field] = el.dataset.v; renderForm(); },
@@ -1606,7 +1606,7 @@
   Object.assign(X, {isDark: isDark, applyTheme: applyTheme, openMenu: showMenu, openSetup: renderSetup, S: S, C: C, C2: C2, L: L, t: t, esc: esc, $: $, sum: sum, ICON: ICON, A: A, dn: dn, api: api, render: render, openPage: openPage, goBack: goBack, setTab: setTab, toast: toast,
     openForm: openForm, rowToForm: rowToForm, openPicker: openPicker, closePicker: closePicker, closeOverlays: closeOverlays, openDetail: openDetail, txRow: txRow, txView: txView, txListGrouped: txListGrouped,
     donut: donut, legend: legend, sparkline: sparkline, shortRp: shortRp, perChips: perChips, rangeOf: rangeOf, periodOf: periodOf, prevOf: prevOf, ownerChips: ownerChips, fObj: fObj, getLines: getLines, kodeToDompet: kodeToDompet,
-    assetGroups: assetGroups, byTimeDesc: byTimeDesc, catIcon: catIcon, chips: chips, enqueue: enqueue, syncNow: syncNow, persist: persist, touch: touch, srvErr: srvErr, waitMaster: waitMaster,
+    assetGroups: assetGroups, byTimeDesc: byTimeDesc, catIcon: catIcon, isNonOp: isNonOp, chips: chips, enqueue: enqueue, syncNow: syncNow, persist: persist, touch: touch, srvErr: srvErr, waitMaster: waitMaster,
     isNonOp: isNonOp, getOpLines: getOpLines, splitIS: splitIS, dd: dd, openChoice: openChoice, vAsset: vAsset, NONOP_G: NONOP_G, newForm: newForm, defaultWallet: defaultWallet,
     DB: DB, lsGet: lsGet, lsSet: lsSet, savePref: savePref, parseTime: parseTime, kpEval: kpEval, rc: {list: rcList, save: rcSave, remove: rcRemove, batch: rcBatch}, shareDoc: shareDoc, pushSentinelOnce: pushSentinelOnce, signAmt: signAmt, debtPeople: debtPeople, unreadCount: unreadCount, VERSION: VERSION});
   X.jpg = window.DoItJpg;

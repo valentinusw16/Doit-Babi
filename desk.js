@@ -1,5 +1,5 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
-/* Do it v3.0 - tampilan responsif: sidebar, Beranda bento (waterfall, kalender, proyeksi), tabel Transaksi desktop,
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.1.0';
+/* Do it v3.1 - tampilan responsif: sidebar, Beranda bento (waterfall, kalender, proyeksi), tabel Transaksi desktop,
    gaya Kaca/Bersih (tersinkron lewat Rencana tipe "tampilan"), foto latar per perangkat. */
 (function () {
   'use strict';
@@ -23,6 +23,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
       'dk.set.t': 'Gaya tampilan', 'dk.gaya.kaca': 'Kaca', 'dk.gaya.bersih': 'Bersih', 'dk.gaya.s': 'Kaca: kartu tembus pandang dengan latar warna. Bersih: kartu polos. Berlaku di semua perangkatmu.', 'dk.gaya.srv': 'Server belum diperbarui ke v3.0, jadi gaya hanya tersimpan di perangkat ini.',
       'dk.bg.t': 'Foto latar', 'dk.bg.s': 'Tampil di gaya Kaca. Hanya tersimpan di perangkat ini.', 'dk.bg.pick': 'Pilih foto', 'dk.bg.change': 'Ganti foto', 'dk.bg.del': 'Hapus foto', 'dk.bg.dim': 'Gelapkan latar', 'dk.dim.0': 'Ringan', 'dk.dim.1': 'Sedang', 'dk.dim.2': 'Gelap',
       'dk.bg.saved': 'Foto latar disimpan', 'dk.bg.deleted': 'Foto latar dihapus', 'dk.bg.fail': 'Foto gagal diproses. Coba foto lain.',
+      'dk.fab': 'Catat', 'dk.fab.x': 'Tutup', 'dk.day.in': 'Masuk', 'dk.day.out': 'Keluar', 'dk.day.n': '{0} transaksi',
       'dk.sb.t': 'Menu samping', 'dk.sb.auto': 'Otomatis', 'dk.sb.open': 'Terbuka', 'dk.sb.rail': 'Ringkas', 'dk.sb.s': 'Hanya tampil di layar lebar (tablet dan laptop).'
     });
     I.add('en', {
@@ -38,6 +39,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
       'dk.set.t': 'Display style', 'dk.gaya.kaca': 'Glass', 'dk.gaya.bersih': 'Clean', 'dk.gaya.s': 'Glass: translucent cards over a colored backdrop. Clean: plain cards. Applies on all your devices.', 'dk.gaya.srv': 'The server is not updated to v3.0 yet, so the style is only saved on this device.',
       'dk.bg.t': 'Background photo', 'dk.bg.s': 'Shown in the Glass style. Saved on this device only.', 'dk.bg.pick': 'Choose photo', 'dk.bg.change': 'Change photo', 'dk.bg.del': 'Remove photo', 'dk.bg.dim': 'Darken backdrop', 'dk.dim.0': 'Light', 'dk.dim.1': 'Medium', 'dk.dim.2': 'Dark',
       'dk.bg.saved': 'Background saved', 'dk.bg.deleted': 'Background removed', 'dk.bg.fail': 'The photo could not be processed. Try another one.',
+      'dk.fab': 'Add', 'dk.fab.x': 'Close', 'dk.day.in': 'In', 'dk.day.out': 'Out', 'dk.day.n': '{0} transactions',
       'dk.sb.t': 'Side menu', 'dk.sb.auto': 'Automatic', 'dk.sb.open': 'Open', 'dk.sb.rail': 'Compact', 'dk.sb.s': 'Only shown on wide screens (tablet and laptop).'
     });
   }
@@ -125,8 +127,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
   X.hooks.sidebar = function () {
     pullGaya(); setSbs();
     var cur = S.page ? (MAPP[S.page.name] || S.page.name) : S.tab, unread = X.unreadCount ? X.unreadCount() : 0, open = sbState() === 'open';
-    var h = '<aside class="side" aria-label="Menu"><div class="sb-brand"><span class="logo">D</span><b class="lbl">Do it</b></div>' +
-      '<button class="sb-add" data-act="add" title="' + esc(t('dk.add')) + '"><span class="ni">' + ICON.plus + '</span><span class="lbl">' + t('dk.add') + '</span><kbd class="lbl">N</kbd></button><nav class="sb-nav">';
+    var h = '<aside class="side" aria-label="Menu"><div class="sb-brand">' + (X.hooks.avatarMe ? X.hooks.avatarMe() : '<span class="logo">D</span>') + '<div class="who lbl"><b>Do it</b><small>' + esc(S.cfg ? S.cfg.user : '') + '</small></div></div><nav class="sb-nav">';
     NAV.forEach(function (g) {
       if (g[0]) h += '<div class="sb-grp"><span class="lbl">' + t(g[0]) + '</span></div>';
       g[1].forEach(function (n) {
@@ -135,9 +136,17 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
           (n[0] === 'notif' && unread ? '<b class="bdg">' + (unread > 9 ? '9+' : unread) + '</b>' : '') + '</button>';
       });
     });
-    h += '</nav><div class="sb-foot">' + (X.hooks.avatar ? X.hooks.avatar() : '') + '<div class="who lbl"><b>' + esc(S.cfg ? S.cfg.user : '') + '</b><small>v' + esc(X.VERSION) + '</small></div>' +
-      '<button class="sb-tg" data-act="sb-toggle" title="' + esc(t(open ? 'dk.collapse' : 'dk.expand')) + '" aria-label="' + esc(t(open ? 'dk.collapse' : 'dk.expand')) + '">' + ICON.chev + '</button></div></aside>';
+    h += '</nav><div class="sb-foot"><small class="lbl muted">v' + esc(X.VERSION) + '</small>' +
+      '<button class="sb-tg" data-act="sb-toggle" title="' + esc(t(open ? 'dk.collapse' : 'dk.expand')) + '" aria-label="' + esc(t(open ? 'dk.collapse' : 'dk.expand')) + '">' + ICON.chev + '</button></div></aside>' + fabHTML();
     return h;
+  };
+  function fabHTML() {
+    var on = !!$('#overlay .sheet');
+    return '<button class="catfab' + (on ? ' x' : '') + '" data-act="catat-toggle" aria-label="' + esc(t('dk.fab')) + '"><span class="c"><i>' + ICON.plus + '</i><b>' + t('dk.fab') + '</b></span><span class="o"><i>' + ICON.x + '</i><b>' + t('dk.fab.x') + '</b></span><kbd>N</kbd></button>';
+  }
+  X.hooks.tabTitle = function (tab) {
+    if (sbState() === 'none') return '';
+    return t({beranda: 'nav.home', transaksi: 'nav.tx', laporan: 'nav.report'}[tab] || 'nav.home');
   };
   X.hooks.topExtra = function () {
     return '<input class="gsearch" id="gq" type="search" placeholder="' + esc(t('dk.search')) + ' (Ctrl K)" value="" autocomplete="off" aria-label="' + esc(t('dk.search')) + '">';
@@ -145,12 +154,12 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
 
   // ---------------------------------------------------------------- Beranda: kartu-kartu
   X.hooks.homePre = function () {
-    X.sankeyOpt = wide() ? {W: 470, Hc: 300, gap: 8, fmt: function (n) { return fnum(n); }} : null;
+    X.sankeyOpt = wide() ? {W: 520, Hc: 290, gap: 6, fmt: function (n) { return fnum(n); }} : null;
   };
   var CPAL = ['var(--accent)', 'var(--in)', '#d6a24c', '#7e8fd6', '#5db8a8', '#b561a8'];
 
   function projChart(pj, d) {
-    var W = 340, H = 112, pts = d.months.map(function (m) { return m.end; });
+    var W = 340, H = 150, pts = d.months.map(function (m) { return m.end; });
     pts.unshift(d.start);
     var lo = Math.min.apply(null, pts.concat([pj.lo])), hi = Math.max.apply(null, pts.concat([pj.hi])), span = (hi - lo) || 1, xa = W * 0.74, n = pts.length - 1 || 1;
     function Y(v) { return 8 + (hi - v) / span * (H - 18); }
@@ -317,27 +326,44 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
 
   // ---- susun Beranda
   X.hooks.homeLayout = function (P) {
-    var cells = [
-      ['b-ban', P.banner], ['b-own', P.owner], ['b-top', P.top], ['b-hero', P.hero], ['b-month', monthCard(P)], ['b-aset' + (P.mid ? '' : ' solo'), asetCard(P)],
-      ['b-wf' + (P.mid ? '' : ' solo'), wfCard(P)], ['b-plan', P.mid], ['b-flow', P.sankey], ['b-cal', calCard(P)], ['b-ratio', P.ratio],
-      ['b-rec' + (P.ratio ? '' : ' solo'), P.recentH + P.recent]
-    ];
-    return '<div class="bwrap"><div class="bento">' + cells.map(function (c) { return c[1] ? '<div class="bt ' + c[0] + '">' + c[1] + '</div>' : ''; }).join('') + '</div></div>';
+    function bt(c, h) { return h ? '<div class="bt ' + c + '">' + h + '</div>' : ''; }
+    var rec = P.recent.replace('<div class="card">', '<div class="card rcard"><div class="ct"><h3>' + esc(t('home.recent')) + '</h3><span class="sp"></span><button class="link" data-act="tab" data-v="transaksi">' + esc(t('see.all')) + '</button></div>');
+    var s1 = bt('b-month', monthCard(P)) + bt('b-ratio', P.ratio), s2 = bt('b-plan', P.mid) + bt('b-rec', rec);
+    return '<div class="bwrap"><div class="bento">' + bt('b-ban', P.banner) + bt('b-own', P.owner) + bt('b-top', P.top) + bt('b-hero', P.hero) +
+      (s1 ? '<div class="stk s1">' + s1 + '</div>' : '') + bt('b-aset' + (P.mid ? '' : ' solo'), asetCard(P)) + bt('b-wf', wfCard(P)) +
+      (s2 ? '<div class="stk s2">' + s2 + '</div>' : '') + bt('b-flow', P.sankey) + bt('b-cal', calCard(P)) + '</div></div>';
   };
-
-  // ---------------------------------------------------------------- tabel Transaksi (desktop)
+  function dayTotals(rows) {
+    var m = {};
+    rows.forEach(function (x) {
+      var d = x.Waktu.substr(0, 10), o = m[d] || (m[d] = {inn: 0, out: 0, n: 0});
+      o.n++;
+      if (x.Status !== 'Aktif' || X.isNonOp(x.KodeAkun)) return;
+      if (x.Jenis === 'Income') o.inn += +x.Jumlah; else if (x.Jenis === 'Expense') o.out += +x.Jumlah; else if (x.Jenis === 'Transfer' && +x.BiayaAdmin) o.out += +x.BiayaAdmin;
+    });
+    return m;
+  }
+  function dayName(d) { return t('an.days.full').split(',')[(new Date(d + 'T00:00:00Z').getUTCDay() + 6) % 7]; }
   X.hooks.txTable = function (rows, limit) {
     if (!rows.length) return '<div class="card"><div class="empty">' + t('flow.empty') + '</div></div>';
-    var today = C.todayLocal(), n = Math.min(limit, rows.length), h = '<div class="card tbl"><table class="txt"><thead><tr><th>' + t('dk.th.date') + '</th><th>' + t('dk.th.tx') + '</th><th>' + t('dk.th.cat') + '</th><th>' + t('dk.th.wal') + '</th><th>' + t('dk.th.own') + '</th><th class="r">' + t('dk.th.amt') + '</th></tr></thead><tbody>';
+    var today = C.todayLocal(), n = Math.min(limit, rows.length), tot = dayTotals(rows), yd = new Date(today + 'T00:00:00Z'); yd.setUTCDate(yd.getUTCDate() - 1); yd = yd.toISOString().substr(0, 10);
+    var h = '<div class="dgh dgr"><span>' + t('dk.th.date') + '</span><span>' + t('dk.th.tx') + '</span><span>' + t('dk.th.cat') + '</span><span>' + t('dk.th.wal') + '</span><span>' + t('dk.th.own') + '</span><span class="r">' + t('dk.th.amt') + '</span></div>', last = '';
     for (var i = 0; i < n; i++) {
       var x = rows[i], v = X.txView(x), d = x.Waktu.substr(0, 10), sub = x.Toko || x.Barang || x.Catatan || x.Tag || '';
+      if (d !== last) {
+        if (last) h += '</div></section>';
+        var o = tot[d], rel = d === today ? t('f.d.0') : (d === yd ? t('f.d.1') : '');
+        h += '<section class="card dcard' + (d === today ? ' hl' : '') + '" data-d="' + d + '"><header class="dch"><div class="dcd"><b>' + esc(dayName(d)) + '</b><span>' + esc(d.substr(8, 2) + ' ' + C.namaBulan(+d.substr(5, 2), true) + ' ' + d.substr(0, 4)) + '</span>' + (rel ? '<em>' + esc(rel) + '</em>' : '') + '</div>' +
+          '<div class="dct"><span class="in">' + t('dk.day.in') + ' <b>' + (o.inn ? '+' : '') + esc(frp(o.inn)) + '</b></span><span class="out">' + t('dk.day.out') + ' <b>' + (o.out ? '−' : '') + esc(frp(o.out)) + '</b></span><small>' + t('dk.day.n', o.n) + '</small></div></header><div class="dgb">';
+        last = d;
+      }
       var tag = x._error ? '<span class="tag bad">' + t('tx.failed') + '</span>' : (x._pending ? '<span class="tag">' + t('tx.pending') + '</span>' : '');
-      h += '<tr class="' + (x.Status !== 'Aktif' ? 'void' : '') + (D_ID() === x.ID ? ' cur' : '') + '" data-act="tx-open" data-id="' + esc(x.ID) + '"><td class="dt">' + esc(C.fmtHari(d, today)) + '<small>' + esc(x.Waktu.substr(11, 5)) + '</small></td>' +
-        '<td><div class="tt"><span class="ico ' + v.cls + '">' + v.ico + '</span><div><b>' + esc(v.title) + '</b>' + tag + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</div></div></td>' +
-        '<td>' + esc(x.Kategori ? X.dn(x.Kategori) : jlabel(x.Jenis)) + '</td><td>' + esc(x.Dompet || '') + (x.DompetTujuan ? '<small>→ ' + esc(x.DompetTujuan) + '</small>' : '') + '</td><td>' + esc(x.PemilikDompet || '') + '</td>' +
-        '<td class="r a ' + (v.sign > 0 ? 'in' : (v.sign < 0 ? 'out' : '')) + '">' + esc(X.signAmt(v, x.Jumlah)) + '</td></tr>';
+      h += '<div class="dgr dr' + (x.Status !== 'Aktif' ? ' void' : '') + (D_ID() === x.ID ? ' cur' : '') + '" role="button" tabindex="0" data-act="tx-open" data-id="' + esc(x.ID) + '"><span class="dt">' + esc(x.Waktu.substr(11, 5)) + '</span>' +
+        '<span class="tt"><span class="ico ' + v.cls + '">' + v.ico + '</span><span class="tx"><b>' + esc(v.title) + '</b>' + tag + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span></span>' +
+        '<span class="cl">' + esc(x.Kategori ? X.dn(x.Kategori) : jlabel(x.Jenis)) + '</span><span class="cl">' + esc(x.Dompet || '') + (x.DompetTujuan ? '<small>→ ' + esc(x.DompetTujuan) + '</small>' : '') + '</span><span class="cl">' + esc(x.PemilikDompet || '') + '</span>' +
+        '<span class="r a ' + (v.sign > 0 ? 'in' : (v.sign < 0 ? 'out' : '')) + '">' + esc(X.signAmt(v, x.Jumlah)) + '</span></div>';
     }
-    h += '</tbody></table></div>';
+    h += '</div></section>';
     if (rows.length > n) h += '<div class="more-wrap"><button class="btn" data-act="more">' + t('more', rows.length - n) + '</button></div>';
     return h;
   };
@@ -347,20 +373,20 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
   // ---------------------------------------------------------------- Pengaturan: gaya, foto latar, menu samping
   function gid() { return 'TAMPIL-' + String(S.cfg.user).replace(/[^A-Za-z0-9_-]/g, '').substr(0, 24); }
   function pushGaya() {
-    if (!S.pref.gayaPend || !S.cfg || !S.master) return;
-    S.pref.gayaPend = false; X.savePref();
-    X.rc.save('tampilan', {gaya: S.pref.gaya, t: S.pref.gayaT || Date.now()}, gid()).catch(function (e) {
+    if (!(S.pref.gayaPend || S.pref.icoPend) || !S.cfg || !S.master) return;
+    S.pref.gayaPend = false; S.pref.icoPend = false; X.savePref();
+    X.rc.save('tampilan', {gaya: S.pref.gaya, t: S.pref.gayaT || Date.now(), ico: S.pref.ico || {}}, gid()).catch(function (e) {
       var m = String(e && e.message || e);
       if (/tidak dikenal|unknown/i.test(m)) { S.pref.gayaSrv = 1; X.savePref(); X.toast(t('dk.gaya.srv')); }
       else { S.pref.gayaPend = true; X.savePref(); }
     });
   }
   function pullGaya() {
-    if (!S.cfg || S.pref.gayaPend) return;
-    var r = S.rencana.filter(function (x) { return x.Tipe === 'tampilan' && x.ID === gid(); })[0], g = r && r.Data && r.Data.gaya;
+    if (!S.cfg || S.pref.gayaPend || S.pref.icoPend) return;
+    var r = S.rencana.filter(function (x) { return x.Tipe === 'tampilan' && x.ID === gid(); })[0], dt = r && r.Data, g = dt && dt.gaya;
     if ((g === 'kaca' || g === 'bersih') && g !== S.pref.gaya) { S.pref.gaya = g; X.savePref(); }
+    if (dt && dt.ico && typeof dt.ico === 'object' && JSON.stringify(dt.ico) !== JSON.stringify(S.pref.ico || {})) { S.pref.ico = dt.ico; X.savePref(); }
   }
-  setInterval(pushGaya, 20000);
   function setGaya(g) { S.pref.gaya = g; S.pref.gayaT = Date.now(); S.pref.gayaPend = true; S.pref.gayaSrv = 0; X.savePref(); X.render(); pushGaya(); }
 
   var BG = {url: null};
@@ -416,6 +442,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
       while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; }
       S.calM = y + '-' + (m < 10 ? '0' : '') + m; X.render();
     },
+    'catat-toggle': function () { if ($('#overlay .sheet')) closeSheet(); else if (A.add) A.add(); },
     'dk-day': function (el) { S.custom = {start: el.dataset.d, end: el.dataset.d}; S.txPer = 'custom'; S.q = ''; X.setTab('transaksi'); }
   });
   document.addEventListener('change', function (e) {
@@ -428,6 +455,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
       el.value = '';
     }
   });
+  function closeSheet() { var x = $('#overlay .sheet .x'); if (x) x.click(); else $('#overlay').innerHTML = ''; }
   function pickBar(g) { var i = +g.getAttribute('data-i'); if (isNaN(i) || WF.sel === i) return; WF.sel = i; var tip = $('#wf-tip'); if (tip) tip.innerHTML = wfTip(i); document.querySelectorAll('.wfs .wfb').forEach(function (n) { n.classList.toggle('sel', n === g); }); }
   document.addEventListener('mouseover', function (e) { var g = e.target.closest && e.target.closest('.wfs .wfb'); if (g) pickBar(g); });
   document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('.wfs .wfb'); if (g) pickBar(g); });
@@ -445,12 +473,21 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
       if (S.page || S.tab !== 'transaksi') X.setTab('transaksi'); else X.render();
       return;
     }
-    if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'n' || e.key === 'N') && sbState() !== 'none' && !$('#overlay .sheet') && !$('#overlay2 .sheet')) { e.preventDefault(); if (A.add) A.add(); }
+    if (e.key === 'Enter' && !e.shiftKey && e.target.matches && e.target.matches('#formbody .optbox input, #formbody input[data-money]')) {
+      var ins = [].slice.call(document.querySelectorAll('#formbody .optbox input, #formbody input[data-money]')), nx = ins[ins.indexOf(e.target) + 1];
+      e.preventDefault();
+      if (nx) nx.focus(); else { e.target.blur(); var sv = $('#overlay .sheet-f [data-act="f-save"]'); if (sv) sv.focus(); }
+      return;
+    }
+    if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'n' || e.key === 'N') && sbState() !== 'none' && !$('#overlay2 .sheet')) {
+      e.preventDefault();
+      if ($('#overlay #formbody')) closeSheet(); else if (A.add) A.add();
+    }
   });
   // panel samping: tandai bila ada lembar terbuka agar halaman bergeser
   (function () {
     var ov = $('#overlay'); if (!ov || !window.MutationObserver) return;
-    new MutationObserver(function () { document.documentElement.toggleAttribute('data-panel', !!ov.querySelector('.sheet')); }).observe(ov, {childList: true});
+    new MutationObserver(function () { var on = !!ov.querySelector('.sheet'); document.documentElement.toggleAttribute('data-panel', on); var f = $('.catfab'); if (f) f.classList.toggle('x', on); }).observe(ov, {childList: true});
   })();
 
   var start0 = X.start;
@@ -458,5 +495,5 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.0.0';
     start0();
     try { loadBg().catch(function () {}); } catch (e) {}
   };
-  X.desk = {nwData: nwData, projection: projection, wide: wide};
+  X.desk = {nwData: nwData, projection: projection, wide: wide, pushTampilan: pushGaya};
 })();

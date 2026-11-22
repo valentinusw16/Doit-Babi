@@ -482,11 +482,11 @@ button.dtbig { display: block; width: 100%; }
 .bwrap { container-type: inline-size; }
 .bento { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
 .bento > :where(.bt) { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; }
-.bento > .bt > .card, .bento > .bt > .plan, .bento > .bt > .rgrid { flex: 1; margin: 0; }
+.bento .bt > .card, .bento .bt > .plan, .bento .bt > .rgrid { flex: 1; margin: 0; }
 .bento .card + .card { margin-top: 0; }
 .b-ban { order: -2; } .b-own { order: -1; } .b-top { order: 0; } .b-hero { order: 1; } .b-wf { order: 2; } .b-flow { order: 3; } .b-cal { order: 4; }
 .b-plan { order: 5; } .b-aset { order: 6; } .b-ratio { order: 7; } .b-rec { order: 8; } .b-month { order: 9; }
-.bento > .b-month { display: none; }
+.bento .b-month { display: none; }
 .bt .ct { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .bt .ct h3 { margin: 0; font-size: 15px; font-weight: 700; }
 .bt .ct .sp { flex: 1; }
@@ -497,7 +497,7 @@ button.dtbig { display: block; width: 100%; }
 .mcard .mrb:first-of-type .mr { border-top: 0; }
 .mcard .mv { font-size: 22px; font-weight: 800; letter-spacing: -.02em; white-space: nowrap; }
 .mcard, .acard { display: flex; flex-direction: column; }
-.bento > .bt > .rgrid { display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; text-align: left; }
+.bento .bt > .rgrid { display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; text-align: left; }
 .mcard .mix { margin-top: auto; padding-top: 8px; }
 .mixb { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: var(--line); gap: 2px; }
 .mixb i { display: block; height: 100%; } .mixb .e { background: var(--out); } .mixb .l { background: var(--in); }
@@ -541,7 +541,7 @@ button.dtbig { display: block; width: 100%; }
 .kcg .kcd.fut { opacity: .45; } .kcg .kcd.none b { color: var(--muted); font-weight: 600; }
 .kcg .kcd:not(.fut):hover { border-color: var(--accent); }
 .b-cal { container-type: inline-size; container-name: cal; }
-@container cal (min-width: 480px) { .kcg .kcd { min-height: 66px; } .kcg .kcd span { font-size: 10.5px; } .kcg .kcd .f { display: inline; } .kcg .kcd .s { display: none; } }
+@container cal (min-width: 480px) { .kcg .kcd { min-height: 52px; } .kcg .kcd span { font-size: 10.5px; } .kcg .kcd .f { display: inline; } .kcg .kcd .s { display: none; } }
 .hero .inout { }
 
 /* tablet kecil / jendela sempit: dua kolom */
@@ -550,7 +550,7 @@ button.dtbig { display: block; width: 100%; }
   .b-ban, .b-own, .b-top { grid-column: span 12; }
   .b-hero, .b-month, .b-aset, .b-plan { grid-column: span 6; }
   .b-wf, .b-flow, .b-cal, .b-ratio, .b-rec { grid-column: span 12; }
-  .b-hero { order: 1; } .b-month { order: 2; } .bento > .b-month { display: flex; } .b-aset { order: 3; } .b-plan { order: 4; } .b-wf { order: 5; } .b-flow { order: 6; } .b-cal { order: 7; } .b-ratio { order: 8; } .b-rec { order: 9; }
+  .b-hero { order: 1; } .b-month { order: 2; } .bento .b-month { display: flex; } .b-aset { order: 3; } .b-plan { order: 4; } .b-wf { order: 5; } .b-flow { order: 6; } .b-cal { order: 7; } .b-ratio { order: 8; } .b-rec { order: 9; }
   .hero .inout { display: none; }
 }
 @container (min-width: 620px) and (max-width: 999px) { .bento > .b-aset.solo { grid-column: span 12; } }
@@ -671,3 +671,118 @@ table.txt th, table.txt td { text-align: left; }
 table.txt th.r, table.txt td.r { text-align: right; }
 table.txt td:nth-child(2) { min-width: 230px; width: 36%; }
 @media (max-width: 819px) { .wfs .ax { font-size: 9px; } }
+
+/* =====================================================================
+   v3.1 - bento melayang: sidebar & top bar kartu, tombol Catat melayang, kartu padat, transaksi per hari
+   ===================================================================== */
+.catfab { display: none; }
+.stk { display: contents; }
+:where(.bento > .stk) > :where(.bt) { grid-column: 1 / -1; min-width: 0; display: flex; flex-direction: column; }
+.mcard .mr { padding: 9px 0; } .mcard .mv { font-size: 21px; }
+.mcard .mix { padding-top: 6px; }
+.kcg .kcd { min-height: 46px; }
+.rcard .ct { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.rcard .ct h3 { margin: 0; font-size: 15px; font-weight: 700; } .rcard .ct .sp { flex: 1; }
+.ikg { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 8px; }
+.ikb { aspect-ratio: 1; border-radius: 14px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+.ikb svg { width: 24px; height: 24px; } .ikb.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.sb-brand .av.brand { width: 44px; height: 44px; box-shadow: 0 0 0 2px var(--glass-b, var(--line)); } .sb-brand .av.brand b { font-size: 19px; }
+
+/* kartu utama dengan foto: isi selalu terbaca */
+.hero.photo .hdim { background: radial-gradient(130% 100% at 15% 10%, rgba(10,4,8,.30), transparent 70%), linear-gradient(180deg, rgba(12,6,10,.5), rgba(12,6,10,.7)); }
+.hero.photo.dm0 .hdim { background: linear-gradient(180deg, rgba(12,6,10,.36), rgba(12,6,10,.56)); }
+.hero.photo.dm2 .hdim { background: linear-gradient(180deg, rgba(12,6,10,.64), rgba(12,6,10,.84)); }
+.hero.photo.bl0 .hbg { filter: blur(3px); } .hero.photo.bl1 .hbg { filter: blur(10px); } .hero.photo.bl2 .hbg { filter: blur(20px); }
+.hero.photo { text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+.hero.photo .muted, .hero.photo .sm, .hero.photo small, .hero.photo .pjx span { color: rgba(255,255,255,.84); }
+.hero.photo .pj .pjr { border-top-color: rgba(255,255,255,.28); }
+.hero.photo .pj svg polyline { stroke: #fff; } .hero.photo .pj svg line { stroke: #fff; } .hero.photo .pj svg circle { stroke: #fff; }
+.hero.photo .pj svg circle:first-of-type { fill: #fff; } .hero.photo .pj svg path { fill: #fff; }
+.hero.photo .pj svg { filter: drop-shadow(0 1px 4px rgba(0,0,0,.55)); }
+.hero.photo .dtag.up { background: rgba(255,255,255,.2); color: #c9f8dc; } .hero.photo .dtag.dn { background: rgba(255,255,255,.2); color: #ffd3d3; }
+.hero.photo .pjl b.in, .hero.photo .in { color: #b9f6cf; } .hero.photo .pjl b.out, .hero.photo .out { color: #ffc9c9; }
+
+@media (min-width: 820px) {
+  html[data-sbs="open"] { --sbw: 270px; } html[data-sbs="rail"] { --sbw: 102px; }
+  html[data-sbs="open"] .app, html[data-sbs="rail"] .app { margin: 0 0 0 calc(var(--sbw) - 22px); }
+  html[data-sbs="open"] .side, html[data-sbs="rail"] .side { top: 14px; bottom: 14px; left: 14px; width: calc(var(--sbw) - 28px); border: 1px solid var(--line); border-radius: 30px; padding: 14px 12px 12px;
+    box-shadow: 0 16px 44px rgba(60,20,40,.13); }
+  html[data-gaya="kaca"][data-sbs="open"] .side, html[data-gaya="kaca"][data-sbs="rail"] .side { border-color: var(--glass-b); }
+  html[data-gaya="kaca"][data-dark="1"][data-sbs] .side { box-shadow: 0 16px 44px rgba(0,0,0,.4); }
+  .sb-brand { gap: 12px; padding: 4px 6px 12px; }
+  .sb-brand .avbtn { margin: 0; }
+  .sb-brand .who { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+  .sb-brand .who b { font-size: 19px; letter-spacing: -.02em; } .sb-brand .who small { font-size: 12.5px; color: var(--muted); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+  .nv { border-radius: 17px; }
+  .nv .lbl { flex: 1; min-width: 0; white-space: normal; line-height: 1.18; text-align: left; }
+  .sb-foot { justify-content: space-between; border-top: 0; padding: 10px 6px 0; }
+  html[data-sbs="rail"] .sb-foot { justify-content: center; }
+  /* top bar jadi kartu melayang */
+  html[data-sbs="open"] .top, html[data-sbs="rail"] .top { top: 14px; margin: 14px 26px 14px; padding: 9px 12px 9px 20px; border-radius: 26px; border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--card) 90%, transparent); box-shadow: 0 12px 34px rgba(60,20,40,.09); }
+  html[data-gaya="kaca"][data-sbs="open"] .top, html[data-gaya="kaca"][data-sbs="rail"] .top { background: var(--glass); border-color: var(--glass-b); -webkit-backdrop-filter: blur(22px) saturate(165%); backdrop-filter: blur(22px) saturate(165%); }
+  html[data-gaya="kaca"][data-dark="1"][data-sbs] .top { box-shadow: 0 12px 34px rgba(0,0,0,.35); }
+  html[data-sbs="open"] .top .title .tt, html[data-sbs="rail"] .top .title .tt { font-size: 22px; }
+  html[data-gaya="kaca"][data-bgimg][data-sbs="open"] .top .tt, html[data-gaya="kaca"][data-bgimg][data-sbs="rail"] .top .tt { color: var(--ink); text-shadow: none; }
+  html[data-gaya="kaca"][data-bgimg][data-sbs="open"] .top .hb, html[data-gaya="kaca"][data-bgimg][data-sbs="rail"] .top .hb,
+  html[data-gaya="kaca"][data-bgimg][data-sbs="open"] .top .sync, html[data-gaya="kaca"][data-bgimg][data-sbs="rail"] .top .sync { color: var(--ink); }
+  html[data-sbs="open"] .top .hb, html[data-sbs="rail"] .top .hb { background: color-mix(in srgb, var(--ink) 6%, transparent); border-color: transparent; }
+  html[data-sbs="open"] .top .hb:hover, html[data-sbs="rail"] .top .hb:hover { background: color-mix(in srgb, var(--ink) 12%, transparent); }
+  html[data-sbs="open"] .top .gsearch, html[data-sbs="rail"] .top .gsearch { background: color-mix(in srgb, var(--ink) 6%, transparent); border-color: transparent; }
+  html[data-sbs="open"] main, html[data-sbs="rail"] main { padding: 0 26px 96px; }
+  /* penyaring Transaksi dan halaman lain: kartu melayang, bukan batang kotak */
+  html[data-sbs="open"] .stick, html[data-sbs="rail"] .stick { top: 92px; margin: 0 0 14px; padding: 12px 14px 6px; border-radius: 24px; background: var(--glass); border: 1px solid var(--glass-b);
+    -webkit-backdrop-filter: blur(20px) saturate(165%); backdrop-filter: blur(20px) saturate(165%); box-shadow: 0 10px 30px rgba(60,20,40,.08); }
+  html[data-sbs] .stick .search { margin: 2px 0 6px; }
+  html[data-sbs="open"] .sumcard, html[data-sbs="rail"] .sumcard { grid-template-columns: repeat(3, 1fr) auto; align-items: center; padding-bottom: 14px; margin-bottom: 14px; }
+  html[data-sbs] .sumcard small { position: static; text-align: right; align-self: center; }
+  /* tombol Catat melayang */
+  html[data-sbs="open"] .catfab, html[data-sbs="rail"] .catfab { display: inline-flex; align-items: center; gap: 12px; position: fixed; z-index: 30; right: 28px; bottom: 26px; height: 54px; padding: 0 16px 0 14px; border-radius: 20px;
+    background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 15px; border: 1px solid transparent;
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--accent) 42%, transparent), 0 2px 6px rgba(0,0,0,.16); transition: transform .15s ease, right .22s ease; }
+  .catfab:hover { transform: translateY(-2px); }
+  .catfab span { display: inline-flex; align-items: center; gap: 8px; } .catfab i { display: grid; place-items: center; } .catfab svg { width: 22px; height: 22px; stroke-width: 2.4; } .catfab b { font-weight: 700; }
+  .catfab kbd { font: 600 11px/1 inherit; border: 1px solid color-mix(in srgb, currentColor 40%, transparent); border-radius: 6px; padding: 3px 6px; opacity: .9; }
+  .catfab .o { display: none; } .catfab.x .o { display: inline-flex; } .catfab.x .c { display: none; }
+  html[data-sbs] .catfab.x { background: var(--card); color: var(--ink); border-color: var(--line); box-shadow: 0 14px 34px rgba(0,0,0,.22), 0 2px 6px rgba(0,0,0,.12); }
+}
+@media (min-width: 820px) and (max-width: 1099px) { html[data-panel] .catfab { display: none !important; } }
+@media (min-width: 1100px) {
+  /* panel Catat/detail: kartu melayang di kanan; halaman menyesuaikan hanya saat panel terbuka */
+  #overlay .sheet, #overlay .sheet.full { top: 14px; bottom: 14px; right: 14px; height: auto; width: 440px; border-radius: 30px; border: 1px solid var(--line); box-shadow: 0 24px 64px rgba(30,10,24,.3); overflow: hidden; }
+  html[data-gaya="kaca"] #overlay .sheet { border-color: var(--glass-b); }
+  html[data-panel] .app { margin-right: calc(440px + 28px); }
+  html[data-panel] .catfab { right: calc(440px + 28px + 16px); }
+  html[data-sbs="open"] .top .gsearch, html[data-sbs="rail"] .top .gsearch { width: 240px; }
+  /* tumpukan kartu: dua kartu kecil berbagi satu kolom, tanpa ruang kosong */
+}
+@container (min-width: 1000px) {
+  .stk { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .stk > .bt { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; grid-column: auto; }
+  .stk.s1 { grid-column: span 4; order: 2; } .stk.s2 { grid-column: span 4; order: 5; }
+  .b-hero, .b-aset { grid-column: span 4; } .b-wf { grid-column: span 8; } .b-flow, .b-cal { grid-column: span 6; }
+  .b-flow { justify-content: center; }
+}
+/* transaksi per hari */
+.dgr { display: grid; grid-template-columns: 58px minmax(220px, 1.9fr) minmax(110px, 1fr) minmax(110px, 1fr) minmax(90px, .8fr) 124px; gap: 0 14px; align-items: center; }
+.dgh { padding: 0 20px 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+html[data-gaya="kaca"][data-bgimg] .dgh { color: rgba(255,255,255,.88); text-shadow: 0 1px 8px rgba(20,6,14,.6); }
+.dgh .r, .dr .r { text-align: right; }
+html[data-sbs] .card.dcard { padding: 0; overflow: hidden; margin: 0 0 14px; }
+.dch { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px 12px; border-bottom: 1px solid var(--line); }
+.dcd { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; } .dcd b { font-size: 16px; } .dcd span { color: var(--muted); font-size: 13.5px; }
+.dcd em { font-style: normal; font-size: 11.5px; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.dct { display: flex; align-items: baseline; gap: 18px; font-size: 13px; color: var(--muted); white-space: nowrap; } .dct b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.dct .in b { color: var(--in); } .dct .out b { color: var(--out); } .dct small { font-size: 12px; margin-left: 2px; }
+.dr { padding: 10px 20px; border-top: 1px solid var(--line); cursor: pointer; }
+.dr:first-child { border-top: 0; }
+.dr:hover, .dr:focus-visible { background: color-mix(in srgb, var(--accent) 7%, transparent); outline: none; }
+.dr .dt { font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dr .tt { display: flex; align-items: center; gap: 10px; min-width: 0; } .dr .tx { display: flex; flex-direction: column; min-width: 0; }
+.dr .tx b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dr small { display: block; font-size: 12px; color: var(--muted); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dr .cl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dr .a { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dr.void { opacity: .55; } .dr.void .tx b { text-decoration: line-through; }
+.dr.cur { background: var(--accent-soft); }
+.b-flow > .card { display: flex; flex-direction: column; } .b-flow > .card > svg { margin: auto 0; width: 100%; height: auto; }

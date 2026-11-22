@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.0.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.1.0';
 /* Do it v2.2 - foto profil (disinkronkan lewat Google Sheet, Rencana tipe "foto", hanya pemilik yang boleh mengganti)
    dan foto latar kartu Kekayaan bersih (hanya di HP ini, IndexedDB). */
 (function () {
@@ -52,6 +52,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.0.0';
   X.hooks.avatar = function () {
     return '<button class="avbtn" data-act="av-open" aria-label="' + esc(t('av.t')) + '">' + avHTML(currentAv()) + '</button>';
   };
+  X.hooks.avatarMe = function () { return '<button class="avbtn" data-act="av-open" aria-label="' + esc(t('av.t')) + '">' + avHTML(S.cfg.user, 'brand') + '</button>'; };
   function avSheet() {
     var me = S.cfg.user, users = (S.M.users && S.M.users.length ? S.M.users : [me]);
     var h = '<div class="scrim" data-act="av-close"></div><div class="sheet"><div class="sheet-h"><div class="sh-t">' + t('av.t') + '</div><button class="x" data-act="av-close" aria-label="' + t('close') + '">' + X.ICON.x + '</button></div><div class="sheet-b">';
