@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.1.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.1.1';
 /* Do it v2.0 - Rencana: anggaran bulanan (+rincian, rollover, realokasi), anggaran event (tag), dana tujuan, transaksi rutin.
    Data disimpan di sheet Rencana (lewat DoIt.rc), dihitung oleh core2.js. */
 (function () {
@@ -104,7 +104,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.1.0';
     var k = curMonth(), J = curJenis(), inc = J === 'Income', lines = allBudgetLines().filter(function (l) { return lineJenis(l) === J; }), bm = C2.budgetMonth(lines, S.tx, k, S.owner), today = C.todayLocal(), isNow = k === today.substr(0, 7);
     var h = '<div class="mnav"><button class="hb" data-act="bm-prev" aria-label="‹">' + ICON.back + '</button><b>' + esc(monthLabel(k)) + '</b><button class="hb" data-act="bm-next" aria-label="›">' + '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>' + '</button></div>';
     h += '<div class="seg sm" style="margin-bottom:10px">' + [['Expense', 'bl.j.exp'], ['Income', 'bl.j.inc']].map(function (x) { return '<button class="' + (J === x[0] ? 'on' : '') + '" data-act="bl-jenis" data-v="' + x[0] + '">' + t(x[1]) + '</button>'; }).join('') + '</div>';
-    h += '<div class="stick"><div class="ddrow">' + X.ownerChips(S.owner, 'owner') + '</div></div>';
+    X.ownerChips(S.owner, 'owner');
     var T = bm.total, p = T.tersedia ? T.terpakai / T.tersedia : 0;
     h += '<div class="card hero"><div class="lbl">' + t(inc ? 'bl.total.inc' : 'bl.total') + '</div><div class="big">' + esc(fm(T.tersedia)) + '</div>' +
       '<div class="sr" style="margin-top:6px"><span>' + esc(t(inc ? 'bl.got' : 'bl.used', fm(T.terpakai))) + '</span><b class="' + (inc ? (T.terpakai >= T.tersedia ? 'in' : '') : (T.sisa < 0 ? 'out' : 'in')) + '">' + esc(inc ? t(T.terpakai >= T.tersedia ? 'bl.inc.over' : 'bl.inc.short', fm(Math.abs(T.sisa))) : t(T.sisa < 0 ? 'bl.over' : 'bl.left', fm(Math.abs(T.sisa)))) + '</b></div>' + pbar(p, inc ? (p >= 1 ? 'good' : '') : null) +

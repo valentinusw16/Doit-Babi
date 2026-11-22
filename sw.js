@@ -1,5 +1,5 @@
 /* Service worker: cangkang aplikasi tersedia offline. Permintaan ke server data tidak pernah disimpan di sini. */
-var CACHE = 'doit-v3.1.0', FONTS = 'doit-fonts-1';
+var CACHE = 'doit-v3.1.1', FONTS = 'doit-fonts-1';
 var SHELL = ['./', 'index.html', 'style.css', 'core.js', 'core2.js', 'i18n.js', 'i18n2.js', 'i18n3.js', 'jpg.js', 'app.js', 'plan.js', 'port.js', 'analisis.js', 'foto.js', 'ikon.js', 'desk.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

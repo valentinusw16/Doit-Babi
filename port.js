@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.1.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.1.1';
 /* Do it v2.1 - Portofolio: semua aset dari pembukuan + nilai terkini.
    - Kas: nilai = saldo buku.
    - Investasi (wadah): isi per emiten/produk (lot, harga rata-rata) + sisa kas; deposito/SBN dihitung dari bunga.
@@ -102,7 +102,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.1.0';
 
   // ---------------------------------------------------------------- halaman Portofolio
   function vPort(p) {
-    var rows = allAccounts(S.owner), view = S.poView || 'akun', h = '<div class="stick"><div class="ddrow">' + X.ownerChips(S.owner, 'owner') + '</div></div>';
+    var rows = allAccounts(S.owner), view = S.poView || 'akun', h = ''; X.ownerChips(S.owner, 'owner');
     var tot = rows.reduce(function (a, r) { a.n += r.nilai; a.b += r.buku; return a; }, {n: 0, b: 0});
     h += '<div class="card hero"><div class="lbl">' + t('po.value') + '</div><div class="big">' + esc(fm(tot.n)) + '</div><div class="sub2">' + esc(t('po.bookline', fm(tot.b))) + (Math.abs(tot.n - tot.b) >= 1 ? ' · <span class="' + cls(tot.n - tot.b) + '">' + esc(t('po.unbooked', sgn(tot.n - tot.b))) + '</span>' : '') + '</div></div>';
     var by = {}; rows.forEach(function (r) { if (r.nilai > 0) by[r.kel] = (by[r.kel] || 0) + r.nilai; });

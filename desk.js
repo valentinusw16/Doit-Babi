@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.1.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.1.1';
 /* Do it v3.1 - tampilan responsif: sidebar, Beranda bento (waterfall, kalender, proyeksi), tabel Transaksi desktop,
    gaya Kaca/Bersih (tersinkron lewat Rencana tipe "tampilan"), foto latar per perangkat. */
 (function () {
@@ -344,6 +344,23 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.1.0';
     return m;
   }
   function dayName(d) { return t('an.days.full').split(',')[(new Date(d + 'T00:00:00Z').getUTCDay() + 6) % 7]; }
+  X.hooks.txDays = function (rows, limit) {
+    if (!rows.length) return '<div class="card"><div class="empty">' + t('flow.empty') + '</div></div>';
+    var today = C.todayLocal(), n = Math.min(limit, rows.length), tot = dayTotals(rows), h = '', last = '';
+    for (var i = 0; i < n; i++) {
+      var x = rows[i], d = x.Waktu.substr(0, 10);
+      if (d !== last) {
+        if (last) h += '</section>';
+        var o = tot[d];
+        h += '<section class="card mday' + (d === today ? ' hl' : '') + '" data-d="' + d + '"><div class="mdh"><b>' + esc(dayName(d).substr(0, 3) + ', ' + d.substr(8, 2) + ' ' + C.namaBulan(+d.substr(5, 2), true)) + '</b><span><i class="in">+' + esc(frp(o.inn)) + '</i> · <i class="ex">−' + esc(frp(o.out)) + '</i></span></div>';
+        last = d;
+      }
+      h += X.txRow(x);
+    }
+    h += '</section>';
+    if (rows.length > n) h += '<div class="more-wrap"><button class="btn" data-act="more">' + t('more', rows.length - n) + '</button></div>';
+    return h;
+  };
   X.hooks.txTable = function (rows, limit) {
     if (!rows.length) return '<div class="card"><div class="empty">' + t('flow.empty') + '</div></div>';
     var today = C.todayLocal(), n = Math.min(limit, rows.length), tot = dayTotals(rows), yd = new Date(today + 'T00:00:00Z'); yd.setUTCDate(yd.getUTCDate() - 1); yd = yd.toISOString().substr(0, 10);

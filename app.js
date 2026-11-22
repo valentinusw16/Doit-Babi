@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.1.0', APP_NAME = 'Do it';
+  var VERSION = '3.1.1', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -270,7 +270,7 @@
   function dd(label, kind, forAct, cur) {
     return '<button class="dd" data-act="dd" data-k="' + kind + '" data-for="' + forAct + '" data-cur="' + esc(cur == null ? '' : cur) + '"><span>' + esc(label) + '</span><i>' + ICON.chevd + '</i></button>';
   }
-  function ownerChips(cur, act) { return dd(cur === 'Semua' ? t('all') : cur, 'owner', act, cur); }
+  function ownerChips(cur, act) { if (act === 'owner') { S._ownTop = true; return ''; } return dd(cur === 'Semua' ? t('all') : cur, 'owner', act, cur); }
   function perChips(cur, act) { return dd(perLabel(cur), 'per', act, cur); }
   function openChoice(title, opts, cur, forAct) {
     $('#overlay2').innerHTML = '<div class="scrim" data-act="pick-close"></div><div class="sheet"><div class="sheet-h"><div class="sh-t">' + esc(title) + '</div><button class="x" data-act="pick-close" aria-label="' + t('close') + '">' + ICON.x + '</button></div><div class="sheet-b"><div class="card choice">' +
@@ -364,7 +364,7 @@
     var utang = sum(loans.filter(function (l) { return l.kind === 'Utang'; }), function (l) { return l.sisa; });
     var P = {f: f, is: is, A: A, piutang: piutang, utang: utang}, failed = opsFailed();
     P.banner = (failed.length ? '<div class="err tap" data-act="page" data-v="settings">' + t('home.failed', failed.length) + '</div>' : '') + (S.authFail ? '<div class="err">' + t('home.authfail') + '</div>' : '');
-    P.owner = '<div class="ddrow">' + ownerChips(S.owner, 'owner') + '</div>';
+    ownerChips(S.owner, 'owner'); P.owner = '';
     P.top = X.hooks.homeTop ? X.hooks.homeTop() : '';
     var hbg = X.hooks.heroBg ? X.hooks.heroBg() : null;
     P.hero = '<div class="card hero' + (hbg ? ' photo ' + hbg.cls : '') + '">' + (hbg ? hbg.html : '') + '<div class="lbl">' + t('home.net') + (S.owner !== 'Semua' ? ' · ' + esc(S.owner) : '') + '</div><div class="big">' + esc(C.fmtRp(A.bs.aset.total - A.bs.liabilitas.total)) + '</div>' +
@@ -416,7 +416,7 @@
     return '<div class="card sumcard"><div><span>' + t('tx.sum.in') + '</span><b class="in">' + esc(C.fmtRp(inn)) + '</b></div><div><span>' + t('tx.sum.out') + '</span><b class="out">' + esc(C.fmtRp(out)) + '</b></div>' +
       '<div><span>' + t('tx.sum.net') + '</span><b class="' + (inn - out < 0 ? 'out' : '') + '">' + esc(C.fmtRp(inn - out)) + '</b></div><small>' + t('tx.sum.count', C.fmtNum(rows.length)) + '</small></div>';
   }
-  function txBody() { var rows = txFiltered(); return txSummary(rows) + (X.hooks.txTable && X.wide && X.wide() ? X.hooks.txTable(rows, S.limit) : txListGrouped(rows, S.limit, 'more')); }
+  function txBody() { var rows = txFiltered(); return txSummary(rows) + (X.hooks.txTable && X.wide && X.wide() ? X.hooks.txTable(rows, S.limit) : (X.hooks.txDays ? X.hooks.txDays(rows, S.limit) : txListGrouped(rows, S.limit, 'more'))); }
   function vTransaksi() {
     return '<div class="stick"><div class="ddrow">' + perChips(S.txPer, 'txper') + ownerChips(S.owner, 'owner') + '<button class="chip sm' + (S.showVoid ? ' on' : '') + '" data-act="void-toggle">' + t('tx.void') + '</button></div>' +
       '<input class="search" id="q" type="search" placeholder="' + esc(t('tx.search')) + '" value="' + esc(S.q) + '" autocomplete="off"></div>' +
@@ -515,7 +515,7 @@
   // ---------------------------------------------------------------- halaman Aset
   function vAssets(focus) {
     var f = fObj(S.owner), A = assetGroups(f), k2d = kodeToDompet();
-    var h = '<div class="stick"><div class="frow">' + ownerChips(S.owner, 'owner') + '</div></div>';
+    ownerChips(S.owner, 'owner'); var h = '';
     h += '<div class="card hero"><div class="lbl">' + t('as.total') + '</div><div class="big">' + esc(C.fmtRp(A.bs.aset.total)) + '</div></div>';
     h += '<div class="btnrow"><button class="btn" data-act="w-open">' + ICON.plus + t('as.add') + '</button></div>';
     h += A.groups.map(function (g) {
@@ -806,7 +806,7 @@
   function render() {
     if (!S.cfg) { renderSetup(); return; }
     var y = window.scrollY, anim = S.anim; S.anim = '';
-    var view, title = APP_NAME, p = S.page, pg = p && X.pages[p.name];
+    var view, title = APP_NAME, p = S.page, pg = p && X.pages[p.name]; S._ownTop = false;
     if (p) {
       title = pageTitle(p);
       view = pg ? pg.render(p) : p.name === 'flow' ? vFlow(S.flowK) : p.name === 'debts' ? vDebts() : p.name === 'notif' ? vNotif() :
@@ -818,7 +818,7 @@
     document.documentElement.setAttribute('data-view', p ? p.name : S.tab);
     $('#app').innerHTML = '<div class="app"><header class="top">' +
       (p ? '<button class="hb back" data-act="back" aria-label="' + t('back') + '">' + ICON.back + '</button>' : (X.hooks.avatar ? X.hooks.avatar() : '')) +
-      '<div class="title"><span class="tt">' + esc(title) + '</span><button id="sync" class="sync" data-act="sync"><i></i></button></div>' +
+      '<div class="title"><span class="tt">' + esc(title) + '</span><button id="sync" class="sync" data-act="sync"><i></i></button>' + (S._ownTop ? '<span class="ownd">' + dd(S.owner === 'Semua' ? t('all') : S.owner, 'owner', 'owner', S.owner) + '</span>' : '') + '</div>' +
       (X.hooks.topExtra ? X.hooks.topExtra() : '') + '<button class="hb bell" data-act="page" data-v="notif" aria-label="' + t('pg.notif') + '" title="' + t('pg.notif') + '">' + ICON.bell + (unread ? '<b class="bdg">' + (unread > 9 ? '9+' : unread) + '</b>' : '') + '</button>' +
       '<button class="hb" data-act="theme-cycle" aria-label="' + t('theme.' + mode) + '" title="' + t('theme.' + mode) + '">' + mIco + '</button>' +
       '<button class="hb lang" data-act="lang-toggle" aria-label="' + t('lang.switch') + '">' + (S.pref.lang === 'en' ? 'EN' : 'ID') + '</button></header>' +

@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.1';
 /* Do it v2.1 - analisis: Tren (6/12 bulan, per kategori, tahun lalu, naik/turun, per hari), Rasio + rincian hitungan,
    Peringatan (di lonceng), Sankey Beranda, Arus Kas, Anggaran vs Realisasi. Semua memakai garis operasional
    (tanpa "Di Luar Operasional" = untung/rugi belum terealisasi). */
@@ -210,9 +210,10 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.0'
     off = my; right.forEach(function (n) { svg += link(mid + nw, off, W - nw, n.y, n.v * sc, n.c); off += n.v * sc; });
     left.concat(right).forEach(function (n) { svg += '<rect x="' + n.x + '" y="' + n.y.toFixed(1) + '" width="' + nw + '" height="' + n.h.toFixed(1) + '" rx="2" fill="' + n.c + '"/>'; });
     svg += '<rect x="' + mid + '" y="' + my.toFixed(1) + '" width="' + nw + '" height="' + mh.toFixed(1) + '" rx="2" fill="var(--ink)"/>';
+    function pc(v) { var p = T > 0 ? v / T * 100 : 0; return p > 0 && p < 1 ? '<1%' : Math.round(p) + '%'; }
     function lbl(n, right) {
       if (n.h < 9) return ''; var x = right ? W - nw - 4 : nw + 4, y = n.y + Math.min(n.h / 2, 12) + 3.5;
-      return '<text x="' + x + '" y="' + y.toFixed(1) + '" class="skl" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(n.l) + ' <tspan class="skv">' + esc(FM(n.v)) + '</tspan></text>';
+      return '<text x="' + x + '" y="' + y.toFixed(1) + '" class="skl" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(n.l) + ' <tspan class="skv">' + esc(FM(n.v)) + '</tspan><tspan class="skp"> · ' + pc(n.v) + '</tspan></text>';
     }
     left.forEach(function (n) { svg += lbl(n, false); }); right.forEach(function (n) { svg += lbl(n, true); });
     svg += '<text x="' + (mid + nw / 2) + '" y="14" class="skl" text-anchor="middle">' + esc(t('sk.mid', FM(I))) + '</text>';

@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['ikon'] = '3.1.0';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['ikon'] = '3.1.1';
 /* Do it v3.1 - ikon kategori yang beragam: setiap subkategori punya ikon sendiri (aturan nama), dan bisa diganti sendiri
    (disimpan di Rencana tipe "tampilan" bersama gaya, jadi ikut tersinkron antar perangkat). */
 (function () {
