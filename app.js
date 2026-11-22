@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.1.1', APP_NAME = 'Do it';
+  var VERSION = '3.2.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -544,7 +544,7 @@
     var h = '<div class="card hero"><div class="lbl">' + esc(a ? dn(a.Kelompok) : '') + (d ? ' · ' + esc(t('as.owner', d.Pemilik)) : '') + (d && !d.Aktif ? ' · ' + t('as.inactive') : '') + '</div>' +
       '<div class="big">' + esc(C.fmtRp(now.saldoAkhir)) + '</div>' + (X.hooks.assetHero ? X.hooks.assetHero(kode, d, now.saldoAkhir) : '') + '</div>';
     h += X.hooks.assetTop ? X.hooks.assetTop(kode, d, now.saldoAkhir) : '';
-    h += '<div class="card"><div class="lbl3">' + t('as.trend') + '</div>' + sparkline(C.monthlyBalance(lines, kode, r.today, 12)) + '</div>';
+    h += '<div class="card"><div class="lbl3">' + t('as.trend') + '</div>' + X.sparkline(C.monthlyBalance(lines, kode, r.today, X.stockOn && X.stockOn() ? 36 : 12)) + '</div>';
     h += '<div class="stick"><div class="ddrow">' + perChips(S.per, 'per') + '</div></div>';
     h += '<div class="tiles"><div class="tile"><div class="lbl">' + t('as.flow.in') + '</div><div class="val in">' + esc(C.fmtRp(flow.masuk)) + '</div></div>' +
       '<div class="tile"><div class="lbl">' + t('as.flow.out') + '</div><div class="val out">' + esc(C.fmtRp(flow.keluar)) + '</div></div></div>';

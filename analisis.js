@@ -1,4 +1,4 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.1';
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.2.0';
 /* Do it v2.1 - analisis: Tren (6/12 bulan, per kategori, tahun lalu, naik/turun, per hari), Rasio + rincian hitungan,
    Peringatan (di lonceng), Sankey Beranda, Arus Kas, Anggaran vs Realisasi. Semua memakai garis operasional
    (tanpa "Di Luar Operasional" = untung/rugi belum terealisasi). */
@@ -19,6 +19,11 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.1'
   // ---------------------------------------------------------------- grafik
   function bars(ser, keys) {
     keys = keys || ['pendapatan', 'beban'];
+    if (X.stockOn && X.stockOn() && X.stock) {
+      var big = C2.monthlySeries(X.getOpLines(), S.M, curKey(), bigN(), lastF, C.pass);
+      return X.stock({id: 'bars-' + keys.join('') + '-' + curKey(), def: 12, labels: big.map(function (s) { return lab(s.bulan); }), keys: big.map(function (s) { return s.bulan; }),
+        series: keys.map(function (k) { return {n: t(k === 'pendapatan' ? 'r.income' : 'r.expense'), c: k === 'pendapatan' ? 'var(--in)' : 'var(--out)', k: 'bar', v: big.map(function (s) { return s[k]; })}; })});
+    }
     var mx = Math.max.apply(null, ser.map(function (s) { return Math.max.apply(null, keys.map(function (k) { return s[k]; })); }).concat([1])), W = 320, H = 130, bw = W / ser.length, one = keys.length === 1;
     var g = ser.map(function (s, i) {
       var x = i * bw, out = '';
@@ -30,7 +35,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.1'
     }).join('');
     return '<svg class="bars" viewBox="0 0 ' + W + ' ' + H + '">' + g + '</svg>' + (one ? '' : '<div class="legend2"><span><i class="in"></i>' + t('r.income') + '</span><span><i class="out"></i>' + t('r.expense') + '</span></div>');
   }
-  function line(vals, labels, color) {
+  function line(vals, labels, color, big) {
+    if (big && X.stockOn && X.stockOn() && X.stock) return X.stock({id: 'cat-' + big.id, def: 12, zero: true, labels: big.labels, keys: big.keys, series: [{n: big.name, c: color, k: 'area', v: big.vals}]});
     var W = 320, H = 90, mx = Math.max.apply(null, vals.concat([1])), n = vals.length;
     var xy = vals.map(function (v, i) { return [(n === 1 ? 0.5 : i / (n - 1)) * (W - 8) + 4, H - 8 - v / mx * (H - 16)]; });
     var d = xy.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
@@ -40,7 +46,9 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.1'
   }
 
   // ---------------------------------------------------------------- data tren
-  function series(f) { return C2.monthlySeries(X.getOpLines(), S.M, curKey(), nM(), f, C.pass); }
+  var lastF = null;
+  function bigN() { return 36; }
+  function series(f) { lastF = f; return C2.monthlySeries(X.getOpLines(), S.M, curKey(), nM(), f, C.pass); }
   function groupSeries(tipe, f, n) { return C2.groupMonthly(X.getOpLines(), S.M, tipe, curKey(), n || nM(), f, C.pass); }
   function catOpts(tipe, f) {
     var gm = groupSeries(tipe, f);
@@ -48,11 +56,14 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.1'
   }
   function catTrend(tipe, f, key) {
     var opts = catOpts(tipe, f); if (!opts.length) return '';
+    var wideOn = X.stockOn && X.stockOn();
     var cur = S[key] && opts.some(function (o) { return o.v === S[key]; }) ? S[key] : opts[0].v, gm = groupSeries(tipe, f), vals = gm[cur] || [], keys = [], i;
     for (i = nM() - 1; i >= 0; i--) keys.push(lab(C2.addMonthKey(curKey(), -i)));
+    var bigD = null;
+    if (wideOn) { var bv = groupSeries(tipe, f, bigN())[cur] || [], bk = []; for (i = bigN() - 1; i >= 0; i--) bk.push(C2.addMonthKey(curKey(), -i)); bigD = {id: key + '-' + cur + '-' + curKey(), name: dn(cur), vals: bv, keys: bk, labels: bk.map(lab)}; }
     var prev = vals.slice(0, -1), av = C2.avg(prev);
     X.ddOpts[key] = function () { return {title: t('an.pickcat'), opts: opts.map(function (o) { return {v: o.v, l: o.l}; })}; };
-    return '<div class="card"><div class="sr" style="margin:0 0 8px"><b>' + t('an.cattrend') + '</b>' + X.dd(dn(cur), key, 'tr-cat-' + key, cur) + '</div>' + line(vals, keys, tipe === 'Pendapatan' ? '#1b7f4b' : '#c0392b') +
+    return '<div class="card"><div class="sr" style="margin:0 0 8px"><b>' + t('an.cattrend') + '</b>' + X.dd(dn(cur), key, 'tr-cat-' + key, cur) + '</div>' + line(vals, keys, tipe === 'Pendapatan' ? '#1b7f4b' : '#c0392b', bigD) +
       '<div class="muted sm" style="margin-top:6px">' + esc(t('an.cat.avg', fm(Math.round(av)), fm(vals[vals.length - 1] || 0))) + '</div></div>';
   }
   /** (b) bulan ini (hari 1..sekarang) dibanding periode yang sama tahun lalu. */
@@ -105,7 +116,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.1.1'
     var aI = C2.avg(prev.map(function (s) { return s.pendapatan; })), aO = C2.avg(prev.map(function (s) { return s.beban; })), last = ser[ser.length - 1];
     h += '<div class="card"><div class="ch">' + t('an.inout', nM()) + '</div>' + bars(ser) + '</div>';
     h += '<div class="card"><dl class="dl"><dt>' + t('an.avg.in') + '</dt><dd class="in">' + esc(fm(Math.round(aI))) + '</dd><dt>' + t('an.avg.out') + '</dt><dd class="out">' + esc(fm(Math.round(aO))) + '</dd><dt>' + t('an.avg.net') + '</dt><dd>' + esc(fm(Math.round(aI - aO))) + '</dd><dt>' + t('an.this') + '</dt><dd>' + esc(fm(last.net)) + '</dd></dl></div>';
-    var nw = C2.netWorthSeries(X.getLines(), S.M, curKey(), nM(), f, C.pass);
+    var nw = C2.netWorthSeries(X.getLines(), S.M, curKey(), X.stockOn && X.stockOn() ? bigN() : nM(), f, C.pass);
     if (nw.length > 1) h += '<div class="card"><div class="ch">' + t('an.networth') + '</div>' + X.sparkline(nw) + '</div>';
     h += catTrend('Beban', f, 'trcat');
     h += yoy(f) + movers(f) + weekday(f);
