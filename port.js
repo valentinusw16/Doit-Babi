@@ -142,6 +142,37 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
     return X.viz.dist(order.map(function (k) { var g = G[k]; g.extra = Object.keys(g.kel).length ? [{title: t('vz.kelas'), items: Object.keys(g.kel).map(function (n) { return {nama: n, v: g.kel[n]}; })}] : []; return g; }), tot, t('po.total'));
   }
   // ---------------------------------------------------------------- halaman Portofolio
+  // ---------------------------------------------------------------- nilai pada tanggal lampau
+  function valueAtDate(d, tgl, ar, L, lines) {
+    var mode = modeOf(d, ar), rec = ar[d.Nama] || {}, m = C.saldoMap(lines, tgl, null)[d.KodeAkun], book = m ? m.d - m.k : 0, out = {buku: book, nilai: book, mode: mode};
+    if (mode === 'manual') { var h = (rec.riwayat || []).filter(function (x) { return x.tgl <= tgl; }).pop(); if (h) out.nilai = +h.nilai; }
+    if (mode === 'wadah') {
+      var hs = holdings(d.Nama).filter(function (a) { return !(a.fix && a.fix.mulai > tgl); }), val = 0, cost = 0, proceeds = 0;
+      if (hs.length) {
+        hs.forEach(function (a) {
+          var p = C2.positionAt(a, L, tgl); val += p.nilai;
+          if (C2.isFixed(a)) { if (a.fix.mulai <= tgl) cost += +a.fix.pokok; if (a.cair && a.cair.tgl <= tgl) proceeds += +a.cair.nilai || 0; }
+          else L.forEach(function (l) { if (l.asetId !== a.id || l.tgl > tgl) return; var g = (+l.unit) * (+l.harga); if (l.jenis === 'beli') cost += g + (+l.biaya || 0); else proceeds += g - (+l.biaya || 0); });
+        });
+        out.nilai = Math.round(book - cost + proceeds + val);
+      }
+    }
+    return out;
+  }
+  function asofCard() {
+    var tgl = S._poAsof || ''; var h = '<div class="card"><div class="ch">' + t('po.asof') + '</div><div class="row"><div class="grow"><input class="input" type="date" id="po-asof" value="' + esc(tgl) + '" max="' + today() + '"></div><button class="btn sm" data-act="po-asof-go">' + t('po.asof.go') + '</button></div>';
+    if (tgl && tgl < today()) {
+      var ar = akunRecs(), L = lots(), lines = X.getLines(), tot = 0, totb = 0, items = [];
+      Object.keys(S.M.dompet).forEach(function (n) {
+        var d = S.M.dompet[n], a = S.M.akun[d.KodeAkun]; if (!a || a.Tipe !== 'Aset' || (S.owner && S.owner !== 'Semua' && d.Pemilik !== S.owner)) return;
+        var v = valueAtDate(d, tgl, ar, L, lines); if (Math.abs(v.nilai) < 1 && Math.abs(v.buku) < 1) return; tot += v.nilai; totb += v.buku; items.push({n: n, k: a.Kelompok, v: v.nilai});
+      });
+      items.sort(function (x, y) { return y.v - x.v; });
+      h += '<div class="sub2" style="margin-top:10px">' + esc(t('po.asof.on', C.fmtTgl(tgl))) + '</div><div class="big" style="font-size:22px">' + esc(fm(tot)) + '</div><div class="muted sm">' + esc(t('po.bookline', fm(totb))) + '</div>' +
+        (X.viz ? X.viz.rows(items.filter(function (x) { return x.v > 0; }).map(function (x) { return {nama: x.n, v: x.v}; }), tot, {limit: 8}) : '');
+    }
+    return h + '</div>';
+  }
   function vPort(p) {
     var rows = allAccounts(S.owner), view = S.poView || 'akun', h = ''; X.ownerChips(S.owner, 'owner');
     var tot = rows.reduce(function (a, r) { a.n += r.nilai; a.b += r.buku; return a; }, {n: 0, b: 0});
@@ -150,6 +181,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
     var gs = Object.keys(by).map(function (k) { return {nama: dn(k), total: by[k]}; }).sort(function (a, b) { return b.total - a.total; });
     if (gs.length) h += distHTML(rows, tot.n);
     h += pendingBox(rows);
+    h += asofCard();
     var anyIsi = holdings().length;
     h += '<div class="btnrow"><button class="btn" data-act="w-open">' + ICON.plus + t('as.add') + '</button>' + '<button class="hb" data-act="po-share" aria-label="' + t('jpg.share') + '">' + ICON.share + '</button></div>';
     if (anyIsi) h += '<div class="seg" style="margin-bottom:10px">' + [['akun', 'po.v.akun'], ['emiten', 'po.v.emiten']].map(function (x) { return '<button class="' + (view === x[0] ? 'on' : '') + '" data-act="po-view" data-v="' + x[0] + '">' + t(x[1]) + '</button>'; }).join('') + '</div>';
@@ -220,16 +252,16 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
   function manualBlock(d, v) {
     var rec = v.rec, hist = (rec.riwayat || []).map(function (r) { return {bulan: r.tgl.substr(0, 7), saldo: r.nilai}; });
     return '<div class="card"><dl class="dl"><dt>' + t('po.nowval.l') + '</dt><dd>' + esc(fm(v.nilai)) + '</dd><dt>' + t('rv.book') + '</dt><dd>' + esc(fm(v.buku)) + '</dd>' + (rec.nilaiTgl ? '<dt>' + t('po.upd.on') + '</dt><dd>' + esc(C.fmtTgl(rec.nilaiTgl)) + '</dd>' : '') + '</dl>' +
-      (hist.length >= 3 ? X.sparkline(hist.slice(-12)) : '') + '</div><div class="btnrow"><button class="btn primary" data-act="po-manual">' + t('po.setval') + '</button></div>';
+      (hist.length >= 3 ? X.sparkline(hist.slice(-12)) : '') + '</div><div class="btnrow"><button class="btn primary" data-act="po-manual">' + t('po.setval') + '</button></div>' + histCard(rec.riwayat, 'nilai', '', 'nilai');
   }
   function susutRec(nama) { return X.plan.recs().filter(function (r) { return r.susut && r.p && r.p.dompet === nama; })[0]; }
   function susutBlock(d, book) {
     var r = susutRec(d.Nama);
     if (!r) return '<div class="card"><div class="muted sm">' + t('su.none') + '</div><div class="btnrow" style="margin-top:10px"><button class="btn primary" data-act="su-new" data-v="' + esc(d.Nama) + '">' + t('su.set') + '</button></div></div>';
     var s = r.susut, nx = C2.nextDue(r, r.terakhir || C2.addDays(r.mulai, -1)), left = nx ? C2.monthsBetween(nx.substr(0, 7), r.akhir.substr(0, 7)) + 1 : 0;
-    return '<div class="card"><dl class="dl"><dt>' + t('su.price') + '</dt><dd>' + esc(fm(s.hargaBeli)) + '</dd><dt>' + t('su.bought') + '</dt><dd>' + esc(C.fmtTgl(s.tglBeli)) + '</dd><dt>' + t('su.life') + '</dt><dd>' + esc(t('su.months', s.umur)) + '</dd>' +
+    return '<div class="card"><dl class="dl"><dt>' + t('su.bookv') + '</dt><dd>' + esc(fm(book)) + '</dd><dt>' + t('su.price') + '</dt><dd>' + esc(fm(s.hargaBeli)) + '</dd><dt>' + t('su.bought') + '</dt><dd>' + esc(C.fmtTgl(s.tglBeli)) + '</dd><dt>' + t('su.life') + '</dt><dd>' + esc(t('su.months', s.umur)) + '</dd>' +
       '<dt>' + t('su.residual') + '</dt><dd>' + esc(fm(s.sisa || 0)) + '</dd><dt>' + t('su.monthly') + '</dt><dd>' + esc(fm(r.p.jumlah)) + '</dd><dt>' + t('su.next') + '</dt><dd>' + esc(nx ? C.fmtTgl(nx) + ' · ' + t('su.left', Math.max(0, left)) : t('rt.ended')) + '</dd></dl>' +
-      '<div class="note">' + t('su.note') + '</div></div><div class="btnrow"><button class="btn" data-act="su-edit" data-v="' + esc(d.Nama) + '">' + t('edit') + '</button><button class="btn danger" data-act="su-del" data-id="' + esc(r.id) + '">' + t('delete') + '</button></div>';
+      '<div class="note">' + t('su.note') + '</div></div>' + (X.plan && X.plan.dueCount ? (function () { var n = X.plan.dueCount(r.id); return n ? '<div class="btnrow"><button class="btn primary" data-act="rt-all" data-id="' + esc(r.id) + '">' + t('rt.all', n) + '</button></div>' : ''; })() : '') + '<div class="btnrow"><button class="btn" data-act="su-edit" data-v="' + esc(d.Nama) + '">' + t('edit') + '</button><button class="btn danger" data-act="su-del" data-id="' + esc(r.id) + '">' + t('delete') + '</button></div>';
   }
 
   // ---------------------------------------------------------------- halaman isi (satu emiten / produk)
@@ -252,6 +284,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
     h += '<div class="btnrow"><button class="btn primary" data-act="po-price" data-id="' + esc(a.id) + '">' + t('po.upd') + '</button><button class="btn" data-act="po-lot" data-id="' + esc(a.id) + '" data-j="beli">' + t('po.buy') + '</button><button class="btn" data-act="po-lot" data-id="' + esc(a.id) + '" data-j="jual">' + t('po.sell') + '</button></div>';
     var ph = (a.riwayat || []).map(function (r) { return {bulan: r.tgl.substr(0, 7), saldo: r.harga}; });
     if (ph.length >= 3) h += '<div class="card"><div class="ch">' + t('po.pricehist') + '</div>' + X.sparkline(ph.slice(-12)) + '</div>';
+    h += histCard(a.riwayat, 'harga', a.id, 'harga');
     var ls = lots().filter(function (l) { return l.asetId === a.id; }).sort(function (x, y) { return x.tgl < y.tgl ? 1 : -1; });
     if (ls.length) h += '<h2>' + t('po.lots') + '</h2><div class="card">' + ls.map(function (l) {
       return '<div class="row"><div class="grow"><div class="t">' + t('po.' + (l.jenis === 'beli' ? 'buy' : 'sell')) + ' · ' + esc(unitTxt(a, +l.unit)) + ' × ' + esc(C.fmtNum(l.harga)) + '</div><div class="s">' + esc(C.fmtTgl(l.tgl)) + (+l.biaya ? ' · ' + esc(t('po.fee', C.fmtNum(l.biaya))) : '') + '</div></div><div class="a">' + esc(fm(l.unit * l.harga)) + '</div><button class="hb sm" data-act="po-lot-del" data-id="' + esc(l.id) + '" aria-label="' + t('delete') + '">' + ICON.x + '</button></div>';
@@ -293,10 +326,21 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
   });
   function fail(m) { PF.busy = false; PF.err = m; render(); }
   function done(p, then) { PF.busy = true; PF.err = ''; render(); p.then(function () { var acc = PF && PF.akun; PF = null; X.closeOverlays(); X.toast(t('saved')); if (then) then(acc); else X.render(); }).catch(function (e) { fail(X.srvErr(e)); }); }
-  function setPrice(a, harga, tgl) {
-    var r = (a.riwayat || []).filter(function (x) { return x.tgl !== tgl; }).concat([{tgl: tgl, harga: harga}]).sort(function (x, y) { return x.tgl < y.tgl ? -1 : 1; }).slice(-60);
-    return {op: 'simpan', tipe: 'aset', id: a.id, data: strip(Object.assign({}, a, {harga: harga, hargaTgl: tgl, riwayat: r}))};
+  // harga "sekarang" selalu entri riwayat paling baru, sehingga mengisi harga di tanggal lampau tidak menimpa harga terkini
+  function setPrice(a, harga, tgl, oldTgl) {
+    var r = (a.riwayat || []).filter(function (x) { return x.tgl !== tgl && x.tgl !== oldTgl; }).concat([{tgl: tgl, harga: harga}]).sort(function (x, y) { return x.tgl < y.tgl ? -1 : 1; }).slice(-60), last = r[r.length - 1];
+    return {op: 'simpan', tipe: 'aset', id: a.id, data: strip(Object.assign({}, a, {harga: last.harga, hargaTgl: last.tgl, riwayat: r}))};
   }
+  function delPrice(a, tgl) {
+    var r = (a.riwayat || []).filter(function (x) { return x.tgl !== tgl; }), last = r[r.length - 1];
+    return {op: 'simpan', tipe: 'aset', id: a.id, data: strip(Object.assign({}, a, last ? {harga: last.harga, hargaTgl: last.tgl, riwayat: r} : {riwayat: r}))};
+  }
+  function histRows(list, kind, id, key) {
+    return list.slice().sort(function (x, y) { return x.tgl < y.tgl ? 1 : -1; }).map(function (r) {
+      return '<div class="row"><div class="grow"><div class="t">' + esc(fm(r[key])) + '</div><div class="s">' + esc(C.fmtTgl(r.tgl)) + '</div></div><div class="a"><button class="hb sm" data-act="po-hedit" data-k="' + kind + '" data-id="' + esc(id || '') + '" data-tgl="' + esc(r.tgl) + '" aria-label="' + esc(t('edit')) + '">' + X.ICON.edit + '</button><button class="hb sm" data-act="po-hdel" data-k="' + kind + '" data-id="' + esc(id || '') + '" data-tgl="' + esc(r.tgl) + '" aria-label="' + esc(t('delete')) + '">' + X.ICON.x + '</button></div></div>';
+    }).join('');
+  }
+  function histCard(list, kind, id, key) { return list && list.length ? '<h2>' + t('po.hist') + '</h2><div class="card">' + histRows(list, kind, id, key) + '</div>' : ''; }
   function strip(o) { var d = Object.assign({}, o); delete d.id; delete d._oleh; return d; }
   function akunSave(nama, patch) { var ar = akunRecs(), r = ar[nama]; return rc.save('akun', Object.assign({dompet: nama}, r ? strip(r) : {}, patch), r ? r.id : undefined); }
   function thenReval(acc) { if (acc) askReval(acc); else X.render(); }
@@ -335,6 +379,16 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
       var a = findA(el.dataset.id); if (!a) return; var f = a.fix || {};
       open('aset', t('edit'), {nama: a.kode || a.nama, kelas: a.kelas, pokok: f.pokok || '', bunga: f.bunga || '', mulai: f.mulai || '', tempo: f.tempo || '', pajak: f.pajak == null ? '10' : f.pajak}, a.id, {asset: a, akun: a.akun});
     },
+    'po-asof-go': function () { var e = $('#po-asof'); S._poAsof = e ? e.value : ''; X.render(); },
+    'po-hedit': function (el) {
+      if (el.dataset.k === 'harga') { var a = findA(el.dataset.id); var e = a && (a.riwayat || []).filter(function (x) { return x.tgl === el.dataset.tgl; })[0]; if (e) open('harga', t('po.upd'), {harga: e.harga, tgl: e.tgl}, a.id, {asset: a, akun: a.akun, oldTgl: e.tgl}); }
+      else { var nm = S._poAcc, rec = akunRecs()[nm] || {}, en = (rec.riwayat || []).filter(function (x) { return x.tgl === el.dataset.tgl; })[0]; if (en) open('manual', t('po.setval'), {nilai: en.nilai, tgl: en.tgl}, null, {akun: nm, rec: rec, oldTgl: en.tgl}); }
+    },
+    'po-hdel': function (el) {
+      if (!confirm(t('bl.del.q'))) return;
+      if (el.dataset.k === 'harga') { var a = findA(el.dataset.id); if (a) rc.batch([delPrice(a, el.dataset.tgl)]).then(function () { X.render(); }).catch(function (e) { X.toast(X.srvErr(e)); }); }
+      else { var nm = S._poAcc, rec = akunRecs()[nm] || {}, r = (rec.riwayat || []).filter(function (x) { return x.tgl !== el.dataset.tgl; }), l = r[r.length - 1]; akunSave(nm, {riwayat: r, nilai: l ? l.nilai : '', nilaiTgl: l ? l.tgl : ''}).then(function () { X.render(); }).catch(function (e) { X.toast(X.srvErr(e)); }); }
+    },
     'po-price': function (el) { var a = findA(el.dataset.id); if (a) open('harga', t('po.upd'), {harga: a.harga || '', tgl: today()}, a.id, {asset: a, akun: a.akun}); },
     'po-prices': function () {
       var list = holdings(S._poAcc).filter(function (a) { return !C2.isFixed(a) && C2.position(a, lots(), today()).unit > 0; }), d = {tgl: today()};
@@ -371,7 +425,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
           .then(function (id) { return rc.save('lot', {asetId: id, jenis: 'beli', unit: u, harga: h, biaya: fee, tgl: d.tgl || td}); })
           .then(function () { PF = null; X.closeOverlays(); X.toast(t('saved')); thenReval(acc); }).catch(function (e) { fail(X.srvErr(e)); });
       }
-      if (PF.kind === 'harga') { var p = num(d.harga); if (!(p >= 0)) return fail(t('po.err.num')); return done(rc.batch([setPrice(PF.asset, p, d.tgl || td)]), thenReval); }
+      if (PF.kind === 'harga') { var p = num(d.harga); if (!(p >= 0)) return fail(t('po.err.num')); return done(rc.batch([setPrice(PF.asset, p, d.tgl || td, PF.oldTgl)]), thenReval); }
       if (PF.kind === 'prices') {
         var ops = []; for (var i = 0; i < PF.list.length; i++) { var v = num(d['h' + i]); if (!(v >= 0)) return fail(t('po.err.num')); if (v !== +PF.list[i].harga) ops.push(setPrice(PF.list[i], v, d.tgl || td)); }
         if (!ops.length) { PF = null; X.closeOverlays(); return; }
@@ -385,8 +439,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
       if (PF.kind === 'cair') { var n = num(d.harga); if (!(n >= 0)) return fail(t('po.err.num')); return done(rc.save('aset', Object.assign({}, strip(PF.asset), {cair: {tgl: d.tgl || td, nilai: n}}), PF.id), thenReval); }
       if (PF.kind === 'manual') {
         var nv = num(d.nilai); if (!(nv >= 0)) return fail(t('po.err.num'));
-        var rr = (PF.rec.riwayat || []).filter(function (x) { return x.tgl !== (d.tgl || td); }).concat([{tgl: d.tgl || td, nilai: nv}]).sort(function (x, y) { return x.tgl < y.tgl ? -1 : 1; }).slice(-60);
-        return done(akunSave(PF.akun, {nilai: nv, nilaiTgl: d.tgl || td, riwayat: rr}), thenReval);
+        var rr = (PF.rec.riwayat || []).filter(function (x) { return x.tgl !== (d.tgl || td) && x.tgl !== PF.oldTgl; }).concat([{tgl: d.tgl || td, nilai: nv}]).sort(function (x, y) { return x.tgl < y.tgl ? -1 : 1; }).slice(-60), lr = rr[rr.length - 1];
+        return done(akunSave(PF.akun, {nilai: lr.nilai, nilaiTgl: lr.tgl, riwayat: rr}), thenReval);
       }
       if (PF.kind === 'kas') { var kv = d.kas === '' ? '' : num(d.kas); if (kv !== '' && isNaN(kv)) return fail(t('po.err.num')); return done(akunSave(PF.akun, {kas: kv}), thenReval); }
       if (PF.kind === 'susut') {

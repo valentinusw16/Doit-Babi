@@ -178,7 +178,20 @@
     if (!d || (harusAktif && !d.Aktif)) throw new Error('Dompet tidak dikenal atau nonaktif: ' + nama);
     return {nama: d.Nama, kode: d.KodeAkun, pemilik: d.Pemilik};
   }
-  function deriveLines(tx, M) {
+  function feeAkun(M) {
+    var k = M.st && M.st.AkunBiayaTransfer; if (k && M.akun[k]) return k;
+    var r = (M.kategori || []).filter(function (x) { return x.Jenis === 'Expense' && /^transfer$/i.test(x.SubKategori); })[0];
+    return r ? r.KodeAkun : k;
+  }
+  /** Baris Pengeluaran "Biaya admin transfer" yang menyertai sebuah Transfer (ID = ID transfer + '-F'). */
+  function feeTx(tx, M) {
+    var fee = Number(tx.BiayaAdmin) || 0; if (tx.Jenis !== 'Transfer' || !(fee > 0)) return null;
+    var k = M.katByKode[feeAkun(M)]; if (!k) throw new Error('Akun biaya transfer belum punya kategori Pengeluaran');
+    return {ID: tx.ID + '-F', Waktu: tx.Waktu, Jenis: 'Expense', SubJenis: '', Dompet: tx.Dompet, DompetTujuan: '', KodeAkun: k.KodeAkun, Kategori: k.Kategori,
+      SubKategori: k.SubKategori, Pihak: '', Jumlah: fee, BiayaAdmin: '', JatuhTempo: '', Jangka: '', Toko: '', Lokasi: '', Barang: '', Tag: tx.Tag, Catatan: 'Biaya admin transfer',
+      DicatatOleh: tx.DicatatOleh, PemilikDompet: tx.PemilikDompet, Status: 'Aktif', Referensi: tx.ID, Mengoreksi: '', DibatalkanOleh: '', DibatalkanPada: '', DibuatPada: '', Rev: 0};
+  }
+  function deriveLines(tx, M, legacyFee) {
     var L = [], j = Number(tx.Jumlah);
     function dr(k, a, o) { L.push({kode: k, debit: a, kredit: 0, pemilik: o}); }
     function cr(k, a, o) { L.push({kode: k, debit: 0, kredit: a, pemilik: o}); }
@@ -191,7 +204,7 @@
       var a = walletInfo(M, tx.Dompet), b = walletInfo(M, tx.DompetTujuan);
       dr(b.kode, j, b.pemilik); cr(a.kode, j, a.pemilik);
       var fee = Number(tx.BiayaAdmin) || 0;
-      if (fee > 0) { dr(M.st.AkunBiayaTransfer, fee, a.pemilik); cr(a.kode, fee, a.pemilik); }
+      if (fee > 0 && legacyFee) { dr(feeAkun(M), fee, a.pemilik); cr(a.kode, fee, a.pemilik); }
     } else if (tx.Jenis === 'Utang/Piutang') {
       w = walletInfo(M, tx.Dompet);
       if (tx.SubJenis === 'Pinjam') { dr(w.kode, j, w.pemilik); cr(tierAkun(M, 'Utang', tx.Jangka), j, w.pemilik); }
@@ -302,7 +315,7 @@
       if (src && src.length) {
         src.forEach(function (j) { out.push({txId: id, tanggal: tanggal, kode: String(j.KodeAkun), debit: Number(j.Debit), kredit: Number(j.Kredit), pemilik: j.Pemilik, pencatat: t.DicatatOleh}); });
       } else {
-        var ls; try { ls = deriveLines(t, S.M); } catch (e) { ls = []; }
+        var ls; try { ls = deriveLines(t, S.M, t.Jenis === 'Transfer' && !S.tx[id + '-F']); } catch (e) { ls = []; }
         ls.forEach(function (l) { out.push({txId: id, tanggal: tanggal, kode: String(l.kode), debit: l.debit, kredit: l.kredit, pemilik: l.pemilik, pencatat: t.DicatatOleh}); });
       }
     }
@@ -409,7 +422,7 @@
   return {
     pad: pad, fmtNum: fmtNum, fmtRp: fmtRp, nowLocal: nowLocal, todayLocal: todayLocal, isDate: isDate, addMonths: addMonths,
     jangka: jangka, newId: newId, fmtTgl: fmtTgl, fmtHari: fmtHari, periodRange: periodRange, indexMaster: indexMaster,
-    loanKind: loanKind, isRepay: isRepay, sisa: sisa, openLoans: openLoans, saldoPihak: saldoPihak, deriveLines: deriveLines,
+    loanKind: loanKind, isRepay: isRepay, sisa: sisa, openLoans: openLoans, saldoPihak: saldoPihak, deriveLines: deriveLines, feeTx: feeTx,
     makeTx: makeTx, toPayload: toPayload, buildLines: buildLines, saldoMap: saldoMap, walletBalances: walletBalances,
     trialBalance: trialBalance, incomeStatement: incomeStatement, setLang: setLang, namaBulan: namaBulan, prevRange: prevRange, accountFlow: accountFlow, monthlyBalance: monthlyBalance, pass: pass, balanceSheet: balanceSheet, freq: freq, recent: recent, clean: clean
   };

@@ -227,6 +227,18 @@
     out.realisasi = round(real); out.pct = out.modal > 0 ? out.untung / out.modal : 0; out.aktif = units > 0 || !lots.some(function (l) { return l.asetId === a.id; });
     return out;
   }
+  /** Harga aset pada tanggal tertentu: entri riwayat terakhir <= tanggal, lalu harga lot terakhir <= tanggal, lalu harga sekarang. */
+  function priceAt(a, tgl, lots) {
+    var r = (a.riwayat || []).filter(function (x) { return x.tgl <= tgl; }).sort(function (x, y) { return x.tgl < y.tgl ? -1 : 1; }).pop();
+    if (r) return +r.harga || 0;
+    var l = (lots || []).filter(function (x) { return x.asetId === a.id && x.tgl <= tgl; }).sort(function (x, y) { return x.tgl < y.tgl ? -1 : 1; }).pop();
+    return l ? +l.harga || 0 : (+a.harga || 0);
+  }
+  /** Posisi aset pada tanggal lampau (lot sampai tanggal itu, harga riwayat pada tanggal itu). */
+  function positionAt(a, lots, tgl) {
+    var a2 = Object.assign({}, a, {harga: priceAt(a, tgl, lots)});
+    return position(a2, lots.filter(function (l) { return l.tgl <= tgl; }), tgl);
+  }
   function portfolio(asets, lots, today) {
     var rows = asets.map(function (a) { return Object.assign({aset: a}, position(a, lots, today)); });
     var tot = rows.reduce(function (t, r) { t.nilai += r.nilai; t.modal += r.modal; t.untung += r.untung; t.realisasi += r.realisasi; return t; }, {nilai: 0, modal: 0, untung: 0, realisasi: 0});
@@ -396,7 +408,7 @@
     nextDue: nextDue, dueDates: dueDates, recTxId: recTxId, nextAfterToday: nextAfterToday,
     spentByMonth: spentByMonth, monthDetail: monthDetail, budgetMonth: budgetMonth, reallocate: reallocate, budgetVsActual: budgetVsActual, budgetReport: budgetReport, projection: projection,
     eventActual: eventActual, goalProgress: goalProgress,
-    isFixed: isFixed, accrued: accrued, position: position, portfolio: portfolio, xirr: xirr,
+    isFixed: isFixed, accrued: accrued, position: position, positionAt: positionAt, priceAt: priceAt, portfolio: portfolio, xirr: xirr,
     monthlySeries: monthlySeries, ratios: ratios, insights: insights, slope: slope, avg: avg, TARGET: TARGET,
     netWorthSeries: netWorthSeries, groupMonthly: groupMonthly, detectRoutine: detectRoutine
   };

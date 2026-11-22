@@ -323,6 +323,24 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     });
     return out.sort(function (a, b) { return a.due < b.due ? -1 : 1; });
   }
+  function dueCount(recId) {
+    var today = C.todayLocal(), me = S.cfg.user, n = 0;
+    recs().forEach(function (r) { if (r.aktif === false || owner(r) !== me || (recId && r.id !== recId)) return; n += C2.dueDates(r, today, 24).filter(function (d) { return !S.tx[C2.recTxId(r.id, d)]; }).length; });
+    return n;
+  }
+  function logAll(recId) {
+    var today = C.todayLocal(), me = S.cfg.user, n = 0;
+    recs().forEach(function (r) {
+      if (r.aktif === false || owner(r) !== me || (recId && r.id !== recId)) return;
+      var ds = C2.dueDates(r, today, 24).filter(function (d) { return !S.tx[C2.recTxId(r.id, d)]; });
+      ds.forEach(function (due) {
+        var F = formFor(r, due);
+        try { var x = C.makeTx(F, S.cfg.user, S.M, S.tx, {}); x._pending = true; S.tx[x.ID] = x; X.enqueue({action: 'tambah', body: {tx: C.toPayload(F)}}); n++; } catch (e) { /* lewati yang gagal divalidasi */ }
+      });
+      if (ds.length) markDone(r.id, ds[ds.length - 1]);
+    });
+    X.touch(); X.render(); X.toast(t('rt.all.ok', n)); X.syncNow();
+  }
   function suggestions() {
     var today = C.todayLocal(), key = S.rev + '|' + Object.keys(S.tx).length + '|' + today + '|' + S.rencana.length;
     if (S._sugKey !== key) {
@@ -343,7 +361,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
   }
   function vRutin() {
     var due = dueList(), sg = suggestions(), rs = recs(), today = C.todayLocal(), h = '';
-    if (due.length) h += '<h2>' + t('rt.h.due') + '</h2>' + due.map(dueCard).join('');
+    if (due.length) h += '<h2>' + t('rt.h.due') + '</h2>' + (dueCount() > 1 ? '<div class="btnrow"><button class="btn primary" data-act="rt-all">' + t('rt.all', dueCount()) + '</button></div>' : '') + due.map(dueCard).join('');
     if (sg.length) h += '<h2>' + t('rt.h.sug') + '</h2>' + sg.map(sugCard).join('');
     h += '<h2>' + t('rt.h.all') + '</h2>';
     if (!rs.length) return h + '<div class="card"><div class="empty">' + t('rt.empty') + '</div></div>';
@@ -469,7 +487,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     });
     return out;
   }
-  X.plan = {planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
+  X.plan = {dueCount: dueCount, logAll: logAll, planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
 
   // ---------------------------------------------------------------- aksi
   function saveVia(promise, done) { PF.busy = true; PF.err = ''; renderForm(); promise.then(function () { PF = null; X.closeOverlays(); X.toast(t('saved')); X.render(); if (done) done(); }).catch(fail); }
@@ -570,6 +588,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       saveVia(rc.save('tujuan', data, g.id));
     },
     // rutin
+    'rt-all': function (el) { logAll(el.dataset.id || ''); },
     'rt-confirm': function (el) { logDue(el.dataset.id, el.dataset.due); },
     'rt-skip': function (el) { markDone(el.dataset.id, el.dataset.due).then(function () { X.render(); }); X.toast(t('rt.skipped')); },
     'rt-edit-due': function (el) {

@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.4.2', APP_NAME = 'Do it';
+  var VERSION = '3.5.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -572,7 +572,7 @@
     var h = '<div class="seg">' + [['Expense', 'pg.expense'], ['Income', 'pg.income']].map(function (s) { return '<button class="' + (j === s[0] ? 'on' : '') + '" data-act="kat-jenis" data-v="' + s[0] + '">' + t(s[1]) + '</button>'; }).join('') + '</div>';
     h += '<div class="btnrow"><button class="btn" data-act="k-open">' + ICON.plus + t('k.add') + '</button></div>';
     h += order.map(function (g) {
-      return '<div class="card grp"><div class="ah"><span class="gi">' + catIcon(g) + '</span><span>' + esc(dn(g)) + '</span><b class="muted">' + groups[g].length + '</b></div><div class="chips">' +
+      return '<div class="card grp"><div class="ah"><span class="gi">' + catIcon(g) + '</span><span>' + esc(dn(g)) + '</span><b class="muted">' + groups[g].length + '</b>' + (X.A['ub-grp'] ? '<button class="hb sm" data-act="ub-grp" data-g="' + esc(g) + '" title="' + esc(t('ub.ren')) + '" aria-label="' + esc(t('ub.ren')) + '">' + ICON.edit + '</button>' : '') + '</div><div class="chips">' +
         groups[g].map(function (k) { return X.A['ik-open'] ? '<button class="chip sm ci" data-act="ik-open" data-k="' + esc(k.KodeAkun) + '" title="' + esc(t('ik.t', dn(k.SubKategori))) + '">' + catIcon(g, k.SubKategori, k.KodeAkun) + esc(dn(k.SubKategori)) + '</button>' : '<span class="chip sm static">' + esc(dn(k.SubKategori)) + '</span>'; }).join('') + '</div></div>';
     }).join('');
     return h;
@@ -589,7 +589,7 @@
     h += '<h2>' + t('set.sync') + '</h2><div class="card"><div class="row"><div class="grow"><div class="t">' + t('set.queue') + '</div><div class="s" id="synclbl"></div><div class="s">' +
       (S.queue.length ? t('set.queue.n', S.queue.length) + (failed.length ? t('set.queue.f', failed.length) : '') : t('set.queue.empty')) + '</div></div><button class="btn sm" data-act="sync">' + t('set.sync.now') + '</button></div>';
     h += S.queue.map(function (o) {
-      var lbl = o.action === 'tambah' ? t('q.add') : o.action === 'batal' ? t('q.batal') : o.action === 'koreksi' ? t('q.koreksi') : t('q.pihak', o.body.nama || '');
+      var lbl = o.action === 'tambah' ? t('q.add') : o.action === 'batal' ? t('q.batal') : o.action === 'koreksi' ? t('q.koreksi') : o.action === 'strukUnggah' ? t('q.struk') : t('q.pihak', o.body.nama || '');
       return '<div class="row"><div class="grow"><div class="t">' + esc(lbl) + '</div><div class="s' + (o.error ? ' out' : '') + '">' + esc(o.error || t('q.wait')) + '</div></div>' +
         (o.error ? '<button class="btn sm danger" data-act="q-drop" data-id="' + esc(o.id) + '">' + t('d.drop') + '</button>' : '') + '</div>';
     }).join('');
@@ -1082,6 +1082,7 @@
         return '<button class="chip ci' + (f.kodeAkun === i.v ? ' on' : '') + '" data-act="f-kat" data-v="' + esc(i.v) + '">' + catIcon(k && k.Kategori, k && k.SubKategori, k && k.KodeAkun) + esc(i.l) + '</button>';
       }).join('') + '<button class="chip more" data-act="f-kat-all">' + t('f.allcat') + '</button></div>';
       h += walletBlock(f.jenis === 'Expense' ? t('f.payfrom') : t('f.payto'), 'dompet');
+      if (f.jenis === 'Expense' && X.hooks.formExtra) h += X.hooks.formExtra(f, FX);
     } else if (f.jenis === 'Transfer') {
       h += walletBlock(t('f.from'), 'dompet') + walletBlock(t('f.to'), 'dompetTujuan');
       h += '<label class="lbl2">' + t('f.fee') + '</label><input class="input" inputmode="numeric" placeholder="0" enterkeyhint="done" value="' + (f.biayaAdmin ? C.fmtNum(f.biayaAdmin) : '') + '" data-money="biayaAdmin">';
@@ -1139,12 +1140,14 @@
         var old = S.tx[FX.edit];
         if (!old || old.Status !== 'Aktif') throw new Error('Transaksi yang dikoreksi sudah dibatalkan');
         old.Status = 'Dibatalkan'; old._pendingBatal = true;
+        var oldKid = S.tx[old.ID + '-F']; if (oldKid && oldKid.Status === 'Aktif') { oldKid.Status = 'Dibatalkan'; oldKid._pendingBatal = true; }
         x._pending = true; S.tx[x.ID] = x;
         enqueue({action: 'koreksi', body: {id: FX.edit, tx: C.toPayload(F)}});
       } else {
         x._pending = true; S.tx[x.ID] = x;
         enqueue({action: 'tambah', body: {tx: C.toPayload(F)}});
       }
+      var kid = C.feeTx(x, S.M); if (kid) { kid._pending = true; S.tx[kid.ID] = kid; }
       if (FX.replaceOp) discardOp(FX.replaceOp, true);
       if (x.Dompet && x.Jenis !== 'Saldo awal') { S.prefs.lastDompet = S.prefs.lastDompet || {}; S.prefs.lastDompet[x.Jenis] = x.Dompet; }
       if (rec && X.plan) X.plan.markDone(rec.id, rec.due, 'catat');
@@ -1221,7 +1224,7 @@
   function renderDetail() {
     var x = S.tx[D.id]; if (!x) { $('#overlay').innerHTML = ''; D = null; return; }
     var v = txView(x), lines = [];
-    try { lines = C.deriveLines(x, S.M); } catch (e) {}
+    try { lines = C.deriveLines(x, S.M, x.Jenis === 'Transfer' && !S.tx[x.ID + '-F']); } catch (e) {}
     var kv = [['d.type', jl(x.Jenis) + (x.SubJenis ? ' · ' + t('s.' + x.SubJenis) : '')], ['d.date', C.fmtTgl(x.Waktu.substr(0, 10)) + ' ' + x.Waktu.substr(11)], ['d.wallet', x.Dompet + (x.DompetTujuan ? ' → ' + x.DompetTujuan : '')],
       ['d.cat', x.Kategori ? dn(x.Kategori) + ' / ' + dn(x.SubKategori) : ''], ['d.party', x.Pihak], ['d.due', x.JatuhTempo ? C.fmtTgl(x.JatuhTempo) + ' (' + t('jg.' + x.Jangka) + ')' : ''],
       ['d.fee', +x.BiayaAdmin ? C.fmtRp(x.BiayaAdmin) : ''], ['d.shop', x.Toko], ['d.loc', x.Lokasi], ['d.item', x.Barang], ['d.tag', x.Tag], ['d.note', x.Catatan],
@@ -1232,7 +1235,7 @@
       '<div class="card hero dh"><div class="ico ' + v.cls + '">' + v.ico + '</div><div><div class="lbl">' + esc(v.title) + '</div><div class="big ' + (v.sign > 0 ? 'in' : (v.sign < 0 ? 'out' : '')) + '">' + esc((v.sign > 0 ? '+' : (v.sign < 0 ? '−' : '')) + C.fmtRp(x.Jumlah)) + '</div></div></div>' +
       (x._error ? '<div class="err" style="margin-top:10px">' + esc(t('d.failed', x._error)) + '</div>' : '') +
       '<div class="card" style="margin-top:10px"><dl class="kv">' + kv.map(function (r) { return '<dt>' + esc(r[0] === 'ID' ? 'ID' : t(r[0])) + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl></div>' + repayBlock(x) +
-      (x.Status === 'Aktif' && (x.Jenis === 'Income' || x.Jenis === 'Expense') && X.plan ? '<div style="margin-top:12px"><button class="link" data-act="d-recur">↻ ' + t('d.recur') + '</button></div>' : '') +
+      (X.hooks.detailExtra ? X.hooks.detailExtra(x) : '') + (x.Status === 'Aktif' && (x.Jenis === 'Income' || x.Jenis === 'Expense') && X.plan ? '<div style="margin-top:12px"><button class="link" data-act="d-recur">↻ ' + t('d.recur') + '</button></div>' : '') +
       (lines.length ? '<h2>' + t('d.journal') + '</h2><div class="card">' + lines.map(function (l) { var nm = dn(S.M.akun[l.kode] ? S.M.akun[l.kode].Nama : l.kode); return '<div class="jr" style="padding:4px 0;border:0"><div class="l' + (l.debit ? '' : ' k') + '"><span>' + esc(nm) + '</span><span>' + esc(C.fmtNum(l.debit || l.kredit)) + '</span></div></div>'; }).join('') + '</div>' : '') +
       (blocked ? '<div class="note">' + t('d.blocked') + '</div>' : '') + '</div>';
     var copyBtn = x.Jenis !== 'Saldo awal' ? '<button class="btn" data-act="d-copy">' + ICON.copy + t('d.copy') + '</button>' : '';
@@ -1261,16 +1264,17 @@
   function cancelTx(id) {
     var x = S.tx[id]; if (!x) return;
     var inQ = S.queue.filter(function (o) { return o.action === 'tambah' && o.body.tx.id === id && o.id !== S.inflight && !o.error; })[0];
-    if (x._pending && inQ) { S.queue = S.queue.filter(function (o) { return o.id !== inQ.id; }); delete S.tx[id]; }
-    else { x._pendingBatal = true; x.Status = 'Dibatalkan'; enqueue({action: 'batal', body: {id: id}}); }
+    var kid = S.tx[id + '-F'];
+    if (x._pending && inQ) { S.queue = S.queue.filter(function (o) { return o.id !== inQ.id; }); delete S.tx[id]; delete S.tx[id + '-F']; }
+    else { x._pendingBatal = true; x.Status = 'Dibatalkan'; if (kid && kid.Status === 'Aktif') { kid._pendingBatal = true; kid.Status = 'Dibatalkan'; } enqueue({action: 'batal', body: {id: id}}); }
     touch(); render(); toast(t('canceled')); syncNow();
   }
   function discardOp(opId, silent) {
     var op = S.queue.filter(function (o) { return o.id === opId; })[0]; if (!op) return;
     S.queue = S.queue.filter(function (o) { return o.id !== opId; });
     var tid = op.body && op.body.tx && op.body.tx.id;
-    if (tid && S.tx[tid] && S.tx[tid]._pending) delete S.tx[tid];
-    if (op.action === 'koreksi') revertBatal(op.body.id);
+    if (tid && S.tx[tid] && S.tx[tid]._pending) { delete S.tx[tid]; delete S.tx[tid + '-F']; }
+    if (op.action === 'koreksi') { revertBatal(op.body.id); revertBatal(op.body.id + '-F'); }
     touch(); if (!silent) render();
   }
 
@@ -1623,7 +1627,7 @@
     });
   }
   Object.assign(X, {isDark: isDark, applyTheme: applyTheme, openMenu: showMenu, openSetup: renderSetup, S: S, C: C, C2: C2, L: L, t: t, esc: esc, $: $, sum: sum, ICON: ICON, A: A, dn: dn, api: api, render: render, openPage: openPage, goBack: goBack, setTab: setTab, toast: toast,
-    openForm: openForm, rowToForm: rowToForm, openPicker: openPicker, closePicker: closePicker, closeOverlays: closeOverlays, openDetail: openDetail, txRow: txRow, txView: txView, txListGrouped: txListGrouped,
+    renderForm: renderForm, getForm: function () { return F; }, closeForm: closeForm, saveFormRaw: function () { return {F: F, FX: FX}; }, openForm: openForm, rowToForm: rowToForm, openPicker: openPicker, closePicker: closePicker, closeOverlays: closeOverlays, openDetail: openDetail, txRow: txRow, txView: txView, txListGrouped: txListGrouped,
     donut: donut, legend: legend, sparkline: sparkline, shortRp: shortRp, perChips: perChips, rangeOf: rangeOf, periodOf: periodOf, prevOf: prevOf, ownerChips: ownerChips, fObj: fObj, getLines: getLines, kodeToDompet: kodeToDompet, repCtx: repCtx, repDoc: repDoc,
     assetGroups: assetGroups, byTimeDesc: byTimeDesc, catIcon: catIcon, isNonOp: isNonOp, chips: chips, enqueue: enqueue, syncNow: syncNow, persist: persist, touch: touch, srvErr: srvErr, waitMaster: waitMaster,
     isNonOp: isNonOp, getOpLines: getOpLines, splitIS: splitIS, dd: dd, openChoice: openChoice, vAsset: vAsset, NONOP_G: NONOP_G, newForm: newForm, defaultWallet: defaultWallet,

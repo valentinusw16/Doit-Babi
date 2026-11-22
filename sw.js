@@ -1,6 +1,6 @@
 /* Service worker: cangkang aplikasi tersedia offline. Permintaan ke server data tidak pernah disimpan di sini. */
-var CACHE = 'doit-v3.4.2', FONTS = 'doit-fonts-1';
-var SHELL = ['./', 'index.html', 'style.css', 'core.js', 'core2.js', 'i18n.js', 'i18n2.js', 'i18n3.js', 'jpg.js', 'app.js', 'chart.js', 'plan.js', 'port.js', 'analisis.js', 'lap.js', 'foto.js', 'ikon.js', 'logo.js', 'viz.js', 'desk.js', 'calc.js', 'saldo.js', 'pilih.js', 'ux.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+var CACHE = 'doit-v3.5.0', FONTS = 'doit-fonts-1';
+var SHELL = ['./', 'index.html', 'style.css', 'core.js', 'core2.js', 'i18n.js', 'i18n2.js', 'i18n3.js', 'jpg.js', 'app.js', 'chart.js', 'plan.js', 'port.js', 'analisis.js', 'lap.js', 'foto.js', 'ikon.js', 'logo.js', 'viz.js', 'desk.js', 'calc.js', 'saldo.js', 'pilih.js', 'ux.js', 'v35.js', 'ubah.js', 'struk.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL.map(function (u) { return new Request(u, {cache: 'reload'}); })); }).then(function () { return self.skipWaiting(); }));
