@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.4.0', APP_NAME = 'Do it';
+  var VERSION = '3.4.1', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -522,7 +522,7 @@
       var pg = isPiutangGroup(g), rows = g.rows.slice().sort(function (a, b) { return b.jumlah - a.jumlah; });
       return '<div class="card agrp' + (focus === g.nama ? ' hl' : '') + '" id="g-' + esc(g.nama.replace(/\W/g, '')) + '"><div class="ah"><span>' + esc(dn(g.nama)) + '</span><b>' + esc(C.fmtRp(g.total)) + '</b></div>' + rows.map(function (r) {
         var d = k2d[r.kode];
-        return '<div class="row tap" ' + (pg ? 'data-act="page" data-v="receivable"' : 'data-act="asset" data-v="' + esc(r.kode) + '"') + '><div class="grow"><div class="t">' + esc(d ? d.Nama : dn(r.nama)) + '</div><div class="s">' + esc((d ? d.Pemilik + ' · ' : '') + r.kode) + '</div></div><div class="a ' + (r.jumlah < 0 ? 'out' : '') + '">' + esc(C.fmtRp(r.jumlah)) + '</div>' + ICON.chev + '</div>';
+        return '<div class="row tap" ' + (pg ? 'data-act="page" data-v="receivable"' : 'data-act="asset" data-v="' + esc(r.kode) + '"') + '>' + (X.hooks.assetIco && d && !pg ? X.hooks.assetIco(d, g.nama) : '') + '<div class="grow"><div class="t">' + esc(d ? d.Nama : dn(r.nama)) + '</div><div class="s">' + esc((d ? d.Pemilik + ' · ' : '') + r.kode) + '</div></div><div class="a ' + (r.jumlah < 0 ? 'out' : '') + '">' + esc(C.fmtRp(r.jumlah)) + '</div>' + ICON.chev + '</div>';
       }).join('') + '</div>';
     }).join('');
     return h + '<div class="note2">' + t('as.note') + '</div>';

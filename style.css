@@ -632,7 +632,7 @@ html[data-gaya="kaca"][data-bgimg] .top .hb, html[data-gaya="kaca"][data-bgimg] 
   html[data-sbs="open"] .top .title .tt, html[data-sbs="rail"] .top .title .tt { font-size: 24px; letter-spacing: -.02em; }
   html[data-sbs="open"] .top .title, html[data-sbs="rail"] .top .title { margin-right: auto; display: flex; align-items: center; gap: 10px; }
   html[data-sbs="open"] .top .avbtn, html[data-sbs="rail"] .top .avbtn { display: none; }
-  html[data-sbs]:not([data-sbs="none"]):not([data-view="beranda"]):not([data-view="transaksi"]) main { max-width: 1080px; }
+  html[data-sbs]:not([data-sbs="none"]):not([data-view="beranda"]):not([data-view="transaksi"]) main { max-width: none; }
   html[data-sbs] .sheet-b { }
 }
 /* laptop dan PC */
@@ -955,3 +955,33 @@ html[data-anim="off"] *, html[data-anim="off"] *::before, html[data-anim="off"] 
 .ddrow .pbtn { float: none; margin: 0 0 0 auto; flex: none; }
 
 html.calcon .sheet { bottom: 54px !important; max-height: calc(94vh - 54px); }
+
+@media (max-width: 819px) { .top .hb.lang { display: none; } }
+@media (min-width: 820px) { .palbtn { display: grid; } }
+
+.ptree { border-top: 1px solid var(--line); padding: 4px 0; } .ptree:first-of-type { border-top: 0; }
+.ptree > summary, .psub > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 9px 2px; cursor: pointer; } .ptree > summary::-webkit-details-marker, .psub > summary::-webkit-details-marker { display: none; }
+.ptree > summary .pn { flex: 1; font-weight: 700; } .psub > summary .pn { flex: 1; font-size: 14px; } .ptree summary b, .psub summary b { font-variant-numeric: tabular-nums; font-size: 14px; } .ptree summary em, .psub summary em, .pit em { font-style: normal; min-width: 46px; text-align: right; color: var(--muted); font-size: 12.5px; }
+.psub { margin-left: 8px; } .psub > summary i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.pbar { display: flex; height: 12px; border-radius: 7px; overflow: hidden; gap: 2px; margin: 2px 0 6px; } .pbar i { display: block; min-width: 3px; }
+.pit { display: flex; gap: 8px; padding: 5px 4px 5px 26px; font-size: 13px; color: var(--muted); } .pit span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .pit b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pdon .legend { max-width: 340px; }
+
+.aico { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); flex: none; overflow: hidden; margin-right: 10px; } .aico svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .aico.has { background: #fff; border: 1px solid var(--line); } .aico img { width: 100%; height: 100%; object-fit: contain; display: block; } .aico.big { width: 54px; height: 54px; border-radius: 16px; } .aico.big svg { width: 28px; height: 28px; }
+.lgrow { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; } .lgblk .btnrow2 { display: flex; gap: 8px; }
+
+.phblk { margin-bottom: 8px; } .phprev { display: block; width: 100%; height: 150px; object-fit: cover; border-radius: 16px; background: var(--accent-soft); } .phprev.ph0 { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--accent); font-weight: 600; border: 2px dashed var(--line); } .phprev.ph0 svg { width: 26px; height: 26px; } .phblk .btnrow2 { display: flex; gap: 8px; margin-top: 8px; }
+.cover { display: block; width: calc(100% + 32px); margin: -14px -16px 10px; height: 120px; object-fit: cover; border-radius: 18px 18px 0 0; } .card.hasph { overflow: hidden; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .two .lbl2 { margin-top: 12px; }
+details.adv { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 8px; } details.adv > summary { cursor: pointer; font-weight: 600; color: var(--muted); padding: 6px 0; }
+
+/* v3.4b: halaman desktop memenuhi lebar: kartu mengalir ke 2-3 kolom dan menyusut otomatis saat panel Catat terbuka */
+@media (min-width: 1100px) {
+  html[data-sbs="open"]:not([data-view="beranda"]):not([data-view="transaksi"]):not([data-view="notif"]) main > div:not(.rutinbox),
+  html[data-sbs="rail"]:not([data-view="beranda"]):not([data-view="transaksi"]):not([data-view="notif"]) main > div:not(.rutinbox) { }
+  html[data-sbs="open"]:not([data-view="beranda"]):not([data-view="transaksi"]) main, html[data-sbs="rail"]:not([data-view="beranda"]):not([data-view="transaksi"]) main { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 14px; align-items: start; padding-bottom: 30px; }
+  html[data-sbs]:not([data-view="beranda"]):not([data-view="transaksi"]) main > * { margin: 0 !important; min-width: 0; }
+  html[data-sbs]:not([data-view="beranda"]):not([data-view="transaksi"]) main > :is(h2, h3, .seg, .btnrow, .btnrow2, .note, .note2, .mnav, .ddrow, .stick, .empty, .chips, .card.hero, .rutinbox, .lbl3, .muted, .tabs, .stk, .insgrid, form, section) { grid-column: 1 / -1; }
+  html[data-sbs]:not([data-view="beranda"]):not([data-view="transaksi"]) main > .card:has(table, .stk-svg, .stk, .sankey, .tbl) { grid-column: 1 / -1; }
+  html[data-sbs]:not([data-view="beranda"]):not([data-view="transaksi"]) main > .insgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 14px; }
+}

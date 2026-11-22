@@ -34,6 +34,26 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
   function money(label, key, val, ph) { return '<label class="lbl2">' + label + '</label><input class="input" inputmode="numeric" data-pf="' + key + '" data-pfm="1" placeholder="' + esc(ph || '0') + '" value="' + (val ? C.fmtNum(val) : '') + '">'; }
   function dateIn(label, key, val) { return '<label class="lbl2">' + label + '</label><input class="input" type="date" data-pf="' + key + '" value="' + esc(val || '') + '">'; }
   function toggle(label, key, on) { return '<button class="tog' + (on ? ' on' : '') + '" data-act="pf-toggle" data-k="' + key + '"><i></i><span>' + label + '</span></button>'; }
+  function photoBlock(d) {
+    return '<div class="phblk">' + (d.foto ? '<img class="phprev" src="' + esc(d.foto) + '" alt="">' : '<div class="phprev ph0">' + ICON.plus + '<span>' + t('ph.add') + '</span></div>') +
+      '<div class="btnrow2"><button class="btn sm" data-act="ph-pick">' + t(d.foto ? 'ph.ch' : 'ph.up') + '</button>' + (d.foto ? '<button class="btn sm danger" data-act="ph-del">' + t('ph.del') + '</button>' : '') + '</div><input type="file" id="file-ph" accept="image/*" hidden data-phf="1"></div>';
+  }
+  function photoShrink(file) {
+    return new Promise(function (res, rej) {
+      var u = URL.createObjectURL(file), im = new Image();
+      im.onerror = function () { URL.revokeObjectURL(u); rej(new Error('img')); };
+      im.onload = function () {
+        var out = '', W = [520, 440, 360, 300, 240], Q = [0.7, 0.6, 0.5];
+        for (var i = 0; i < W.length; i++) for (var j = 0; j < Q.length; j++) {
+          var k = Math.min(1, W[i] / Math.max(im.naturalWidth, im.naturalHeight)), cv = document.createElement('canvas'); cv.width = Math.round(im.naturalWidth * k); cv.height = Math.round(im.naturalHeight * k);
+          cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); out = cv.toDataURL('image/jpeg', Q[j]); if (out.length <= 17000) { URL.revokeObjectURL(u); return res(out); }
+        }
+        URL.revokeObjectURL(u); rej(new Error('big'));
+      };
+      im.src = u;
+    });
+  }
+  function cover(d) { return d.foto ? '<img class="cover" src="' + esc(d.foto) + '" alt="">' : ''; }
   function saveBtn(act, label) { return '<button class="btn primary" data-act="' + act + '"' + (PF.busy ? ' disabled' : '') + '>' + (PF.busy ? t('w.saving') : (label || t('save'))) + '</button>'; }
   function saveDel(act, delAct) { return (PF.id ? '<div class="btnrow2"><button class="btn danger" data-act="' + delAct + '">' + t('delete') + '</button>' + saveBtn(act) + '</div>' : saveBtn(act)); }
 
@@ -55,6 +75,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
   });
   document.addEventListener('change', function (e) {
     var el = e.target; if (!PF || !PF.d) return;
+    if (el.dataset.phf) { var f = el.files && el.files[0]; el.value = ''; if (f) photoShrink(f).then(function (img) { PF.d.foto = img; renderForm(); }).catch(function () { PF.err = t('ph.fail'); renderForm(); }); return; }
     if (el.dataset.pfr === 'g') PF.d[el.dataset.list][+el.dataset.i].g = el.value;
   });
   function rincianTotal(r) { return (r || []).reduce(function (a, x) { return a + (+x.j || 0) * (+x.k || 1); }, 0); }
@@ -118,7 +139,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       var a = act.g[g.nama] || 0, pc = bud > 0 ? a / bud : (a > 0 ? 9.99 : 0), subRows = rows.filter(function (r) { return r.line.scope === 'sub'; }), grupRows = rows.filter(function (r) { return r.line.scope !== 'sub'; });
       return {g: g, rows: rows, bud: bud, a: a, pc: pc, subRows: subRows, grupRows: grupRows};
     });
-    cards.sort(function (x, y) { return (y.bud > 0) - (x.bud > 0) || (x.bud > 0 ? y.pc - x.pc : y.a - x.a); });
+    /* v3.4b: urutan kartu mengikuti urutan kategori di CoA */
     h += cards.map(function (c) {
       var g = c.g, isOpen = !!open[J + ':' + g.nama], sisa = c.bud - c.a, neg = inc ? false : sisa < 0;
       var out = '<div class="card bl cat"><div class="ah tap" data-act="bl-cat" data-g="' + esc(g.nama) + '"><span class="gi">' + X.catIcon(g.nama) + '</span><span>' + esc(dn(g.nama)) + '</span>' +
@@ -178,12 +199,13 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     ev: {
       title: function (p) { return p.id ? t('ev.edit') : t('ev.add'); },
       body: function (p) {
-        var d = p.d, h = inp(t('ev.name'), 'nama', d.nama, t('ev.name.ph')) + inp(t('ev.tag'), 'tag', d.tag, '#liburan-bali') + '<div class="muted sm" style="margin:4px 2px 0">' + t('ev.tag.hint') + '</div>' +
-          dateIn(t('ev.from'), 'mulai', d.mulai) + dateIn(t('ev.to'), 'selesai', d.selesai) + money(t('ev.budget'), 'anggaran', d.anggaran);
+        var d = p.d, h = photoBlock(d) + inp(t('ev.name'), 'nama', d.nama, t('ev.name.ph')) +
+          '<div class="two">' + dateIn(t('ev.from'), 'mulai', d.mulai) + dateIn(t('ev.to'), 'selesai', d.selesai) + '</div>' + money(t('ev.budget'), 'anggaran', d.anggaran);
         h += '<label class="lbl2">' + t('ev.items') + '</label>' + (d.items || []).map(function (r, i) {
           return '<div class="rrow"><select class="input" data-pfr="g" data-list="items" data-i="' + i + '">' + expenseGroups().map(function (g) { return '<option value="' + esc(g) + '"' + (g === r.g ? ' selected' : '') + '>' + esc(dn(g)) + '</option>'; }).join('') + '</select>' +
             '<input class="input" inputmode="numeric" data-pfr="j" data-list="items" data-i="' + i + '" value="' + (r.j ? C.fmtNum(r.j) : '') + '" placeholder="Rp"><button class="hb" data-act="pf-rdel" data-list="items" data-i="' + i + '" aria-label="' + t('delete') + '">' + ICON.x + '</button></div>';
         }).join('') + '<button class="link" data-act="pf-radd" data-list="items">+ ' + t('ev.items.add') + '</button>';
+        h += '<details class="adv"' + (d.tag ? ' open' : '') + '><summary>' + t('pf.adv') + '</summary>' + inp(t('ev.tag'), 'tag', d.tag, '#liburan-bali') + '<div class="muted sm" style="margin:4px 2px 0">' + t('ev.tag.hint') + '</div></details>';
         return h;
       },
       foot: function () { return saveDel('ev-save', 'ev-del'); }
@@ -191,10 +213,10 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     gl: {
       title: function (p) { return p.id ? t('gl.edit') : t('gl.add'); },
       body: function (p) {
-        var d = p.d, h = inp(t('gl.name'), 'nama', d.nama, t('gl.name.ph')) + money(t('gl.target'), 'target', d.target) + dateIn(t('gl.due'), 'tenggat', d.tenggat);
-        h += '<label class="lbl2">' + t('gl.wallets') + '</label><div class="muted sm" style="margin:-4px 0 8px">' + t('gl.wallets.hint') + '</div><div class="chips">' +
+        var d = p.d, h = photoBlock(d) + inp(t('gl.name'), 'nama', d.nama, t('gl.name.ph')) + '<div class="two">' + money(t('gl.target'), 'target', d.target) + dateIn(t('gl.due'), 'tenggat', d.tenggat) + '</div>';
+        h += '<details class="adv"' + ((d.dompet && d.dompet.length) || d.awal ? ' open' : '') + '><summary>' + t('pf.adv') + '</summary><label class="lbl2">' + t('gl.wallets') + '</label><div class="muted sm" style="margin:-4px 0 8px">' + t('gl.wallets.hint') + '</div><div class="chips">' +
           (d.dompet || []).map(function (n, i) { return '<button class="chip sm on" data-act="gl-wallet-del" data-i="' + i + '">' + esc(n) + ' ✕</button>'; }).join('') + '<button class="chip sm more" data-act="gl-wallet-add">+ ' + t('gl.wallet.add') + '</button></div>';
-        h += money(t('gl.start'), 'awal', d.awal);
+        h += money(t('gl.start'), 'awal', d.awal) + '</details>';
         return h;
       },
       foot: function () { return saveDel('gl-save', 'gl-del'); }
@@ -241,7 +263,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       var rows = Object.keys(a.byGrup).sort(function (x, y) { return a.byGrup[y] - a.byGrup[x]; });
       var itemBud = {}; (e.items || []).forEach(function (i) { itemBud[i.g] = (itemBud[i.g] || 0) + (+i.j || 0); });
       Object.keys(itemBud).forEach(function (g) { if (rows.indexOf(g) < 0) rows.push(g); });
-      return '<div class="card bl"><div class="ah"><span class="gi">' + ICON.tag + '</span><span>' + esc(e.nama) + '<small class="muted sm dnet">#' + esc(norm(e.tag)) + (e.mulai ? ' · ' + esc(C.fmtTgl(e.mulai)) + (e.selesai ? ' – ' + esc(C.fmtTgl(e.selesai)) : '') : '') + '</small></span>' +
+      return '<div class="card bl' + (e.foto ? ' hasph' : '') + '">' + cover(e) + '<div class="ah"><span class="gi">' + ICON.tag + '</span><span>' + esc(e.nama) + '<small class="muted sm dnet">#' + esc(norm(e.tag)) + (e.mulai ? ' · ' + esc(C.fmtTgl(e.mulai)) + (e.selesai ? ' – ' + esc(C.fmtTgl(e.selesai)) : '') : '') + '</small></span>' +
         '<button class="hb sm" data-act="ev-open" data-id="' + esc(e.id) + '" aria-label="' + t('ev.edit') + '">' + ICON.edit + '</button></div>' +
         '<div class="sr"><span class="muted">' + esc(bud ? t('bl.used.of', C.fmtNum(a.total), C.fmtNum(bud)) : t('ev.spent', fm(a.total))) + '</span>' + (bud ? '<b>' + pct(p) + '</b>' : '') + '</div>' + (bud ? pbar(p) : '') +
         (bud ? '<div class="s ' + (bud - a.total < 0 ? 'out' : 'muted') + ' sm" style="margin-top:6px">' + esc(bud - a.total < 0 ? t('bl.over', fm(a.total - bud)) : t('bl.left', fm(bud - a.total))) + '</div>' : '') +
@@ -258,7 +280,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     if (!gs.length) return h + '<div class="card"><div class="empty">' + t('gl.empty') + '</div></div>';
     return h + gs.map(function (g) {
       var p = C2.goalProgress(g, wm, today), st = {tercapai: ['in', 'gl.s.done'], lewat: ['out', 'gl.s.late'], berjalan: ['', 'gl.s.go'], 'tanpa-tenggat': ['', 'gl.s.nodue']}[p.status];
-      return '<div class="card bl"><div class="ah"><span class="gi">' + ICON.target + '</span><span>' + esc(g.nama) + '<small class="muted sm dnet">' + esc(g.tenggat ? t('gl.by', C.fmtTgl(g.tenggat)) : t('gl.s.nodue')) + '</small></span>' +
+      return '<div class="card bl' + (g.foto ? ' hasph' : '') + '">' + cover(g) + '<div class="ah"><span class="gi">' + ICON.target + '</span><span>' + esc(g.nama) + '<small class="muted sm dnet">' + esc(g.tenggat ? t('gl.by', C.fmtTgl(g.tenggat)) : t('gl.s.nodue')) + '</small></span>' +
         '<button class="hb sm" data-act="gl-open" data-id="' + esc(g.id) + '" aria-label="' + t('gl.edit') + '">' + ICON.edit + '</button></div>' +
         '<div class="sr"><span class="muted">' + esc(t('bl.used.of', C.fmtNum(p.terkumpul), C.fmtNum(p.target))) + '</span><b>' + pct(p.pct) + '</b></div>' + pbar(p.pct, p.selesai ? '' : (p.status === 'lewat' ? 'bad' : '')) +
         '<div class="sr" style="margin-top:6px"><span class="muted sm">' + esc(p.selesai ? t('gl.s.done') : t('gl.remain', fm(p.sisa))) + '</span><span class="tag ' + (st[0] === 'out' ? 'bad' : '') + '">' + esc(t(st[1])) + '</span></div>' +
@@ -514,8 +536,10 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       var d = PF.d, nama = (d.nama || '').trim(), tag = norm(d.tag || nama);
       if (nama.length < 2) { PF.err = t('w.short'); renderForm(); return; }
       var items = (d.items || []).filter(function (i) { return +i.j > 0; }).map(function (i) { return {g: i.g, j: +i.j}; });
-      saveVia(rc.save('event', {nama: nama, tag: '#' + tag, mulai: d.mulai || '', selesai: d.selesai || '', anggaran: +d.anggaran || rincianTotal(items.map(function (i) { return {j: i.j, k: 1}; })), items: items, aktif: true}, PF.id));
+      saveVia(rc.save('event', {nama: nama, tag: '#' + tag, mulai: d.mulai || '', selesai: d.selesai || '', anggaran: +d.anggaran || rincianTotal(items.map(function (i) { return {j: i.j, k: 1}; })), items: items, foto: d.foto || '', aktif: true}, PF.id));
     },
+    'ph-pick': function () { var i = document.getElementById('file-ph'); if (i) i.click(); },
+    'ph-del': function () { if (PF && PF.d) { PF.d.foto = ''; renderForm(); } },
     'ev-del': function () { if (!confirm(t('bl.del.q'))) return; saveVia(rc.remove(PF.id)); },
     'ev-tx': function (el) { var e = rc.list('event').filter(function (x) { return x.id === el.dataset.id; })[0]; if (!e) return; S.q = norm(e.tag); S.txPer = 'semua'; S.owner = 'Semua'; X.setTab('transaksi'); },
     // tujuan
@@ -530,7 +554,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       var d = PF.d, nama = (d.nama || '').trim();
       if (nama.length < 2) { PF.err = t('w.short'); renderForm(); return; }
       if (!(+d.target > 0)) { PF.err = t('bl.err.amount'); renderForm(); return; }
-      saveVia(rc.save('tujuan', {nama: nama, target: +d.target, tenggat: d.tenggat || '', dompet: d.dompet || [], awal: +d.awal || 0, setoran: d.setoran || [], aktif: true}, PF.id));
+      saveVia(rc.save('tujuan', {nama: nama, target: +d.target, tenggat: d.tenggat || '', dompet: d.dompet || [], awal: +d.awal || 0, setoran: d.setoran || [], foto: d.foto || '', aktif: true}, PF.id));
     },
     'gl-del': function () { if (!confirm(t('bl.del.q'))) return; saveVia(rc.remove(PF.id)); },
     'gl-setor': function (el) { var g = rc.list('tujuan').filter(function (x) { return x.id === el.dataset.id; })[0]; if (g) openForm('setor', g.id, {tgl: C.todayLocal(), jumlah: 0}, {goal: g}); },

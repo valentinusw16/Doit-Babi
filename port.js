@@ -100,6 +100,55 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
     }).join('') + '</div>';
   }
 
+
+  // ---------------------------------------------------------------- distribusi rinci (kelompok > subkategori > isi)
+  var PCOL = ['#c2185b', '#1f9d63', '#d6a24c', '#5c6bc0', '#26a69a', '#8e5bd1', '#e0703a', '#4f8fc0', '#a0a64a', '#7a7a7a'];
+  function subLabel(nama, kel, fallback) {
+    var s = nama + ' ' + kel;
+    if (/terkunci|deposito|berjangka|lock/i.test(s)) return t('po.sub.lock');
+    if (/gopay|ovo|dana|shopee|linkaja|emoney|e-money|flazz|brizzi|tapcash|wondr|jenius|isaku|e-?wallet|kartu|kredit/i.test(s)) return t('po.sub.ew');
+    if (/tunai|cash|dompet|kantong/i.test(s)) return t('po.sub.cash');
+    if (/bank|bca|bri|bni|mandiri|livin|jago|cimb|bsi|permata|danamon|btn|ocbc|seabank|tabungan|giro|nabung/i.test(s)) return t('po.sub.bank');
+    if (/s2\d|iphone|hp|ponsel|laptop|lenovo|samsung|elektronik|tablet/i.test(s)) return t('po.sub.elec');
+    if (/mobil|motor|kendaraan/i.test(s)) return t('po.sub.veh');
+    if (/rumah|tanah|properti|apartemen/i.test(s)) return t('po.sub.prop');
+    return fallback;
+  }
+  function distTree(rows) {
+    var T = {};
+    function add(kel, sub, item, v) {
+      if (!(v > 0)) return; var k = T[kel] || (T[kel] = {nama: dn(kel), total: 0, subs: {}}); k.total += v;
+      var s = k.subs[sub] || (k.subs[sub] = {nama: sub, total: 0, items: {}}); s.total += v; s.items[item] = (s.items[item] || 0) + v;
+    }
+    rows.forEach(function (r) {
+      if (!(r.nilai > 0)) return; var acc = S.M.akun[r.d.KodeAkun] || {}, subName = subLabel(r.d.Nama, r.kel, dn(acc.Nama || r.kel));
+      if (r.mode === 'wadah' && r.isi.length) {
+        r.isi.forEach(function (x) { add(r.kel, t('po.k.' + x.aset.kelas), x.aset.kode || x.aset.nama, x.pos.nilai); });
+        add(r.kel, t('po.kas'), r.d.Nama, r.kas);
+      } else add(r.kel, subName, r.d.Nama, r.nilai);
+    });
+    return Object.keys(T).map(function (k) {
+      var g = T[k]; g.subList = Object.keys(g.subs).map(function (s) { var x = g.subs[s]; x.itemList = Object.keys(x.items).map(function (i) { return {nama: i, v: x.items[i]}; }).sort(function (a, b) { return b.v - a.v; }); return x; }).sort(function (a, b) { return b.total - a.total; }); return g;
+    }).sort(function (a, b) { return b.total - a.total; });
+  }
+  function pc(v, tot) { var p = tot ? v / tot * 100 : 0; return (p >= 10 ? Math.round(p) : Math.round(p * 10) / 10).toString().replace('.', S.pref.lang === 'en' ? '.' : ',') + '%'; }
+  function distHTML(rows, tot) {
+    var tr = distTree(rows); if (!tr.length) return '';
+    var lvl = S.poLvl || 'sub', h = '<div class="card"><div class="ch">' + t('po.dist') + '</div><div class="seg" style="margin:6px 0 10px">' + [['kel', 'po.d.kel'], ['sub', 'po.d.sub']].map(function (x) { return '<button class="' + (lvl === x[0] ? 'on' : '') + '" data-act="po-lvl" data-v="' + x[0] + '">' + t(x[1]) + '</button>'; }).join('') + '</div>';
+    var segs = lvl === 'kel' ? tr.map(function (g) { return {nama: g.nama, total: g.total}; }) : [].concat.apply([], tr.map(function (g) { return g.subList.map(function (s) { return {nama: s.nama + (tr.length > 1 ? ' · ' + g.nama : ''), total: s.total}; }); })).sort(function (a, b) { return b.total - a.total; });
+    var colr = function (i) { return PCOL[i % PCOL.length]; };
+    h += '<div class="donutrow pdon">' + X.donut(segs.map(function (g) { return {nama: g.nama, total: g.total}; }), tot, t('po.total')) + '<div class="legend">' + segs.slice(0, 8).map(function (g, i) { return '<div class="lg"><i style="background:' + colr(i) + '"></i><span>' + esc(g.nama) + '</span><b>' + pc(g.total, tot) + '</b></div>'; }).join('') + '</div></div></div>';
+    h += '<div class="card"><div class="ch">' + t('po.tree') + '</div>' + tr.map(function (g, gi) {
+      var si = 0;
+      return '<details class="ptree"' + (gi === 0 ? ' open' : '') + '><summary><span class="pn">' + esc(g.nama) + '</span><b>' + esc(fm(g.total)) + '</b><em>' + pc(g.total, tot) + '</em></summary>' +
+        '<div class="pbar">' + g.subList.map(function (s, i) { return '<i style="width:' + (s.total / g.total * 100) + '%;background:' + colr(i) + '" title="' + esc(s.nama) + '"></i>'; }).join('') + '</div>' +
+        g.subList.map(function (s, i) {
+          return '<details class="psub"><summary><i style="background:' + colr(i) + '"></i><span class="pn">' + esc(s.nama) + '</span><b>' + esc(fm(s.total)) + '</b><em>' + pc(s.total, g.total) + '</em></summary>' +
+            s.itemList.map(function (x) { return '<div class="pit"><span>' + esc(x.nama) + '</span><b>' + esc(fm(x.v)) + '</b><em>' + pc(x.v, s.total) + '</em></div>'; }).join('') + '</details>';
+        }).join('') + '</details>';
+    }).join('') + '</div>';
+    return h;
+  }
   // ---------------------------------------------------------------- halaman Portofolio
   function vPort(p) {
     var rows = allAccounts(S.owner), view = S.poView || 'akun', h = ''; X.ownerChips(S.owner, 'owner');
@@ -107,7 +156,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
     h += '<div class="card hero"><div class="lbl">' + t('po.value') + '</div><div class="big">' + esc(fm(tot.n)) + '</div><div class="sub2">' + esc(t('po.bookline', fm(tot.b))) + (Math.abs(tot.n - tot.b) >= 1 ? ' · <span class="' + cls(tot.n - tot.b) + '">' + esc(t('po.unbooked', sgn(tot.n - tot.b))) + '</span>' : '') + '</div></div>';
     var by = {}; rows.forEach(function (r) { if (r.nilai > 0) by[r.kel] = (by[r.kel] || 0) + r.nilai; });
     var gs = Object.keys(by).map(function (k) { return {nama: dn(k), total: by[k]}; }).sort(function (a, b) { return b.total - a.total; });
-    if (gs.length) h += '<div class="card"><div class="ch">' + t('po.alloc') + '</div><div class="donutrow">' + X.donut(gs, tot.n, t('po.total')) + X.legend(gs, tot.n) + '</div></div>';
+    if (gs.length) h += distHTML(rows, tot.n);
     h += pendingBox(rows);
     var anyIsi = holdings().length;
     h += '<div class="btnrow"><button class="btn" data-act="w-open">' + ICON.plus + t('as.add') + '</button>' + '<button class="hb" data-act="po-share" aria-label="' + t('jpg.share') + '">' + ICON.share + '</button></div>';
@@ -118,7 +167,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
       var list = grp[k].sort(function (a, b) { return b.nilai - a.nilai; }), tt = list.reduce(function (s, r) { return s + r.nilai; }, 0);
       h += '<div class="card agrp' + (p && p.extra === k ? ' hl' : '') + '" id="g-' + esc(k.replace(/\W/g, '')) + '"><div class="ah"><span>' + esc(dn(k)) + '</span><b>' + esc(fm(tt)) + '</b></div>' + list.map(function (r) {
         var dif = Math.abs(r.selisih) >= 1 && r.mode !== 'kas' && r.mode !== 'susut';
-        return '<div class="row tap" data-act="asset" data-v="' + esc(r.d.KodeAkun) + '"><div class="grow"><div class="t">' + esc(r.d.Nama) + '</div><div class="s">' + esc(r.d.Pemilik + ' · ' + t('po.m.' + r.mode) + (r.isi.length ? ' · ' + t('po.n.isi', r.isi.length) : '')) + '</div></div>' +
+        return '<div class="row tap" data-act="asset" data-v="' + esc(r.d.KodeAkun) + '">' + (X.hooks.assetIco ? X.hooks.assetIco(r.d, r.kel) : '') + '<div class="grow"><div class="t">' + esc(r.d.Nama) + '</div><div class="s">' + esc(r.d.Pemilik + ' · ' + t('po.m.' + r.mode) + (r.isi.length ? ' · ' + t('po.n.isi', r.isi.length) : '')) + '</div></div>' +
           '<div class="a">' + esc(fm(r.nilai)) + (dif ? '<small class="' + cls(r.selisih) + '">' + esc(sgn(r.selisih)) + '</small>' : '') + '</div>' + ICON.chev + '</div>';
       }).join('') + '</div>';
     });
@@ -166,7 +215,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
     else {
       h += v.isi.map(function (r) {
         var a = r.aset, p = r.pos, fx = C2.isFixed(a);
-        return '<div class="row tap" data-act="po-open" data-id="' + esc(a.id) + '"><div class="ico">' + ICON.pie + '</div><div class="grow"><div class="t">' + esc(a.kode || a.nama) + (p.aktif ? '' : '<span class="tag">' + t('po.closed') + '</span>') + '</div>' +
+        return '<div class="row tap" data-act="po-open" data-id="' + esc(a.id) + '">' + (X.assetIco ? X.assetIco('aset', a.id, a.kode || a.nama, a.kelas) : '<div class="ico">' + ICON.pie + '</div>') + '<div class="grow"><div class="t">' + esc(a.kode || a.nama) + (p.aktif ? '' : '<span class="tag">' + t('po.closed') + '</span>') + '</div>' +
           '<div class="s">' + esc(fx ? t('po.fixed.s', a.fix.bunga, a.fix.tempo ? C.fmtTgl(a.fix.tempo) : '-') : unitTxt(a, p.unit) + ' · ' + C.fmtNum(a.harga || 0)) + '</div></div>' +
           '<div class="a">' + esc(fm(p.nilai)) + '<small class="' + cls(p.untung) + '">' + esc(p.modal ? sgn(p.untung) + ' · ' + pctT(p.pct || 0) : '') + '</small></div></div>';
       }).join('');
@@ -198,6 +247,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
     var pos = C2.position(a, lots(), today()), fixed = C2.isFixed(a), h = '';
     h += '<div class="card hero"><div class="lbl">' + esc(t('po.k.' + a.kelas) + ' · ' + a.akun) + '</div><div class="big">' + esc(fm(pos.nilai)) + '</div><div class="sr" style="margin-top:6px"><span>' + esc(t('po.cost', fm(pos.modal))) + '</span><b class="' + cls(pos.untung) + '">' + esc(sgn(pos.untung) + (pos.modal ? ' (' + pctT(pos.pct || 0) + ')' : '')) + '</b></div>' +
       '<div class="sr"><span class="muted">' + t('po.realized') + '</span><b class="' + cls(pos.realisasi) + '">' + esc(sgn(pos.realisasi)) + '</b></div></div>';
+    if (X.logoBlock) { var wl = S.M.dompet[a.akun]; if (wl && wl.Pemilik === S.cfg.user) h += X.logoBlock('aset', a.id, a.kode || a.nama, a.kelas); }
     if (fixed) {
       var f = a.fix;
       h += '<div class="card"><dl class="dl"><dt>' + t('po.f.pokok') + '</dt><dd>' + esc(fm(f.pokok)) + '</dd><dt>' + t('po.f.bunga') + '</dt><dd>' + esc(String(f.bunga)) + '% / ' + t('po.year') + '</dd><dt>' + t('po.f.mulai') + '</dt><dd>' + esc(C.fmtTgl(f.mulai)) + '</dd>' +
@@ -280,6 +330,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['port'] = '3.3.0';
 
   Object.assign(A, {
     'po-kupon': function (el) { var a = findA(el.dataset.id); if (a && X.kupon) X.kupon.open(a.kode || a.nama, a.fix ? C2.accrued(a.fix, today()) : 0); },
+    'po-lvl': function (el) { S.poLvl = el.dataset.v; X.render(); },
     'po-view': function (el) { S.poView = el.dataset.v; X.render(); },
     'po-share': function () { X.shareDoc(docPort(), 'doit-portofolio-' + today()); },
     'po-mode': function (el) { var nama = S._poAcc; akunSave(nama, {mode: el.dataset.v}).then(function () { X.render(); }).catch(function (e) { X.toast(X.srvErr(e)); }); },
