@@ -9,9 +9,9 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v35'] = '3.5.0';
 
   // ---------------------------------------------------------------- jam
   function clockText() {
-    var en = S.pref && S.pref.lang === 'en', d = new Date(), loc = en ? 'en-GB' : 'id-ID';
-    var tg = d.toLocaleDateString(loc, {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'});
-    var jm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    var en = S.pref && S.pref.lang === 'en', d = new Date(), loc = en ? 'en-GB' : 'id-ID', p2 = function (n) { return String(n).padStart(2, '0'); };
+    var tg = d.toLocaleDateString(loc, {weekday: 'long'}) + ', ' + p2(d.getDate()) + ' ' + d.toLocaleDateString(loc, {month: 'short'}).replace('.', '') + ' ' + d.getFullYear();
+    var jm = p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
     return {tg: tg, jm: jm};
   }
   function clockHTML() { var c = clockText(); return '<span class="clk" id="clk"><b>' + esc(c.jm) + '</b><small>' + esc(c.tg) + '</small></span>'; }
@@ -21,7 +21,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v35'] = '3.5.0';
   }
   var prevTop = X.hooks.topExtra;
   X.hooks.topExtra = function () { return clockHTML() + (prevTop ? prevTop.apply(this, arguments) : ''); };
-  setInterval(tick, 15000);
+  setInterval(tick, 1000);
 
   // ---------------------------------------------------------------- biaya admin lama
   function legacyFees() {

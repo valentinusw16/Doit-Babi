@@ -75,6 +75,8 @@
     }
     return m;
   }
+  /** v3.6: sisa yang dibawa manual ke bulan k (line.ro = {'YYYY-MM': jumlah}). */
+  function roFor(line, k) { return line.ro && +line.ro[k] > 0 ? +line.ro[k] : 0; }
   function baseFor(line, k) { return line.ov && line.ov[k] != null ? +line.ov[k] : (+line.jumlah || 0); }
   /** Rincian satu bulan: {dasar, bawa, tersedia, terpakai, sisa, pct}. Rollover hanya meneruskan sisa positif. */
   function monthDetail(line, k, spent) {
@@ -83,10 +85,11 @@
       var from = line.mulai && line.mulai < k ? line.mulai : k;
       if (monthsBetween(from, k) > 36) from = addMonthKey(k, -36);
       for (cur = from; cur < k; cur = addMonthKey(cur, 1)) {
-        var av = baseFor(line, cur) + bawa, sp = spent[cur] || 0;
+        var av = baseFor(line, cur) + bawa + roFor(line, cur), sp = spent[cur] || 0;
         bawa = Math.max(0, av - sp);
       }
     }
+    bawa += roFor(line, k);
     var dasar = baseFor(line, k), tersedia = dasar + bawa, terpakai = spent[k] || 0;
     return {dasar: dasar, bawa: bawa, tersedia: tersedia, terpakai: terpakai, sisa: tersedia - terpakai, pct: tersedia > 0 ? terpakai / tersedia : (terpakai > 0 ? 9.99 : 0)};
   }

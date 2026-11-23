@@ -259,7 +259,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
       var h = Math.max(2, bot - top), cls = b.tot ? 'tot' : (b.delta >= 0 ? 'up' : 'dn');
       if (i > 0) { var pv = bars[i - 1], ly = Y(pv.level); svg += '<line x1="' + (cx - bw - -w / 2 - 0).toFixed(1) + '" x2="' + (cx - w / 2).toFixed(1) + '" y1="' + ly.toFixed(1) + '" y2="' + ly.toFixed(1) + '" class="cn"/>'; }
       svg += '<g class="wfb' + (WF.sel === i ? ' sel' : '') + '" data-i="' + i + '" tabindex="0" role="button" aria-label="' + esc(b.tip.title + ' ' + frp(b.tip.amt)) + '"><rect x="' + (cx - bw / 2).toFixed(1) + '" y="0" width="' + bw.toFixed(1) + '" height="' + H + '" fill="transparent"/>' +
-        '<rect class="bar ' + cls + '" x="' + (cx - w / 2).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" style="--i:' + i + '"/>';
+        '<rect class="wbar ' + cls + '" x="' + (cx - w / 2).toFixed(1) + '" y="' + top.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="4" style="--i:' + i + '"/>';
       if (big) { var v = b.tot ? b.to : b.delta; svg += '<text x="' + cx.toFixed(1) + '" y="' + (top - 5).toFixed(1) + '" text-anchor="middle" class="vl ' + cls + '">' + (b.tot ? '' : sgn(v)) + esc(jt1(Math.abs(v))) + '</text>'; }
       svg += '<text x="' + cx.toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" class="ax">' + esc(b.l) + '</text></g>';
     });
@@ -282,8 +282,12 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
     for (y = cy; y >= Math.min(firstYear(), cy); y--) yrs += '<option value="' + y + '"' + (y === year ? ' selected' : '') + '>' + y + '</option>';
     var sel = '<select id="wf-mode" class="sel" aria-label="' + esc(t('dk.wf.month')) + '"><option value="bulan"' + (mode === 'bulan' ? ' selected' : '') + '>' + t('dk.wf.month') + '</option><option value="komponen"' + (mode === 'komponen' ? ' selected' : '') + '>' + t('dk.wf.comp') + '</option></select>' +
       '<select id="wf-year" class="sel" aria-label="' + esc(t('dk.set.t')) + '">' + yrs + '</select>';
+    var cdl = S.wfStyle === 'candle' && X.v36;
+    if (cdl) sel = '<select id="wf-year" class="sel" aria-label="' + esc(t('dk.set.t')) + '">' + yrs + '</select>';
+    if (X.v36) sel = X.v36.styleSelect() + sel;
     var h = '<div class="card wfc"><div class="ct"><h3>' + esc(t('dk.wf.t', year)) + '</h3><div class="sp"></div>' + sel + '</div>';
     if (!d.has || !d.months.length) return h + '<div class="empty">' + t('dk.wf.empty') + '</div></div>';
+    if (cdl) return h + X.v36.candle(d, P.f) + '</div>';
     var bars = wfBars(d, mode), key = mode + year + (S._wfN || 0), anim = WF.animFor !== key;
     WF.bars = bars; WF.animFor = key;
     if (WF.sel == null || WF.sel >= bars.length || WF.selKey !== mode + year) { WF.sel = Math.max(0, bars.length - (mode === 'bulan' ? 2 : 2)); WF.selKey = mode + year; }
@@ -328,10 +332,10 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
   X.hooks.homeLayout = function (P) {
     function bt(c, h) { return h ? '<div class="bt ' + c + '">' + h + '</div>' : ''; }
     var rec = P.recent.replace('<div class="card">', '<div class="card rcard"><div class="ct"><h3>' + esc(t('home.recent')) + '</h3><span class="sp"></span><button class="link" data-act="tab" data-v="transaksi">' + esc(t('see.all')) + '</button></div>');
-    var s1 = bt('b-month', monthCard(P)) + bt('b-ratio', P.ratio), s2 = bt('b-plan', P.mid) + bt('b-rec', rec);
+    var s1 = bt('b-month', X.v36 ? X.v36.stat(P) : monthCard(P)) + bt('b-ratio', P.ratio), s2 = bt('b-bud', X.v36 ? X.v36.budget(P) : '') + bt('b-plan', P.mid) + bt('b-rec', rec);
     return '<div class="bwrap"><div class="bento">' + bt('b-ban', P.banner) + bt('b-own', P.owner) + bt('b-top', P.top) + bt('b-hero', P.hero) +
       (s1 ? '<div class="stk s1">' + s1 + '</div>' : '') + bt('b-aset' + (P.mid ? '' : ' solo'), asetCard(P)) + bt('b-wf', wfCard(P)) +
-      (s2 ? '<div class="stk s2">' + s2 + '</div>' : '') + bt('b-flow', P.sankey) + bt('b-cal', calCard(P)) + '</div></div>';
+      (s2 ? '<div class="stk s2">' + s2 + '</div>' : '') + bt('b-d14', X.v36 ? X.v36.d14(P) : '') + bt('b-flow', P.sankey) + bt('b-cal', calCard(P)) + '</div></div>';
   };
   function dayTotals(rows) {
     var m = {};

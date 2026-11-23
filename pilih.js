@@ -18,7 +18,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['pilih'] = '3.4.0';
       var on = !!SEL.ids[r.dataset.id]; r.classList.toggle('psel', on); r.classList.toggle('pmode', SEL.on);
       var cb = r.querySelector(':scope > .pcb'); if (SEL.on && !cb) { cb = document.createElement('i'); cb.className = 'pcb'; r.insertBefore(cb, r.firstChild); } else if (!SEL.on && cb) cb.remove();
     });
-    var bt = $('.pbtn'); if (S.tab === 'transaksi' && !S.page) { if (!bt) { bt = document.createElement('button'); bt.className = 'pbtn'; bt.dataset.act = 'ps-toggle'; var hd = m.querySelector('.stick .ddrow'); if (hd) hd.appendChild(bt); else m.insertBefore(bt, m.firstChild); } bt.textContent = SEL.on ? t('ps.done') : t('ps.btn'); bt.classList.toggle('on', SEL.on); } else if (bt) bt.remove();
+    var bt = $('.pbtn'); if (S.tab === 'transaksi' && !S.page) { if (!bt) { bt = document.createElement('button'); bt.className = 'pbtn'; bt.dataset.act = 'ps-toggle'; var hd = m.querySelector('.stick .txbar') || m.querySelector('.stick .ddrow'); if (hd) hd.appendChild(bt); else m.insertBefore(bt, m.firstChild); } bt.textContent = SEL.on ? t('ps.done') : t('ps.btn'); bt.classList.toggle('on', SEL.on); } else if (bt) bt.remove();
     bar();
   }
   function bar() {

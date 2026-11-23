@@ -43,8 +43,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['viz'] = '3.4.2';
     var gi = gs.map(function (g, i) { return {nama: dn(g.nama), v: g.total, ico: X.catIcon(g.nama), c: col(i)}; });
     var subs = []; gs.forEach(function (g, i) { g.rows.forEach(function (x) { subs.push({nama: dn(x.nama) + ' · ' + dn(g.nama), v: x.jumlah, ico: X.catIcon(g.nama, x.nama, x.kode), c: col(i)}); }); });
     subs.sort(function (a, b) { return b.v - a.v; });
-    var h = '<div class="g2"><div class="card"><div class="ch">' + t('vz.group') + '</div>' + stack(gi, part.total) + rows(gi, part.total, {limit: 12}) + '</div>' +
-      '<div class="card"><div class="ch">' + t('vz.top') + '</div>' + rows(subs, part.total, {limit: 10}) + '</div>';
+    var h = '<div class="g2">';
     if (txs && txs.length) {
       var top = txs.slice().sort(function (a, b) { return +b.Jumlah - +a.Jumlah; }).slice(0, 6);
       h += '<div class="card"><div class="ch">' + t('vz.topn') + '</div>' + top.map(function (x) { var k = S.M.katByKode[x.KodeAkun] || {}; return '<div class="row tap" data-act="tx-open" data-id="' + esc(x.ID) + '"><div class="grow"><div class="t">' + esc(x.Barang || x.Toko || dn(k.SubKategori || '') || '-') + '</div><div class="s">' + esc(C.fmtTgl(x.Waktu.substr(0, 10))) + ' · ' + esc(dn(k.Kategori || '')) + '</div></div><div class="a ' + (isInc ? 'in' : 'out') + '">' + esc(fm(+x.Jumlah)) + '</div></div>'; }).join('') + '</div>';

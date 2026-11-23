@@ -111,7 +111,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
   }
   function ownerNow() { return S.owner !== 'Semua' ? S.owner : S.cfg.user; }
   function newLine(scope, key, jenis) {
-    return {scope: scope, key: key, jenis: jenis, pemilik: ownerNow(), rincian: [], jumlah: 0, rollover: jenis === 'Expense', mulai: curMonth(), ov: {}, ovm: 0};
+    return {scope: scope, key: key, jenis: jenis, pemilik: ownerNow(), rincian: [], jumlah: 0, rollover: false, mulai: curMonth(), ov: {}, ovm: 0};
   }
   function lineRow(r, k, sub, sc, gname) {
     var l = r.line, notes = [];
@@ -132,6 +132,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       '<div class="sr" style="margin-top:6px"><span>' + esc(t(inc ? 'bl.got' : 'bl.used', fm(T.terpakai))) + '</span><b class="' + (inc ? (T.terpakai >= T.tersedia ? 'in' : '') : (T.sisa < 0 ? 'out' : 'in')) + '">' + esc(inc ? t(T.terpakai >= T.tersedia ? 'bl.inc.over' : 'bl.inc.short', fm(Math.abs(T.sisa))) : t(T.sisa < 0 ? 'bl.over' : 'bl.left', fm(Math.abs(T.sisa)))) + '</b></div>' + pbar(p, inc ? (p >= 1 ? 'good' : '') : null) +
       (!inc && isNow && T.terpakai ? '<div class="sub2">' + esc(t('bl.proj', fm(C2.projection(T.terpakai, k, today)))) + '</div>' : '') + '</div>';
     if (!inc && bm.rows.length > 1) h += '<div class="btnrow"><button class="btn" data-act="bl-realok">' + ICON.swap + t('bl.realok') + '</button></div>';
+    if (X.v36) h += X.v36.anggaranTop(J, k, bm, lines);
     h += '<div class="muted sm" style="margin:2px 2px 10px">' + t('bl.cat.hint') + '</div>';
     var act = actualMaps(J, k, S.owner), open = S.bopen || {};
     var cards = groupsOf(J).map(function (g) {
@@ -179,7 +180,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     bl: {
       title: function (p) { return p.id ? t('bl.edit') : t('bl.add'); },
       body: function (p) {
-        var d = p.d, k = curMonth(), name = lineName(d), h = '<div class="card"><div class="ah" style="padding:0"><span class="gi">' + X.catIcon(lineGroup(d)) + '</span><span>' + esc(name) + '</span><b class="muted sm">' + t(d.scope === 'sub' ? 'bl.sub' : 'bl.grp') + '</b></div></div>';
+        var d = p.d, k = curMonth(), name = lineName(d), h = (X.v36 && lineJenis(d) === 'Expense' ? X.v36.formSisa(d) : '') + '<div class="card"><div class="ah" style="padding:0"><span class="gi">' + X.catIcon(lineGroup(d)) + '</span><span>' + esc(name) + '</span><b class="muted sm">' + t(d.scope === 'sub' ? 'bl.sub' : 'bl.grp') + '</b></div></div>';
         h += '<label class="lbl2">' + t('bl.owner') + '</label><div class="chips">' + S.M.users.map(function (u) { return '<button class="chip sm' + (d.pemilik === u ? ' on' : '') + '" data-act="bl-owner" data-v="' + esc(u) + '"' + (p.id ? ' disabled' : '') + '>' + esc(u) + '</button>'; }).join('') + '</div>' + (p.id ? '' : '<div class="muted sm" style="margin-top:4px">' + t('bl.owner.hint') + '</div>');
         h += '<label class="lbl2">' + t('bl.rincian') + '</label><div class="muted sm" style="margin:-4px 0 8px">' + t('bl.rincian.hint') + '</div>';
         h += (d.rincian || []).map(function (r, i) {
@@ -453,11 +454,6 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
   }
   X.hooks.homeMid = function () {
     var P = planState(S.owner), rows = [];
-    if (P.bud) {
-      var B = P.bud, more = B.worst ? t('pl.tight', lineName(B.worst.line) + (B.worst.line.pemilik && S.owner === 'Semua' ? ' (' + B.worst.line.pemilik + ')' : ''), pct(B.worst.pct)) + (B.nWarn > 1 ? ' · ' + t('pl.more.bud', B.nWarn - 1) : '') : '';
-      var bst = B.worst && B.worst.pct > 1 ? 'bad' : (B.worst && B.st === 'ok' ? 'warn' : B.st);
-      rows.push(planRow('anggaran', t('home.budget'), t('bl.used.of', X.shortRp(B.T.terpakai), X.shortRp(B.T.tersedia)), B.p, bst, more));
-    }
     if (P.ev.length) {
       var E = P.ev[0];
       rows.push(planRow('event', t('pl.ev', E.e.nama), E.bud ? t('bl.used.of', X.shortRp(E.a.total), X.shortRp(E.bud)) : t('ev.spent', fm(E.a.total)), E.bud ? E.p : null, E.st, P.ev.length > 1 ? t('pl.more', P.ev.length - 1) : ''));
@@ -487,7 +483,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     });
     return out;
   }
-  X.plan = {dueCount: dueCount, logAll: logAll, planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
+  X.plan = {bud: {curMonth: curMonth, curJenis: curJenis, groupsOf: groupsOf, actualMaps: actualMaps, lineName: lineName, lineGroup: lineGroup, lineJenis: lineJenis, strip: strip, monthLabel: monthLabel, ownerNow: ownerNow, openForm: openForm, saveVia: saveVia, setPF: function (p) { PF = p; }}, dueCount: dueCount, logAll: logAll, planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
 
   // ---------------------------------------------------------------- aksi
   function saveVia(promise, done) { PF.busy = true; PF.err = ''; renderForm(); promise.then(function () { PF = null; X.closeOverlays(); X.toast(t('saved')); X.render(); if (done) done(); }).catch(fail); }

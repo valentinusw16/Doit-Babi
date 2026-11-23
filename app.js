@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.5.0', APP_NAME = 'Do it';
+  var VERSION = '3.6.0', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -398,13 +398,15 @@
     var hay = [x.SubKategori, x.Kategori, x.Dompet, x.DompetTujuan, x.Toko, x.Lokasi, x.Barang, x.Tag, x.Catatan, x.Pihak, x.SubJenis, x.Jenis, x.DicatatOleh].join(' ').toLowerCase();
     return q.toLowerCase().split(/\s+/).every(function (w) { return hay.indexOf(w) >= 0; });
   }
-  function txFiltered() {
+  function txFiltered(skipOwner) {
     var r = rangeOf(S.txPer), rows = [];
     Object.keys(S.tx).forEach(function (id) {
       var x = S.tx[id], d = x.Waktu.substr(0, 10);
       if (!S.showVoid && x.Status !== 'Aktif') return;
       if (d < r.start || d > r.end) return;
-      if (S.owner !== 'Semua' && x.PemilikDompet !== S.owner) return;
+      if (!skipOwner && S.owner !== 'Semua' && x.PemilikDompet !== S.owner) return;
+      if (S.txCat && x.Kategori !== S.txCat) return;
+      if (S.txSub && x.KodeAkun !== S.txSub) return;
       if (!matchQ(x, S.q)) return;
       rows.push(x);
     });
@@ -416,10 +418,10 @@
     return '<div class="card sumcard"><div><span>' + t('tx.sum.in') + '</span><b class="in">' + esc(C.fmtRp(inn)) + '</b></div><div><span>' + t('tx.sum.out') + '</span><b class="out">' + esc(C.fmtRp(out)) + '</b></div>' +
       '<div><span>' + t('tx.sum.net') + '</span><b class="' + (inn - out < 0 ? 'out' : '') + '">' + esc(C.fmtRp(inn - out)) + '</b></div><small>' + t('tx.sum.count', C.fmtNum(rows.length)) + '</small></div>';
   }
-  function txBody() { var rows = txFiltered(); return txSummary(rows) + (X.hooks.txTable && X.wide && X.wide() ? X.hooks.txTable(rows, S.limit) : (X.hooks.txDays ? X.hooks.txDays(rows, S.limit) : txListGrouped(rows, S.limit, 'more'))); }
+  function txBody() { var rows = txFiltered(); return txSummary(rows) + (X.v36 && S.M.users.length > 1 ? X.v36.userCompare(txFiltered(true)) : '') + (X.hooks.txTable && X.wide && X.wide() ? X.hooks.txTable(rows, S.limit) : (X.hooks.txDays ? X.hooks.txDays(rows, S.limit) : txListGrouped(rows, S.limit, 'more'))); }
   function vTransaksi() {
-    return '<div class="stick"><div class="ddrow">' + perChips(S.txPer, 'txper') + ownerChips(S.owner, 'owner') + '<button class="chip sm' + (S.showVoid ? ' on' : '') + '" data-act="void-toggle">' + t('tx.void') + '</button></div>' +
-      '<input class="search" id="q" type="search" placeholder="' + esc(t('tx.search')) + '" value="' + esc(S.q) + '" autocomplete="off"></div>' +
+    return '<div class="stick"><div class="ddrow">' + perChips(S.txPer, 'txper') + ownerChips(S.owner, 'owner') + (X.v36 ? X.v36.txFilters() : '') + '<button class="chip sm' + (S.showVoid ? ' on' : '') + '" data-act="void-toggle">' + t('tx.void') + '</button></div>' +
+      '<input class="search" id="q" type="search" placeholder="' + esc(t('tx.search')) + '" value="' + esc(S.q) + '" autocomplete="off">' + (X.v36 ? X.v36.txBar() : '') + '</div>' +
       (X.hooks.txTop ? X.hooks.txTop() : '') + '<div id="txlist">' + txBody() + '</div>';
   }
 
@@ -429,13 +431,19 @@
     var p = Math.round((cur - prev) / prev * 100);
     return p === 0 ? t('flow.same') : (p > 0 ? t('flow.up', p) : t('flow.down', -p));
   }
+  var flowCtx = null;
+  function flowListHTML() {
+    if (!flowCtx) return '';
+    var rows = flowCtx.rows.filter(function (x) { return X.v36 ? X.v36.matchFlow(x, S.fq) : true; });
+    return (X.v36 ? X.v36.flowResult(rows, S.fq) : '') + (rows.length ? txListGrouped(rows, S.limit, 'more') : '<div class="card"><div class="empty">' + t('flow.empty') + '</div></div>');
+  }
   function vFlow(kind) {
     var isInc = kind === 'income', f = fObj(S.owner), r = rangeOf(S.per), lines = getOpLines();
     var cur = C.incomeStatement(lines, S.M, r.start, r.end, f), part = isInc ? cur.pendapatan : cur.beban;
     var pr = prevOf(S.per), prevTot = null;
     if (pr) { var pv = C.incomeStatement(lines, S.M, pr.start, pr.end, f); prevTot = isInc ? pv.pendapatan.total : pv.beban.total; }
-    var h = '<div class="seg" style="margin-bottom:10px">' + [['expense', 'pg.expense'], ['income', 'pg.income']].map(function (x) { return '<button class="' + (kind === x[0] ? 'on' : '') + '" data-act="flow-k" data-v="' + x[0] + '">' + t(x[1]) + '</button>'; }).join('') + '</div>';
-    h += '<div class="stick"><div class="ddrow">' + perChips(S.per, 'per') + ownerChips(S.owner, 'owner') + '</div></div>';
+    var h = '<div class="stick"><div class="ddrow flrow"><div class="seg sm nseg">' + [['expense', 'pg.expense'], ['income', 'pg.income']].map(function (x) { return '<button class="' + (kind === x[0] ? 'on' : '') + '" data-act="flow-k" data-v="' + x[0] + '">' + t(x[1]) + '</button>'; }).join('') + '</div>' + perChips(S.per, 'per') + ownerChips(S.owner, 'owner') +
+      '<input class="search flsearch" id="fq" type="search" placeholder="' + esc(t('v36.fq')) + '" value="' + esc(S.fq || '') + '" autocomplete="off"></div></div>';
     var cmp = prevTot != null ? pctTxt(part.total, prevTot) : '';
     h += '<div class="card hero"><div class="lbl">' + t(isInc ? 'flow.total.in' : 'flow.total.out') + '</div><div class="big ' + (isInc ? 'in' : 'out') + '">' + esc(C.fmtRp(part.total)) + '</div>' +
       (cmp ? '<div class="sub2">' + esc(cmp) + ' ' + t('per.vs') + ' (' + esc(C.fmtRp(prevTot)) + ')</div>' : '') + '</div>';
@@ -445,14 +453,8 @@
       var d = x.Waktu.substr(0, 10); return x.Status === 'Aktif' && !isNonOp(x.KodeAkun) && x.Jenis === (isInc ? 'Income' : 'Expense') && d >= r.start && d <= r.end && (!f || x.PemilikDompet === f.pemilik);
     }).sort(byTimeDesc);
     h += '<div class="card pie-one">' + donut(part.groups, part.total, t(isInc ? 'tx.sum.in' : 'tx.sum.out')) + legend(part.groups, part.total) + '</div>' + (X.viz ? X.viz.flow(part, isInc, rows) : '') + trend;
-    h += '<h2>' + t('flow.bygroup') + '</h2><div class="ggrid">' + part.groups.map(function (g, i) {
-      var mx = g.rows[0] ? g.rows[0].jumlah : 1;
-      return '<div class="card grp"><div class="ah"><span class="gi" style="color:' + CHART[Math.min(i, 6)] + '">' + catIcon(g.nama) + '</span><span>' + esc(dn(g.nama)) + '</span><b>' + esc(C.fmtRp(g.total)) + '</b></div>' +
-        g.rows.map(function (x) {
-          return '<div class="subrow"><div class="sr"><span><span class="gi sm">' + catIcon(g.nama, x.nama, x.kode) + '</span>' + esc(dn(x.nama)) + '</span><b>' + esc(C.fmtNum(x.jumlah)) + ' <em class="pcx">' + (g.total ? Math.round(x.jumlah / g.total * 100) : 0) + '%</em></b></div><div class="bar ' + (isInc ? 'green' : 'red') + '"><i style="width:' + Math.max(3, Math.round(x.jumlah / mx * 100)) + '%"></i></div></div>';
-        }).join('') + '</div>';
-    }).join('') + '</div>';
-    h += '<h2>' + t('flow.list') + '</h2>' + txListGrouped(rows, S.limit, 'more');
+    flowCtx = {isInc: isInc, rows: rows};
+    h += '<h2>' + t('flow.list') + '</h2><div id="fl-list">' + flowListHTML() + '</div>';
     return h;
   }
 
@@ -1626,7 +1628,7 @@
       return r.ids;
     });
   }
-  Object.assign(X, {isDark: isDark, applyTheme: applyTheme, openMenu: showMenu, openSetup: renderSetup, S: S, C: C, C2: C2, L: L, t: t, esc: esc, $: $, sum: sum, ICON: ICON, A: A, dn: dn, api: api, render: render, openPage: openPage, goBack: goBack, setTab: setTab, toast: toast,
+  Object.assign(X, {flowList: flowListHTML, isDark: isDark, applyTheme: applyTheme, openMenu: showMenu, openSetup: renderSetup, S: S, C: C, C2: C2, L: L, t: t, esc: esc, $: $, sum: sum, ICON: ICON, A: A, dn: dn, api: api, render: render, openPage: openPage, goBack: goBack, setTab: setTab, toast: toast,
     renderForm: renderForm, getForm: function () { return F; }, closeForm: closeForm, saveFormRaw: function () { return {F: F, FX: FX}; }, openForm: openForm, rowToForm: rowToForm, openPicker: openPicker, closePicker: closePicker, closeOverlays: closeOverlays, openDetail: openDetail, txRow: txRow, txView: txView, txListGrouped: txListGrouped,
     donut: donut, legend: legend, sparkline: sparkline, shortRp: shortRp, perChips: perChips, rangeOf: rangeOf, periodOf: periodOf, prevOf: prevOf, ownerChips: ownerChips, fObj: fObj, getLines: getLines, kodeToDompet: kodeToDompet, repCtx: repCtx, repDoc: repDoc,
     assetGroups: assetGroups, byTimeDesc: byTimeDesc, catIcon: catIcon, isNonOp: isNonOp, chips: chips, enqueue: enqueue, syncNow: syncNow, persist: persist, touch: touch, srvErr: srvErr, waitMaster: waitMaster,
