@@ -1,5 +1,5 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.1';
-/* Do it v3.6.1 - menu Plan dipecah (Event, Anggaran, Goals), Rutin masuk Transaksi, Event bertingkat
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
+/* Do it v3.6.2 - menu Plan dipecah (Event, Anggaran, Goals), Rutin masuk Transaksi, Event bertingkat
    (kategori, subkategori, toko, barang, jumlah x harga), kartu Event/Goals terpisah di Beranda. Tanpa perubahan server. */
 (function () {
   'use strict';
@@ -13,7 +13,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.1';
     'v361.toko': 'Toko / sumber (opsional)', 'v361.barang': 'Barang (opsional)', 'v361.qty': 'Jumlah', 'v361.price': 'Harga satuan', 'v361.total': 'Total', 'v361.sum': 'Total rincian',
     'v361.in': '{0} hari lagi', 'v361.on': 'Berlangsung, hari ke-{0} dari {1}', 'v361.on1': 'Berlangsung, hari ke-{0}', 'v361.end': 'Berakhir {0} hari lagi', 'v361.done': 'Selesai', 'v361.today': 'Hari ini',
     'v361.bud': 'Anggaran', 'v361.used': 'Terpakai', 'v361.left': 'Sisa', 'v361.over': 'Lebih', 'v361.out': 'Di luar rencana', 'v361.whole': 'Seluruh kategori', 'v361.allsub': 'Semua subkategori',
-    'v361.ev.all': 'Lihat semua ({0})', 'v361.ev.none': 'Belum ada event.', 'v361.gl.t': 'Goals', 'v361.ev.t': 'Event', 'v361.nobud': 'Tanpa anggaran', 'v361.tx': 'Lihat {0} transaksi'
+    'v361.ev.all': 'Lihat semua ({0})', 'v361.ev.none': 'Belum ada event.', 'v361.gl.t': 'Goals', 'v361.ev.t': 'Event', 'v361.nobud': 'Tanpa anggaran', 'v361.tx': 'Lihat {0} transaksi',
+    'v361.plan.title': 'Rencana pengeluaran', 'v361.plan.add': 'Tambah rencana', 'v361.plan.edit': 'Ubah rencana', 'v361.plan.hint': 'Rencana tidak masuk jurnal. Isi seperti saat mencatat. Ketik 4*15000 di kolom jumlah untuk jumlah × harga.', 'v361.plan.empty': 'Belum ada rencana.', 'v361.real': 'Catat realisasi', 'v361.real.done': 'Tercatat', 'v361.real.title': 'Realisasi rencana', 'v361.plan.when': 'Tgl {0}'
   });
   I.add('en', {
     'pg.event': 'Events', 'pg.anggaran': 'Budget', 'pg.tujuan': 'Goals', 'v361.plan': 'Plan', 'v361.g.fin': 'Finance', 'v361.g.data': 'Data & system',
@@ -22,7 +23,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.1';
     'v361.toko': 'Store / source (optional)', 'v361.barang': 'Item (optional)', 'v361.qty': 'Quantity', 'v361.price': 'Unit price', 'v361.total': 'Total', 'v361.sum': 'Breakdown total',
     'v361.in': 'in {0} days', 'v361.on': 'Ongoing, day {0} of {1}', 'v361.on1': 'Ongoing, day {0}', 'v361.end': 'Ends in {0} days', 'v361.done': 'Finished', 'v361.today': 'Today',
     'v361.bud': 'Budget', 'v361.used': 'Spent', 'v361.left': 'Left', 'v361.over': 'Over', 'v361.out': 'Outside the plan', 'v361.whole': 'Whole category', 'v361.allsub': 'All subcategories',
-    'v361.ev.all': 'See all ({0})', 'v361.ev.none': 'No events yet.', 'v361.gl.t': 'Goals', 'v361.ev.t': 'Event', 'v361.nobud': 'No budget', 'v361.tx': 'View {0} transactions'
+    'v361.ev.all': 'See all ({0})', 'v361.ev.none': 'No events yet.', 'v361.gl.t': 'Goals', 'v361.ev.t': 'Event', 'v361.nobud': 'No budget', 'v361.tx': 'View {0} transactions',
+    'v361.plan.title': 'Planned expense', 'v361.plan.add': 'Add plan', 'v361.plan.edit': 'Edit plan', 'v361.plan.hint': 'Plans do not enter the journal. Fill in like recording. Type 4*15000 in the amount for quantity × price.', 'v361.plan.empty': 'No plans yet.', 'v361.real': 'Record actual', 'v361.real.done': 'Recorded', 'v361.real.title': 'Record planned expense', 'v361.plan.when': 'On {0}'
   });
 
   function frp(n) { return C.fmtRp(n); }
@@ -69,9 +71,9 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.1';
     return '';
   }
   function itemTitle(it) { var p = []; if (it.b) p.push(it.b); if (it.s) p.push((it.b ? '@ ' : '') + it.s); return p.join(' ') || subName(it.k) || t('v361.whole'); }
-  function row(ico, title, sub, real, bud, cls) {
+  function row(ico, title, sub, real, bud, cls, extra) {
     var h = H(), p = bud ? real / bud : 0;
-    return '<div class="evr ' + (cls || '') + '"><div class="sr"><span class="evt">' + (ico ? '<span class="gi sm">' + ico + '</span>' : '') + '<span class="evtt">' + esc(title) + (sub ? '<small class="muted sm">' + esc(sub) + '</small>' : '') + '</span></span><b class="num">' + esc(C.fmtNum(real)) + (bud ? ' / ' + esc(C.fmtNum(bud)) : '') + '</b></div>' + (bud ? h.pbar(p) : '') + '</div>';
+    return '<div class="evr ' + (cls || '') + '"><div class="sr"><span class="evt">' + (ico ? '<span class="gi sm">' + ico + '</span>' : '') + '<span class="evtt">' + esc(title) + (sub ? '<small class="muted sm">' + esc(sub) + '</small>' : '') + '</span></span><b class="num">' + esc(C.fmtNum(real)) + (bud ? ' / ' + esc(C.fmtNum(bud)) : '') + '</b></div>' + (bud ? h.pbar(p) : '') + (extra || '') + '</div>';
   }
   function evCard(e) {
     var h = H(), a = evActual(e), bud = evBudget(e), p = bud ? a.total / bud : 0, gs = evGroups(e, a), left = bud - a.total;
@@ -84,11 +86,12 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.1';
       var key = e.id + ':' + g.nama, open = !S.evClosed || !S.evClosed[key];
       var body = '';
       g.subOrder.forEach(function (k) {
-        var s = g.subs[k], det = s.items.filter(function (w) { return w.it.s || w.it.b; });
+        var s = g.subs[k], det = s.items;
         body += row(k ? X.catIcon(g.nama, (S.M.katByKode[k] || {}).SubKategori, k) : '', k ? subName(k) : t('v361.allsub'), '', s.real, s.bud, 'evs');
         det.forEach(function (w) {
-          var it = w.it, sub = (+it.q > 0 && +it.h > 0 ? C.fmtNum(it.q) + ' × ' + C.fmtNum(it.h) : '') + (w.n ? (+it.q > 0 ? ' · ' : '') + w.n + 'x' : '');
-          body += row('', itemTitle(it), sub, w.real, +it.j || 0, 'evi2');
+          var it = w.it, sub = [+it.q > 0 && +it.h > 0 ? C.fmtNum(it.q) + ' × ' + C.fmtNum(it.h) : '', it.w ? C.fmtTgl(it.w) : '', it.d || '', w.n ? w.n + 'x' : ''].filter(Boolean).join(' · ');
+          var ex = '<div class="evact">' + (it.x ? '<span class="pst ok"><i></i>' + t('v361.real.done') + '</span>' : '<button class="link sm" data-act="ev-real" data-id="' + esc(e.id) + '" data-i="' + w.i + '">' + t('v361.real') + '</button>') + '</div>';
+          body += row('', itemTitle(it), sub, w.real, +it.j || 0, 'evi2', ex);
         });
       });
       Object.keys(a.otherSub).forEach(function (k) { var sc = S.M.katByKode[k]; if (!sc || sc.Kategori !== g.nama) return; body += row('', subName(k), t('v361.out'), a.otherSub[k], 0, 'evo'); });
@@ -109,41 +112,50 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.1';
     var m = {}; Object.keys(S.tx).forEach(function (id) { var v = String(S.tx[id][field] || '').trim(); if (v) m[v] = (m[v] || 0) + 1; });
     return Object.keys(m).sort(function (a, b) { return m[b] - m[a]; }).slice(0, 60);
   }
-  function evItems(d) {
-    var items = d.items || [], groups = P.expenseGroups();
-    function ev(i, f) { return ' data-evi="' + f + '" data-i="' + i + '"'; }
-    var h = '<label class="lbl2">' + t('ev.items') + '</label><div class="muted sm" style="margin:-2px 2px 8px">' + t('v361.items.hint') + '</div>' +
-      '<datalist id="evl-toko">' + listOf('Toko').map(function (v) { return '<option value="' + esc(v) + '">'; }).join('') + '</datalist><datalist id="evl-barang">' + listOf('Barang').map(function (v) { return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>';
-    h += items.map(function (r, i) {
-      var subs = S.M.kategori.filter(function (k) { return k.Jenis === 'Expense' && k.Kategori === r.g; }), auto = +r.q > 0 && +r.h > 0;
-      return '<div class="evi"><div class="eg2"><select class="input"' + ev(i, 'g') + '>' + groups.map(function (g) { return '<option value="' + esc(g) + '"' + (g === r.g ? ' selected' : '') + '>' + esc(dn(g)) + '</option>'; }).join('') + '</select>' +
-        '<select class="input"' + ev(i, 'k') + '><option value="">' + esc(t('ev.allsub')) + '</option>' + subs.map(function (k) { return '<option value="' + esc(k.KodeAkun) + '"' + (k.KodeAkun === r.k ? ' selected' : '') + '>' + esc(dn(k.SubKategori)) + '</option>'; }).join('') + '</select>' +
-        '<button class="hb" data-act="pf-rdel" data-list="items" data-i="' + i + '" aria-label="' + t('delete') + '">' + ICON.x + '</button></div>' +
-        '<div class="eg2b"><input class="input"' + ev(i, 's') + ' list="evl-toko" placeholder="' + esc(t('v361.toko')) + '" value="' + esc(r.s || '') + '" autocomplete="off"><input class="input"' + ev(i, 'b') + ' list="evl-barang" placeholder="' + esc(t('v361.barang')) + '" value="' + esc(r.b || '') + '" autocomplete="off"></div>' +
-        '<div class="eg3"><input class="input" inputmode="numeric"' + ev(i, 'q') + ' placeholder="' + esc(t('v361.qty')) + '" value="' + (+r.q ? C.fmtNum(r.q) : '') + '"><input class="input" inputmode="numeric"' + ev(i, 'h') + ' placeholder="' + esc(t('v361.price')) + '" value="' + (+r.h ? C.fmtNum(r.h) : '') + '">' +
-        '<input class="input" inputmode="numeric" id="evj-' + i + '"' + ev(i, 'j') + ' placeholder="' + esc(t('v361.total')) + '" value="' + (+r.j ? C.fmtNum(r.j) : '') + '"' + (auto ? ' readonly' : '') + '></div></div>';
-    }).join('');
-    return h + '<button class="link" data-act="pf-radd" data-list="items">+ ' + t('ev.items.add') + '</button><div class="evsum"><span class="muted">' + t('v361.sum') + '</span><b class="num" id="ev-sum">' + esc(frp(sumBy(items, function (i) { return +i.j || 0; }))) + '</b></div>';
+  function evTag(d) { return '#' + H().norm(d.tag || d.nama || ''); }
+  function itemLine(r) {
+    var sc = r.k && S.M.katByKode[r.k], nm = (r.g ? dn(r.g) : '') + (sc ? ' › ' + dn(sc.SubKategori) : ''), who = itemTitle(r);
+    return {a: nm, b: (r.s || r.b ? who : ''), c: [+r.q > 0 && +r.h > 0 ? C.fmtNum(r.q) + ' × ' + C.fmtNum(r.h) : '', r.w ? t('v361.plan.when', C.fmtTgl(r.w)) : '', r.d || ''].filter(Boolean).join(' · ')};
   }
-  document.addEventListener('input', function (e) {
-    var el = e.target, f = el && el.dataset && el.dataset.evi; if (!f) return;
-    var PF = P.pf(); if (!PF || !PF.d) return; var it = PF.d.items[+el.dataset.i]; if (!it) return;
-    if (f === 's' || f === 'b') { it[f] = el.value; return; }
-    var dg = el.value.replace(/\D/g, '').substr(0, f === 'q' ? 6 : 12); it[f] = dg ? Number(dg) : 0; el.value = dg ? C.fmtNum(dg) : '';
-    if (+it.q > 0 && +it.h > 0) it.j = it.q * it.h;
-    var jn = document.getElementById('evj-' + el.dataset.i); if (jn) { if (f !== 'j') jn.value = it.j ? C.fmtNum(it.j) : ''; jn.readOnly = +it.q > 0 && +it.h > 0; }
-    var sm = $('#ev-sum'); if (sm) sm.textContent = frp(sumBy(PF.d.items, function (i) { return +i.j || 0; }));
-  });
-  document.addEventListener('change', function (e) {
-    var el = e.target, f = el && el.dataset && el.dataset.evi; if (!f || (f !== 'g' && f !== 'k')) return;
-    var PF = P.pf(); if (!PF || !PF.d) return; var it = PF.d.items[+el.dataset.i]; if (!it) return;
-    it[f] = el.value; if (f === 'g') { it.k = ''; P.renderForm(); }
-  });
+  function evItems(d) {
+    var items = d.items || [];
+    var h = '<label class="lbl2">' + t('ev.items') + '</label><div class="muted sm" style="margin:-2px 2px 8px">' + t('v361.plan.hint') + '</div>';
+    if (!items.length) h += '<div class="muted sm" style="margin:6px 2px">' + t('v361.plan.empty') + '</div>';
+    h += items.map(function (r, i) {
+      var L = itemLine(r);
+      return '<div class="evi pl"><button class="evp tap" data-act="ev-pedit" data-i="' + i + '"><span class="evpa">' + esc(L.a) + '</span>' + (L.b ? '<span class="evpb">' + esc(L.b) + '</span>' : '') + (L.c ? '<small class="muted sm">' + esc(L.c) + '</small>' : '') + '</button><b class="num evpj">' + esc(C.fmtNum(r.j || 0)) + '</b>' +
+        '<button class="hb" data-act="pf-rdel" data-list="items" data-i="' + i + '" aria-label="' + t('delete') + '">' + ICON.x + '</button></div>';
+    }).join('');
+    return h + '<button class="link" data-act="ev-padd">+ ' + t('v361.plan.add') + '</button><div class="evsum"><span class="muted">' + t('v361.sum') + '</span><b class="num" id="ev-sum">' + esc(frp(sumBy(items, function (i) { return +i.j || 0; }))) + '</b></div>';
+  }
+  // buka formulir Catat sebagai penyusun rencana (tidak masuk jurnal)
+  function planOpen(idx) {
+    var PF = P.pf(); if (!PF || !PF.d) return; var snap = {id: PF.id, d: PF.d}, it = idx >= 0 ? PF.d.items[idx] : null;
+    function back() { P.bud.openForm('ev', snap.id, snap.d); }
+    function cb(F) {
+      var sc = S.M.katByKode[F.kodeAkun] || {}, o = {g: sc.Kategori || (it && it.g) || '', k: F.kodeAkun || '', s: F.toko || '', b: F.barang || '', j: +F.jumlah || 0, d: F.dompet || '', w: String(F.waktu || '').substr(0, 10) || C.todayLocal(), c: F.catatan || ''};
+      if (it && it.q && it.h && it.q * it.h === o.j) { o.q = it.q; o.h = it.h; }
+      if (it && it.x) o.x = it.x;
+      snap.d.items = snap.d.items || []; if (it) snap.d.items[idx] = o; else snap.d.items.push(o);
+      back();
+    }
+    var init = {jenis: 'Expense', kodeAkun: it ? it.k : '', dompet: it ? it.d || '' : '', jumlah: it ? +it.j || 0 : 0, toko: it ? it.s || '' : '', barang: it ? it.b || '' : '', catatan: it ? it.c || '' : '', tag: evTag(snap.d), waktu: it && it.w ? it.w + 'T12:00' : ''};
+    X.openForm(init, {planCb: cb, planBack: back, planTitle: t(it ? 'v361.plan.edit' : 'v361.plan.title')});
+    var fx = X.saveFormRaw().FX; if (fx) { fx.more = true; X.renderForm(); }
+  }
   function evItemsOut(items) {
     return (items || []).map(function (i) {
       var q = +i.q || 0, h = +i.h || 0, j = q > 0 && h > 0 ? q * h : (+i.j || 0);
-      var o = {g: i.g, k: i.k || '', j: j}; if (String(i.s || '').trim()) o.s = String(i.s).trim(); if (String(i.b || '').trim()) o.b = String(i.b).trim(); if (q > 0 && h > 0) { o.q = q; o.h = h; } return o;
+      var o = {g: i.g, k: i.k || '', j: j}; ['s', 'b', 'd', 'w', 'c', 'x'].forEach(function (f) { if (String(i[f] || '').trim()) o[f] = String(i[f]).trim(); }); if (q > 0 && h > 0) { o.q = q; o.h = h; } return o;
     }).filter(function (i) { return i.j > 0; });
+  }
+  // realisasi: buka formulir Catat sungguhan dari kartu event
+  function realOpen(evId, idx) {
+    var e = P.rc.list('event').filter(function (x) { return x.id === evId; })[0]; if (!e) return; var it = (e.items || [])[idx]; if (!it) return;
+    X.openForm({jenis: 'Expense', kodeAkun: it.k || '', dompet: it.d || '', jumlah: +it.j || 0, toko: it.s || '', barang: it.b || '', catatan: it.c || '', tag: e.tag || evTag(e)}, {planTitle: t('v361.real.title'), after: function (x) {
+      var items = (e.items || []).map(function (r, n) { return n === idx ? Object.assign({}, r, {x: x.ID}) : r; });
+      P.rc.save('event', Object.assign({}, e, {items: items}), e.id).catch(function (er) { X.toast(X.srvErr(er)); });
+    }});
   }
 
   // ---------------------------------------------------------------- Beranda: kartu Event dan Goals terpisah
@@ -172,6 +184,9 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.1';
   }
 
   Object.assign(A, {
+    'ev-padd': function () { planOpen(-1); },
+    'ev-pedit': function (el) { planOpen(+el.dataset.i); },
+    'ev-real': function (el) { realOpen(el.dataset.id, +el.dataset.i); },
     'ev-tog': function (el) { S.evClosed = S.evClosed || {}; var k = el.dataset.k; S.evClosed[k] = !S.evClosed[k]; X.render(); },
     'v361-txtab': function (el) { S.txTab = el.dataset.v === 'rutin' ? 'rutin' : 'list'; X.render(); },
     'home-plan': function (el) {

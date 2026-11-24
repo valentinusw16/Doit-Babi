@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.6.1', APP_NAME = 'Do it';
+  var VERSION = '3.6.2', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -1073,14 +1073,14 @@
     renderForm();
   }
   function formHTML() {
-    var f = F, h = '', title = FX.edit ? t('f.fix') : (f.jenis === 'Saldo awal' ? t('f.opening') : (FX.copy ? t('f.copy') : t('f.new')));
+    var f = F, h = '', title = FX.planTitle ? FX.planTitle : FX.edit ? t('f.fix') : (f.jenis === 'Saldo awal' ? t('f.opening') : (FX.copy ? t('f.copy') : t('f.new')));
     h += '<div class="sheet-h"><div class="sh-t">' + title + '</div><button class="x" data-act="f-close" aria-label="' + t('close') + '">' + ICON.x + '</button></div><div class="sheet-b" id="formbody">';
-    if (f.jenis !== 'Saldo awal') {
+    if (f.jenis !== 'Saldo awal' && !FX.planCb) {
       h += '<div class="seg">' + ['Expense', 'Income', 'Transfer', 'Utang/Piutang'].map(function (s) {
         return '<button class="' + (f.jenis === s ? 'on' : '') + '" data-act="f-jenis" data-v="' + s + '"' + (FX.edit && s !== f.jenis ? ' disabled style="opacity:.4"' : '') + '>' + jl(s) + '</button>';
       }).join('') + '</div>';
     }
-    if (!FX.edit && f.jenis !== 'Saldo awal' && X.plan && X.plan.myRecs().length) h += '<div class="fromrec"><button class="dd" data-act="f-rec"><span>' + ICON.repeat + ' ' + esc(FX.recName || t('f.fromrec')) + '</span><i>' + ICON.chevd + '</i></button></div>';
+    if (!FX.edit && !FX.planCb && f.jenis !== 'Saldo awal' && X.plan && X.plan.myRecs().length) h += '<div class="fromrec"><button class="dd" data-act="f-rec"><span>' + ICON.repeat + ' ' + esc(FX.recName || t('f.fromrec')) + '</span><i>' + ICON.chevd + '</i></button></div>';
     h += amtHTML();
     if (f.jenis !== 'Saldo awal') h += dtBlock();
     h += '<div id="f-next"></div>';
@@ -1135,13 +1135,17 @@
     ov.innerHTML = '<div class="scrim" data-act="f-close"></div><div class="sheet full">' + formHTML() + '</div>';
     var nb = $('#formbody'); if (nb && !focus) nb.scrollTop = st;
   }
-  function closeForm() { $('#overlay').innerHTML = ''; F = null; FX = null; }
+  function closeForm() { var back = FX && FX.planBack; $('#overlay').innerHTML = ''; F = null; FX = null; if (back) back(); }
   function resetForJenis(j) {
     F.jenis = j; F.subJenis = ''; F.kodeAkun = ''; F.pihak = ''; F.referensi = ''; F.jatuhTempo = ''; F.dompetTujuan = ''; F.biayaAdmin = '';
     F.dompet = defaultWallet(j);
   }
   function saveForm() {
     try {
+      if (FX.planCb) {
+        C.makeTx(Object.assign({}, F, {waktu: F.waktu || C.nowLocal()}), S.cfg.user, S.M, S.tx, {});
+        var pcb = FX.planCb, pdat = Object.assign({}, F); FX.planBack = null; closeForm(); pcb(pdat); return;
+      }
       if (!F.waktu) F.waktu = C.nowLocal();
       var FX_wasEdit = !!FX.edit, rec = FX.rec, x = C.makeTx(F, S.cfg.user, S.M, S.tx, {ignoreId: FX.edit || null});
       if (FX.edit) {
@@ -1159,7 +1163,8 @@
       if (FX.replaceOp) discardOp(FX.replaceOp, true);
       if (x.Dompet && x.Jenis !== 'Saldo awal') { S.prefs.lastDompet = S.prefs.lastDompet || {}; S.prefs.lastDompet[x.Jenis] = x.Dompet; }
       if (rec && X.plan) X.plan.markDone(rec.id, rec.due, 'catat');
-      var jenis = x.Jenis; closeForm(); touch(); render(); toast(jenis === 'Saldo awal' ? t('opening.saved') : t('saved')); syncNow();
+      var afterCb = FX.after;
+      var jenis = x.Jenis; FX.planBack = null; closeForm(); if (afterCb) afterCb(x); touch(); render(); toast(jenis === 'Saldo awal' ? t('opening.saved') : t('saved')); syncNow();
       if (X.hooks.afterSave && !FX_wasEdit) X.hooks.afterSave(x);
     } catch (e) {
       FX.err = L.tErr(e.message); renderForm();

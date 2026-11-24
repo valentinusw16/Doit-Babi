@@ -1121,3 +1121,7 @@ html[data-panel] .top .clk { display: none !important; }
 .evmini { margin-top: 8px; display: grid; gap: 2px; }
 .b-ev, .b-gl { order: 5; }
 @container (min-width: 620px) and (max-width: 999px) { .b-ev, .b-gl { grid-column: span 6; } }
+.evi.pl { grid-template-columns: 1fr auto auto; align-items: center; }
+.evp { display: flex; flex-direction: column; gap: 2px; text-align: left; background: none; border: 0; padding: 2px; font: inherit; color: inherit; min-width: 0; cursor: pointer; }
+.evpa { font-weight: 600; overflow-wrap: anywhere; } .evpb { overflow-wrap: anywhere; } .evpj { white-space: nowrap; }
+.evact { margin-top: 2px; }
