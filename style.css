@@ -1093,3 +1093,31 @@ html[data-panel] .top .clk { display: none !important; }
 .wfc .ct { flex-wrap: wrap; row-gap: 8px; } .wfc .ct h3 { flex: 1 1 100%; } @media (min-width: 820px) { .wfc .ct h3 { flex: 0 1 auto; } }
 
 @media (max-width: 819px) { .b-month { order: 3; } }
+
+/* ---- v3.6.1: Event bertingkat, kartu Event/Goals, tab Transaksi, menu Plan */
+.mgh { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 12px 4px 6px; }
+.mgh:first-child { margin-top: 0; }
+.txtabs { margin: 0 0 10px; }
+.txtabs .bdg { font-style: normal; font-size: 11px; background: var(--accent, #2f6f5e); color: #fff; border-radius: 9px; padding: 0 6px; margin-left: 4px; }
+.evi { border: 1px solid var(--line, #e3e6ea); border-radius: 12px; padding: 8px; margin-bottom: 8px; display: grid; gap: 6px; }
+.evi .eg2 { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; align-items: center; }
+.evi .eg2b { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.evi .eg3 { display: grid; grid-template-columns: .7fr 1fr 1.2fr; gap: 6px; }
+.evi .input { min-width: 0; width: 100%; }
+.evsum { display: flex; justify-content: space-between; align-items: center; padding: 10px 4px 2px; }
+.evc .evph { margin: 2px 0 8px; }
+.evstat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 8px; }
+.evstat > div { min-width: 0; } .evstat small { display: block; } .evstat b { font-size: 14px; overflow-wrap: anywhere; }
+.evg { margin-top: 10px; border-top: 1px solid var(--line, #e3e6ea); padding-top: 8px; }
+.evgh { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 4px 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.evgh .evgn { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.evgh .chev { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); opacity: .5; margin-left: 4px; }
+.evgh .chev.up { transform: rotate(-135deg); }
+.evb { padding: 4px 0 2px 4px; }
+.evr { padding: 5px 0; } .evr .sr { gap: 8px; }
+.evr .evt { display: flex; align-items: center; gap: 6px; min-width: 0; } .evr .evtt { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.evr.evi2 { padding-left: 22px; } .evr.evo .evtt { color: var(--muted); }
+.evout { margin-top: 10px; display: flex; justify-content: space-between; }
+.evmini { margin-top: 8px; display: grid; gap: 2px; }
+.b-ev, .b-gl { order: 5; }
+@container (min-width: 620px) and (max-width: 999px) { .b-ev, .b-gl { grid-column: span 6; } }

@@ -120,7 +120,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
   var NAV = [
     [null, [['beranda', 'home', 'nav.home', 'tab'], ['transaksi', 'list', 'nav.tx', 'tab'], ['laporan', 'chart', 'nav.report', 'tab']]],
     ['dk.g.fin', [['flow', 'inArr', 'pg.flow', 'page'], ['portfolio', 'pie', 'pg.portfolio', 'page'], ['debts', 'loan', 'pg.debts', 'page']]],
-    ['dk.g.plan', [['rencana', 'plan', 'pg.rencana', 'page']]],
+    ['dk.g.plan', [['event', 'tag', 'pg.event', 'page'], ['anggaran', 'plan', 'pg.anggaran', 'page'], ['tujuan', 'target', 'pg.tujuan', 'page']]],
     ['dk.g.data', [['categories', 'tag', 'pg.categories', 'page'], ['parties', 'people', 'pg.parties', 'page'], ['opening', 'flag', 'pg.opening', 'saldo-awal']]],
     ['dk.g.sys', [['notif', 'bell', 'pg.notif', 'page'], ['settings', 'gear', 'pg.settings', 'page']]]
   ];
@@ -332,7 +332,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
   X.hooks.homeLayout = function (P) {
     function bt(c, h) { return h ? '<div class="bt ' + c + '">' + h + '</div>' : ''; }
     var rec = P.recent.replace('<div class="card">', '<div class="card rcard"><div class="ct"><h3>' + esc(t('home.recent')) + '</h3><span class="sp"></span><button class="link" data-act="tab" data-v="transaksi">' + esc(t('see.all')) + '</button></div>');
-    var s1 = bt('b-month', X.v36 ? X.v36.stat(P) : monthCard(P)) + bt('b-ratio', P.ratio), s2 = bt('b-bud', X.v36 ? X.v36.budget(P) : '') + bt('b-plan', P.mid) + bt('b-rec', rec);
+    var s1 = bt('b-month', X.v36 ? X.v36.stat(P) : monthCard(P)) + bt('b-ratio', P.ratio), s2 = bt('b-bud', X.v36 ? X.v36.budget(P) : '') + bt('b-ev', P.ev) + bt('b-gl', P.gl) + bt('b-rec', rec);
     return '<div class="bwrap"><div class="bento">' + bt('b-ban', P.banner) + bt('b-own', P.owner) + bt('b-top', P.top) + bt('b-hero', P.hero) +
       (s1 ? '<div class="stk s1">' + s1 + '</div>' : '') + bt('b-aset' + (P.mid ? '' : ' solo'), asetCard(P)) + bt('b-wf', wfCard(P)) +
       (s2 ? '<div class="stk s2">' + s2 + '</div>' : '') + bt('b-d14', X.v36 ? X.v36.d14(P) : '') + bt('b-flow', P.sankey) + bt('b-cal', calCard(P)) + '</div></div>';

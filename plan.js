@@ -203,12 +203,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       body: function (p) {
         var d = p.d, h = photoBlock(d) + inp(t('ev.name'), 'nama', d.nama, t('ev.name.ph')) +
           '<div class="two">' + dateIn(t('ev.from'), 'mulai', d.mulai) + dateIn(t('ev.to'), 'selesai', d.selesai) + '</div>' + money(t('ev.budget'), 'anggaran', d.anggaran);
-        h += '<label class="lbl2">' + t('ev.items') + '</label>' + (d.items || []).map(function (r, i) {
-          var subs = S.M.kategori.filter(function (k) { return k.Jenis === 'Expense' && k.Kategori === r.g; });
-          return '<div class="rrow ev3"><select class="input" data-pfr="g" data-list="items" data-i="' + i + '">' + expenseGroups().map(function (g) { return '<option value="' + esc(g) + '"' + (g === r.g ? ' selected' : '') + '>' + esc(dn(g)) + '</option>'; }).join('') + '</select>' +
-            '<select class="input" data-pfr="k" data-list="items" data-i="' + i + '"><option value="">' + esc(t('ev.allsub')) + '</option>' + subs.map(function (k) { return '<option value="' + esc(k.KodeAkun) + '"' + (k.KodeAkun === r.k ? ' selected' : '') + '>' + esc(dn(k.SubKategori)) + '</option>'; }).join('') + '</select>' +
-            '<input class="input" inputmode="numeric" data-pfr="j" data-list="items" data-i="' + i + '" value="' + (r.j ? C.fmtNum(r.j) : '') + '" placeholder="Rp"><button class="hb" data-act="pf-rdel" data-list="items" data-i="' + i + '" aria-label="' + t('delete') + '">' + ICON.x + '</button></div>';
-        }).join('') + '<button class="link" data-act="pf-radd" data-list="items">+ ' + t('ev.items.add') + '</button>';
+        h += X.v361 ? X.v361.evItems(d) : '';
         h += '<details class="adv"' + (d.tag ? ' open' : '') + '><summary>' + t('pf.adv') + '</summary>' + inp(t('ev.tag'), 'tag', d.tag, '#liburan-bali') + '<div class="muted sm" style="margin:4px 2px 0">' + t('ev.tag.hint') + '</div></details>';
         return h;
       },
@@ -452,7 +447,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       '<div class="sr"><span class="muted sm">' + esc(sub) + '</span>' + (p != null ? '<b class="sm">' + pct(p) + '</b>' : '') + '</div>' + (p != null ? pbar(p, st === 'done' || st === 'near' ? 'good' : (st === 'late' ? 'warn' : '')) : '') +
       (more ? '<div class="muted sm" style="margin-top:4px">' + esc(more) + '</div>' : '') + '</button>';
   }
-  X.hooks.homeMid = function () {
+  X.hooks.homeMid = function () { if (X.v361) { var P0 = planState(S.owner); return X.v361.homeEv(P0) + X.v361.homeGl(P0); } return ''; };
+  X.hooks.homeMidOld = function () {
     var P = planState(S.owner), rows = [];
     if (P.ev.length) {
       var E = P.ev[0];
@@ -483,7 +479,8 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     });
     return out;
   }
-  X.plan = {bud: {curMonth: curMonth, curJenis: curJenis, groupsOf: groupsOf, actualMaps: actualMaps, lineName: lineName, lineGroup: lineGroup, lineJenis: lineJenis, strip: strip, monthLabel: monthLabel, ownerNow: ownerNow, openForm: openForm, saveVia: saveVia, setPF: function (p) { PF = p; }}, dueCount: dueCount, logAll: logAll, planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs};
+  X.plan = {bud: {curMonth: curMonth, curJenis: curJenis, groupsOf: groupsOf, actualMaps: actualMaps, lineName: lineName, lineGroup: lineGroup, lineJenis: lineJenis, strip: strip, monthLabel: monthLabel, ownerNow: ownerNow, openForm: openForm, saveVia: saveVia, setPF: function (p) { PF = p; }}, dueCount: dueCount, logAll: logAll, planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs,
+    h: {pbar: pbar, pct: pct, norm: norm, badge: badge, cover: cover}, state: planState, pf: function () { return PF; }, renderForm: renderForm, expenseGroups: expenseGroups, rc: rc, vAnggaran: vAnggaran, vGoals: vGoals, vRutin: vRutin, vEvent: vEvent};
 
   // ---------------------------------------------------------------- aksi
   function saveVia(promise, done) { PF.busy = true; PF.err = ''; renderForm(); promise.then(function () { PF = null; X.closeOverlays(); X.toast(t('saved')); X.render(); if (done) done(); }).catch(fail); }
@@ -547,7 +544,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
       } catch (e) { PF.err = e.message; renderForm(); }
     },
     'pf-toggle': function (el) { PF.d[el.dataset.k] = !(PF.d[el.dataset.k] === undefined ? true : PF.d[el.dataset.k]); renderForm(); },
-    'pf-radd': function (el) { var l = el.dataset.list; PF.d[l] = PF.d[l] || []; PF.d[l].push(l === 'items' ? {g: expenseGroups()[0], k: '', j: 0} : {n: '', j: 0, k: 1}); renderForm(); },
+    'pf-radd': function (el) { var l = el.dataset.list; PF.d[l] = PF.d[l] || []; PF.d[l].push(l === 'items' ? {g: expenseGroups()[0], k: '', s: '', b: '', j: 0} : {n: '', j: 0, k: 1}); renderForm(); },
     'pf-rdel': function (el) { PF.d[el.dataset.list].splice(+el.dataset.i, 1); renderForm(); },
     // event
     'ev-new': function () { openForm('ev', null, {nama: '', tag: '', mulai: '', selesai: '', anggaran: 0, items: []}); },
@@ -555,7 +552,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     'ev-save': function () {
       var d = PF.d, nama = (d.nama || '').trim(), tag = norm(d.tag || nama);
       if (nama.length < 2) { PF.err = t('w.short'); renderForm(); return; }
-      var items = (d.items || []).filter(function (i) { return +i.j > 0; }).map(function (i) { return {g: i.g, k: i.k || '', j: +i.j}; });
+      var items = X.v361.evItemsOut(d.items);
       saveVia(rc.save('event', {nama: nama, tag: '#' + tag, mulai: d.mulai || '', selesai: d.selesai || '', anggaran: +d.anggaran || rincianTotal(items.map(function (i) { return {j: i.j, k: 1}; })), items: items, foto: d.foto || '', aktif: true}, PF.id));
     },
     'ph-pick': function () { var i = document.getElementById('file-ph'); if (i) i.click(); },

@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.6.0', APP_NAME = 'Do it';
+  var VERSION = '3.6.1', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -373,7 +373,8 @@
       '<div class="inout"><button class="tap" data-act="page" data-v="income"><span>' + t('home.in') + '</span><b class="in">' + esc(C.fmtRp(is.pendapatan.total)) + '</b></button><button class="tap" data-act="page" data-v="expense"><span>' + t('home.out') + '</span><b class="out">' + esc(C.fmtRp(is.beban.total)) + '</b></button></div></div>';
     P.ratio = X.hooks.homeRatio ? X.hooks.homeRatio(f) : '';
     P.sankey = X.hooks.homeSankey ? X.hooks.homeSankey(is) : '';
-    P.mid = X.hooks.homeMid ? X.hooks.homeMid() : '';
+    var PS0 = X.plan && X.plan.state ? X.plan.state(S.owner) : null;
+    P.ev = PS0 && X.v361 ? X.v361.homeEv(PS0) : ''; P.gl = PS0 && X.v361 ? X.v361.homeGl(PS0) : ''; P.mid = P.ev + P.gl;
     P.assets = '<div class="h2row"><h2>' + t('home.assets.h') + '</h2><button class="link" data-act="page" data-v="portfolio">' + t('see.all') + '</button></div>' +
       (A.groups.length ? '<div class="card">' + A.groups.map(function (g) {
         var pg = isPiutangGroup(g);
@@ -420,7 +421,9 @@
   }
   function txBody() { var rows = txFiltered(); return txSummary(rows) + (X.v36 && S.M.users.length > 1 ? X.v36.userCompare(txFiltered(true)) : '') + (X.hooks.txTable && X.wide && X.wide() ? X.hooks.txTable(rows, S.limit) : (X.hooks.txDays ? X.hooks.txDays(rows, S.limit) : txListGrouped(rows, S.limit, 'more'))); }
   function vTransaksi() {
-    return '<div class="stick"><div class="ddrow">' + perChips(S.txPer, 'txper') + ownerChips(S.owner, 'owner') + (X.v36 ? X.v36.txFilters() : '') + '<button class="chip sm' + (S.showVoid ? ' on' : '') + '" data-act="void-toggle">' + t('tx.void') + '</button></div>' +
+    var tabs = X.v361 ? X.v361.txTabs() : '';
+    if (X.v361 && S.txTab === 'rutin') return tabs + X.plan.vRutin();
+    return tabs + '<div class="stick"><div class="ddrow">' + perChips(S.txPer, 'txper') + ownerChips(S.owner, 'owner') + (X.v36 ? X.v36.txFilters() : '') + '<button class="chip sm' + (S.showVoid ? ' on' : '') + '" data-act="void-toggle">' + t('tx.void') + '</button></div>' +
       '<input class="search" id="q" type="search" placeholder="' + esc(t('tx.search')) + '" value="' + esc(S.q) + '" autocomplete="off">' + (X.v36 ? X.v36.txBar() : '') + '</div>' +
       (X.hooks.txTop ? X.hooks.txTop() : '') + '<div id="txlist">' + txBody() + '</div>';
   }
@@ -834,12 +837,15 @@
     if (!anim) window.scrollTo(0, y);
   }
   function showMenu() {
-    var items = [['flow', 'pg.flow', ICON.inArr], ['portfolio', 'pg.portfolio', ICON.pie], ['debts', 'pg.debts', ICON.loan], ['rencana', 'pg.rencana', ICON.plan],
-      ['parties', 'pg.parties', ICON.people], ['categories', 'pg.categories', ICON.tag], ['opening', 'pg.opening', ICON.flag], ['settings', 'pg.settings', ICON.gear]].slice(0, 12);
+    var groups = [['v361.g.fin', [['flow', 'pg.flow', ICON.inArr], ['portfolio', 'pg.portfolio', ICON.pie], ['debts', 'pg.debts', ICON.loan]]],
+      ['v361.plan', [['event', 'pg.event', ICON.tag], ['anggaran', 'pg.anggaran', ICON.plan], ['tujuan', 'pg.tujuan', ICON.target]]],
+      ['v361.g.data', [['parties', 'pg.parties', ICON.people], ['categories', 'pg.categories', ICON.tag], ['opening', 'pg.opening', ICON.flag], ['settings', 'pg.settings', ICON.gear]]]], n = 0;
     $('#overlay').innerHTML = '<div class="scrim" data-act="ov-close"></div><div class="sheet menu-sheet"><div class="sheet-h"><div class="sh-t">' + t('nav.menu') + '</div><button class="x" data-act="ov-close" aria-label="' + t('close') + '">' + ICON.x + '</button></div>' +
-      '<div class="sheet-b"><div class="mgrid">' + items.map(function (it, i) {
-        return '<button class="mi mi' + i + '" data-act="' + (it[0] === 'opening' ? 'saldo-awal' : 'page') + '" data-v="' + it[0] + '"><span>' + it[2] + '</span>' + t(it[1]) + '</button>';
-      }).join('') + '</div></div></div>';
+      '<div class="sheet-b">' + groups.map(function (g) {
+        return '<div class="mgh">' + t(g[0]) + '</div><div class="mgrid">' + g[1].map(function (it) {
+          return '<button class="mi mi' + (n++) + '" data-act="' + (it[0] === 'opening' ? 'saldo-awal' : 'page') + '" data-v="' + it[0] + '"><span>' + it[2] + '</span>' + t(it[1]) + '</button>';
+        }).join('') + '</div>';
+      }).join('') + '</div></div>';
   }
   function renderSetup(err) {
     $('#app').innerHTML = '<div class="setup"><div class="setup-top"><button class="hb lang" data-act="lang-toggle">' + (S.pref.lang === 'en' ? 'EN' : 'ID') + '</button></div><img src="icon-192.png" alt="" class="logo"><h1>' + esc(APP_NAME) + '</h1><p>' + t('setup.p') + '</p>' +
