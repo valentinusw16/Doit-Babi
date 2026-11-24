@@ -1125,3 +1125,26 @@ html[data-panel] .top .clk { display: none !important; }
 .evp { display: flex; flex-direction: column; gap: 2px; text-align: left; background: none; border: 0; padding: 2px; font: inherit; color: inherit; min-width: 0; cursor: pointer; }
 .evpa { font-weight: 600; overflow-wrap: anywhere; } .evpb { overflow-wrap: anywhere; } .evpj { white-space: nowrap; }
 .evact { margin-top: 2px; }
+
+/* ---- v3.6.3: tabel harian, laporan event, cetak PDF */
+.evdaily { margin: 6px 0 4px; border: 0.5px solid var(--line, #e3e6ea); border-radius: 10px; padding: 4px 8px; }
+.evdh, .evdr { display: grid; grid-template-columns: 1.6fr .9fr .9fr auto; gap: 6px; align-items: center; padding: 4px 0; font-size: 12px; }
+.evdh { color: var(--muted); font-size: 11px; border-bottom: 0.5px solid var(--line, #e3e6ea); }
+.evdh span:nth-child(2), .evdh span:nth-child(3), .evdr .num { text-align: right; }
+.evdr + .evdr { border-top: 0.5px dashed var(--line, #e3e6ea); }
+.evdr.now { background: var(--bg-accent, rgba(47,111,94,.08)); border-radius: 6px; padding-left: 4px; padding-right: 4px; }
+.pdblk { margin-top: 12px; }
+.evh3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
+.evbc { margin-bottom: 10px; }
+.evbb { height: 8px; border-radius: 4px; background: var(--bg-neutral, rgba(0,0,0,.05)); margin-top: 3px; overflow: hidden; }
+.evbb i { display: block; height: 100%; border-radius: 4px; }
+.evbb i.pl { background: #9aa6b2; } .evbb i.ok { background: #2f8f6b; } .evbb i.bad { background: #c0392b; }
+.lg { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 8px; vertical-align: -1px; } .lg.pl { background: #9aa6b2; margin-left: 0; } .lg.ok { background: #2f8f6b; }
+.evrp td { vertical-align: top; } .evrp tr.det td:first-child { padding-left: 24px; color: var(--muted); } .evrp tr.sub td:first-child { padding-left: 12px; }
+.evrp col + col, .evrp td:not(:first-child), .evrp th:not(:first-child) { text-align: right; }
+#printroot { display: none; }
+.prt { font-family: system-ui, sans-serif; color: #111; background: #fff; }
+.prt .card { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; background: #fff; break-inside: avoid; }
+.prt .muted { color: #666; } .prt .out { color: #b3261e; } .prt .in { color: #1b7a4b; }
+.prtf { text-align: center; font-size: 11px; color: #777; margin-top: 8px; }
+@media print { body.printing > *:not(#printroot) { display: none !important; } body.printing #printroot { display: block !important; } body.printing { background: #fff !important; } @page { margin: 12mm; } }

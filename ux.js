@@ -64,7 +64,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['ux'] = '3.3.0';
   }
   var NAVS = [['beranda', 'nav.home', 'tab', 'home'], ['transaksi', 'nav.tx', 'tab', 'list'], ['laporan', 'nav.report', 'tab', 'chart'], ['flow', 'pg.flow', 'page', 'inArr'], ['portfolio', 'pg.portfolio', 'page', 'pie'], ['debts', 'pg.debts', 'page', 'loan'],
     ['event', 'pg.event', 'page', 'tag'], ['anggaran', 'pg.anggaran', 'page', 'plan'], ['tujuan', 'pg.tujuan', 'page', 'target'],  ['categories', 'pg.categories', 'page', 'tag'], ['parties', 'pg.parties', 'page', 'people'], ['opening', 'pg.opening', 'saldo-awal', 'flag'], ['notif', 'pg.notif', 'page', 'bell'], ['settings', 'pg.settings', 'page', 'gear']];
-  var REPK = ['ann', 'is', 'bs', 'cf', 'bva', 'tb', 'jr', 'tren', 'rasio', 'ins'];
+  var REPK = ['ann', 'is', 'bs', 'cf', 'bva', 'event', 'tb', 'jr', 'tren', 'rasio', 'ins'];
   function sbsNone() { return document.documentElement.getAttribute('data-sbs') === 'none'; }
   function build() {
     var L = [], who = ['Semua'].concat(S.M && S.M.users || []);

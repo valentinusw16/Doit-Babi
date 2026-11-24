@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.6.2', APP_NAME = 'Do it';
+  var VERSION = '3.6.3', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -604,7 +604,7 @@
   }
 
   // ---------------------------------------------------------------- Laporan
-  var REP_KINDS = ['ann', 'is', 'bs', 'cf', 'bva', 'tb', 'jr', 'tren', 'rasio', 'ins'];
+  var REP_KINDS = ['ann', 'is', 'bs', 'cf', 'bva', 'event', 'tb', 'jr', 'tren', 'rasio', 'ins'];
   var DIMS = ['pemilik', 'pencatat'];
   function repCtx() {
     var R = S.rep, today = C.todayLocal(), per = periodOf(R.period);
@@ -1083,6 +1083,7 @@
     if (!FX.edit && !FX.planCb && f.jenis !== 'Saldo awal' && X.plan && X.plan.myRecs().length) h += '<div class="fromrec"><button class="dd" data-act="f-rec"><span>' + ICON.repeat + ' ' + esc(FX.recName || t('f.fromrec')) + '</span><i>' + ICON.chevd + '</i></button></div>';
     h += amtHTML();
     if (f.jenis !== 'Saldo awal') h += dtBlock();
+    if (FX.planCb && FX.pd && X.v361) h += X.v361.pdBlock(FX.pd);
     h += '<div id="f-next"></div>';
     if (f.jenis === 'Expense' || f.jenis === 'Income') {
       h += '<label class="lbl2">' + t('f.cat') + '</label><div class="chips">' + topKat(f.jenis).map(function (i) {
@@ -1117,7 +1118,7 @@
         h += '<label class="lbl2">' + t('f.loc') + '</label>' + acIn('lokasi', 'Lokasi');
         if (f.jenis === 'Expense') h += '<label class="lbl2">' + t('f.item') + '</label>' + acIn('barang', 'Barang') + (f.barang || !f.toko ? '' : sugChips('Barang', 'barang'));
       }
-      h += '<label class="lbl2">' + t('f.tag') + '</label>' + acIn('tag', 'Tag', t('f.tag.ph'));
+      h += '<label class="lbl2">' + t('f.tag') + '</label>' + acIn('tag', 'Tag', t('f.tag.ph')) + (X.v361 && !FX.planCb ? X.v361.tagSug(f) : '');
       h += '<label class="lbl2">' + t('f.note') + '</label>' + acIn('catatan', 'Catatan') + '</div>';
     }
     h += '</div>' + footHTML();
@@ -1144,7 +1145,7 @@
     try {
       if (FX.planCb) {
         C.makeTx(Object.assign({}, F, {waktu: F.waktu || C.nowLocal()}), S.cfg.user, S.M, S.tx, {});
-        var pcb = FX.planCb, pdat = Object.assign({}, F); FX.planBack = null; closeForm(); pcb(pdat); return;
+        var pcb = FX.planCb, pdat = Object.assign({}, F, {_pd: FX.pd ? Object.assign({}, FX.pd) : null}); FX.planBack = null; closeForm(); pcb(pdat); return;
       }
       if (!F.waktu) F.waktu = C.nowLocal();
       var FX_wasEdit = !!FX.edit, rec = FX.rec, x = C.makeTx(F, S.cfg.user, S.M, S.tx, {ignoreId: FX.edit || null});

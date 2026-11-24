@@ -1,5 +1,5 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
-/* Do it v3.6.2 - menu Plan dipecah (Event, Anggaran, Goals), Rutin masuk Transaksi, Event bertingkat
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.3';
+/* Do it v3.6.3 - menu Plan dipecah (Event, Anggaran, Goals), Rutin masuk Transaksi, Event bertingkat
    (kategori, subkategori, toko, barang, jumlah x harga), kartu Event/Goals terpisah di Beranda. Tanpa perubahan server. */
 (function () {
   'use strict';
@@ -14,7 +14,9 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
     'v361.in': '{0} hari lagi', 'v361.on': 'Berlangsung, hari ke-{0} dari {1}', 'v361.on1': 'Berlangsung, hari ke-{0}', 'v361.end': 'Berakhir {0} hari lagi', 'v361.done': 'Selesai', 'v361.today': 'Hari ini',
     'v361.bud': 'Anggaran', 'v361.used': 'Terpakai', 'v361.left': 'Sisa', 'v361.over': 'Lebih', 'v361.out': 'Di luar rencana', 'v361.whole': 'Seluruh kategori', 'v361.allsub': 'Semua subkategori',
     'v361.ev.all': 'Lihat semua ({0})', 'v361.ev.none': 'Belum ada event.', 'v361.gl.t': 'Goals', 'v361.ev.t': 'Event', 'v361.nobud': 'Tanpa anggaran', 'v361.tx': 'Lihat {0} transaksi',
-    'v361.plan.title': 'Rencana pengeluaran', 'v361.plan.add': 'Tambah rencana', 'v361.plan.edit': 'Ubah rencana', 'v361.plan.hint': 'Rencana tidak masuk jurnal. Isi seperti saat mencatat. Ketik 4*15000 di kolom jumlah untuk jumlah × harga.', 'v361.plan.empty': 'Belum ada rencana.', 'v361.real': 'Catat realisasi', 'v361.real.done': 'Tercatat', 'v361.real.title': 'Realisasi rencana', 'v361.plan.when': 'Tgl {0}'
+    'v361.plan.title': 'Rencana pengeluaran', 'v361.plan.add': 'Tambah rencana', 'v361.plan.edit': 'Ubah rencana', 'v361.plan.hint': 'Rencana tidak masuk jurnal. Isi seperti saat mencatat. Ketik 4*15000 di kolom jumlah untuk jumlah × harga.', 'v361.plan.empty': 'Belum ada rencana.', 'v361.real': 'Catat realisasi', 'v361.real.done': 'Tercatat', 'v361.real.title': 'Realisasi rencana', 'v361.plan.when': 'Tgl {0}',
+    'v361.daily': 'Berulang harian', 'v361.daily.n': 'Jumlah hari', 'v361.daily.hint': 'Mulai = tanggal di atas. Jumlah di atas = jatah per hari.', 'v361.days': '{0} hari × {1}', 'v361.day.catat': 'Catat', 'v361.day.none': 'belum dicatat', 'v361.day.today': 'hari ini', 'v361.day.future': 'belum',
+    'r.event': 'Laporan event', 'v361.r.pick': 'Pilih event', 'v361.r.none': 'Belum ada event. Buat dulu di menu Event.', 'v361.r.cat': 'Per kategori', 'v361.r.det': 'Rencana vs realisasi', 'v361.r.daily': 'Tabel harian', 'v361.r.out': 'Di luar rencana', 'v361.r.pend': 'Rencana belum direalisasikan', 'v361.r.plan': 'Rencana', 'v361.r.real': 'Realisasi', 'v361.r.diff': 'Selisih', 'v361.r.day': 'Hari', 'v361.r.quota': 'Jatah', 'v361.r.act': 'Aktual', 'v361.r.avg': 'Rata-rata per hari {0}', 'v361.r.proj': 'Proyeksi akhir {0}', 'v361.r.pdf': 'PDF', 'v361.r.open': 'Laporan', 'v361.r.cnt': 'Rencana tercatat {0} dari {1}, di luar rencana {2} transaksi', 'v361.tagsug': 'Tambah {0}', 'v361.r.pct': 'Terpakai', 'v361.r.total': 'Total'
   });
   I.add('en', {
     'pg.event': 'Events', 'pg.anggaran': 'Budget', 'pg.tujuan': 'Goals', 'v361.plan': 'Plan', 'v361.g.fin': 'Finance', 'v361.g.data': 'Data & system',
@@ -24,10 +26,13 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
     'v361.in': 'in {0} days', 'v361.on': 'Ongoing, day {0} of {1}', 'v361.on1': 'Ongoing, day {0}', 'v361.end': 'Ends in {0} days', 'v361.done': 'Finished', 'v361.today': 'Today',
     'v361.bud': 'Budget', 'v361.used': 'Spent', 'v361.left': 'Left', 'v361.over': 'Over', 'v361.out': 'Outside the plan', 'v361.whole': 'Whole category', 'v361.allsub': 'All subcategories',
     'v361.ev.all': 'See all ({0})', 'v361.ev.none': 'No events yet.', 'v361.gl.t': 'Goals', 'v361.ev.t': 'Event', 'v361.nobud': 'No budget', 'v361.tx': 'View {0} transactions',
-    'v361.plan.title': 'Planned expense', 'v361.plan.add': 'Add plan', 'v361.plan.edit': 'Edit plan', 'v361.plan.hint': 'Plans do not enter the journal. Fill in like recording. Type 4*15000 in the amount for quantity × price.', 'v361.plan.empty': 'No plans yet.', 'v361.real': 'Record actual', 'v361.real.done': 'Recorded', 'v361.real.title': 'Record planned expense', 'v361.plan.when': 'On {0}'
+    'v361.plan.title': 'Planned expense', 'v361.plan.add': 'Add plan', 'v361.plan.edit': 'Edit plan', 'v361.plan.hint': 'Plans do not enter the journal. Fill in like recording. Type 4*15000 in the amount for quantity × price.', 'v361.plan.empty': 'No plans yet.', 'v361.real': 'Record actual', 'v361.real.done': 'Recorded', 'v361.real.title': 'Record planned expense', 'v361.plan.when': 'On {0}',
+    'v361.daily': 'Repeat daily', 'v361.daily.n': 'Number of days', 'v361.daily.hint': 'Start = the date above. Amount above = allowance per day.', 'v361.days': '{0} days × {1}', 'v361.day.catat': 'Record', 'v361.day.none': 'not recorded', 'v361.day.today': 'today', 'v361.day.future': 'upcoming',
+    'r.event': 'Event report', 'v361.r.pick': 'Pick an event', 'v361.r.none': 'No events yet. Create one in the Event menu.', 'v361.r.cat': 'By category', 'v361.r.det': 'Plan vs actual', 'v361.r.daily': 'Daily table', 'v361.r.out': 'Outside the plan', 'v361.r.pend': 'Plans not yet recorded', 'v361.r.plan': 'Plan', 'v361.r.real': 'Actual', 'v361.r.diff': 'Difference', 'v361.r.day': 'Day', 'v361.r.quota': 'Allowance', 'v361.r.act': 'Actual', 'v361.r.avg': 'Average per day {0}', 'v361.r.proj': 'Projected end {0}', 'v361.r.pdf': 'PDF', 'v361.r.open': 'Report', 'v361.r.cnt': 'Plans recorded {0} of {1}, {2} transactions outside the plan', 'v361.tagsug': 'Add {0}', 'v361.r.pct': 'Used', 'v361.r.total': 'Total'
   });
 
   function frp(n) { return C.fmtRp(n); }
+  function dayIso(n) { return new Date(n * 864e5).toISOString().substr(0, 10); }
   function sumBy(a, f) { return a.reduce(function (s, x) { return s + f(x); }, 0); }
   function dayNum(d) { return Math.round(Date.UTC(+d.substr(0, 4), +d.substr(5, 2) - 1, +d.substr(8, 2)) / 864e5); }
   function H() { return P.h; }
@@ -35,19 +40,19 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
 
   // ---------------------------------------------------------------- realisasi event bertingkat
   function evActual(e) {
-    var tag = String(e.tag || '').toLowerCase().replace(/^#/, ''), items = (e.items || []).map(function (it, i) { return {i: i, it: it, real: 0, n: 0, sc: (it.k ? 1 : 0) + (it.s ? 1 : 0) + (it.b ? 1 : 0)}; });
+    var tag = String(e.tag || '').toLowerCase().replace(/^#/, ''), items = (e.items || []).map(function (it, i) { return {i: i, it: it, real: 0, n: 0, days: {}, end: it.n && it.w ? dayIso(dayNum(it.w) + (+it.n) - 1) : '', sc: (it.k ? 1 : 0) + (it.s ? 1 : 0) + (it.b ? 1 : 0)}; });
     var out = {items: items, otherSub: {}, otherTot: 0, otherG: {}, total: 0, n: 0, byGrup: {}};
     if (!tag) return out;
     Object.keys(S.tx).forEach(function (id) {
       var x = S.tx[id]; if (x.Status !== 'Aktif' || x.Jenis !== 'Expense') return;
       var tags = String(x.Tag || '').toLowerCase().split(/[\s,]+/).map(function (s) { return s.replace(/^#/, ''); }); if (tags.indexOf(tag) < 0) return;
-      var toko = String(x.Toko || '').toLowerCase(), barang = String(x.Barang || '').toLowerCase(), amt = +x.Jumlah, best = null;
+      var txd = String(x.Waktu || '').substr(0, 10), toko = String(x.Toko || '').toLowerCase(), barang = String(x.Barang || '').toLowerCase(), amt = +x.Jumlah, best = null;
       items.forEach(function (w) {
-        var it = w.it; if (it.g !== x.Kategori) return; if (it.k && it.k !== x.KodeAkun) return; if (it.s && !words(it.s, toko)) return; if (it.b && !words(it.b, barang)) return;
+        var it = w.it; if (it.g !== x.Kategori) return; if (w.end && (txd < it.w || txd > w.end)) return; if (it.k && it.k !== x.KodeAkun) return; if (it.s && !words(it.s, toko)) return; if (it.b && !words(it.b, barang)) return;
         if (!best || w.sc > best.sc) best = w;
       });
       out.total += amt; out.n++; out.byGrup[x.Kategori] = (out.byGrup[x.Kategori] || 0) + amt;
-      if (best) { best.real += amt; best.n++; } else { out.otherTot += amt; out.otherG[x.Kategori] = (out.otherG[x.Kategori] || 0) + amt; out.otherSub[x.KodeAkun] = (out.otherSub[x.KodeAkun] || 0) + amt; }
+      if (best) { best.real += amt; best.n++; if (best.end) best.days[txd] = (best.days[txd] || 0) + amt; } else { out.otherTot += amt; out.otherG[x.Kategori] = (out.otherG[x.Kategori] || 0) + amt; out.otherSub[x.KodeAkun] = (out.otherSub[x.KodeAkun] || 0) + amt; }
     });
     return out;
   }
@@ -91,6 +96,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
         det.forEach(function (w) {
           var it = w.it, sub = [+it.q > 0 && +it.h > 0 ? C.fmtNum(it.q) + ' × ' + C.fmtNum(it.h) : '', it.w ? C.fmtTgl(it.w) : '', it.d || '', w.n ? w.n + 'x' : ''].filter(Boolean).join(' · ');
           var ex = '<div class="evact">' + (it.x ? '<span class="pst ok"><i></i>' + t('v361.real.done') + '</span>' : '<button class="link sm" data-act="ev-real" data-id="' + esc(e.id) + '" data-i="' + w.i + '">' + t('v361.real') + '</button>') + '</div>';
+          if (+it.n > 0) { sub = t('v361.days', it.n, C.fmtNum(it.per)) + (w.n ? ' · ' + w.n + 'x' : ''); ex = dailyTable(e, w); }
           body += row('', itemTitle(it), sub, w.real, +it.j || 0, 'evi2', ex);
         });
       });
@@ -99,7 +105,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
         (g.bud ? h.pbar(g.real / g.bud) : '') + (open ? '<div class="evb">' + body + '</div>' : '') + '</div>';
     }).join('');
     if (a.otherTot > 0 && gs.length) out += '<div class="evout muted sm">' + esc(t('v361.out')) + ': <b class="num out">' + esc(frp(a.otherTot)) + '</b></div>';
-    return out + '<div style="margin-top:8px"><button class="link" data-act="ev-tx" data-id="' + esc(e.id) + '">' + t('v361.tx', a.n) + '</button></div></div>';
+    return out + '<div style="margin-top:8px;display:flex;gap:14px"><button class="link" data-act="ev-lap" data-id="' + esc(e.id) + '">' + t('v361.r.open') + '</button><button class="link" data-act="ev-tx" data-id="' + esc(e.id) + '">' + t('v361.tx', a.n) + '</button></div></div>';
   }
   function vEvent() {
     var evs = P.rc.list('event').filter(function (e) { return e.aktif !== false; }), h = '<div class="btnrow"><button class="btn" data-act="ev-new">' + ICON.plus + t('ev.add') + '</button></div>';
@@ -115,7 +121,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
   function evTag(d) { return '#' + H().norm(d.tag || d.nama || ''); }
   function itemLine(r) {
     var sc = r.k && S.M.katByKode[r.k], nm = (r.g ? dn(r.g) : '') + (sc ? ' › ' + dn(sc.SubKategori) : ''), who = itemTitle(r);
-    return {a: nm, b: (r.s || r.b ? who : ''), c: [+r.q > 0 && +r.h > 0 ? C.fmtNum(r.q) + ' × ' + C.fmtNum(r.h) : '', r.w ? t('v361.plan.when', C.fmtTgl(r.w)) : '', r.d || ''].filter(Boolean).join(' · ')};
+    return {a: nm, b: (r.s || r.b ? who : ''), c: [+r.n > 0 ? t('v361.days', r.n, C.fmtNum(r.per)) : (+r.q > 0 && +r.h > 0 ? C.fmtNum(r.q) + ' × ' + C.fmtNum(r.h) : ''), r.w ? t('v361.plan.when', C.fmtTgl(r.w)) : '', r.d || ''].filter(Boolean).join(' · ')};
   }
   function evItems(d) {
     var items = d.items || [];
@@ -134,25 +140,26 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
     function back() { P.bud.openForm('ev', snap.id, snap.d); }
     function cb(F) {
       var sc = S.M.katByKode[F.kodeAkun] || {}, o = {g: sc.Kategori || (it && it.g) || '', k: F.kodeAkun || '', s: F.toko || '', b: F.barang || '', j: +F.jumlah || 0, d: F.dompet || '', w: String(F.waktu || '').substr(0, 10) || C.todayLocal(), c: F.catatan || ''};
-      if (it && it.q && it.h && it.q * it.h === o.j) { o.q = it.q; o.h = it.h; }
+      var pd = F._pd; if (pd && pd.on && +pd.n > 0) { o.n = +pd.n; o.per = +F.jumlah || 0; o.j = o.n * o.per; } else if (it && it.q && it.h && it.q * it.h === o.j) { o.q = it.q; o.h = it.h; }
       if (it && it.x) o.x = it.x;
       snap.d.items = snap.d.items || []; if (it) snap.d.items[idx] = o; else snap.d.items.push(o);
       back();
     }
-    var init = {jenis: 'Expense', kodeAkun: it ? it.k : '', dompet: it ? it.d || '' : '', jumlah: it ? +it.j || 0 : 0, toko: it ? it.s || '' : '', barang: it ? it.b || '' : '', catatan: it ? it.c || '' : '', tag: evTag(snap.d), waktu: it && it.w ? it.w + 'T12:00' : ''};
-    X.openForm(init, {planCb: cb, planBack: back, planTitle: t(it ? 'v361.plan.edit' : 'v361.plan.title')});
+    var init = {jenis: 'Expense', kodeAkun: it ? it.k : '', dompet: it ? it.d || '' : '', jumlah: it ? (+it.n > 0 ? +it.per || 0 : +it.j || 0) : 0, toko: it ? it.s || '' : '', barang: it ? it.b || '' : '', catatan: it ? it.c || '' : '', tag: evTag(snap.d), waktu: it && it.w ? it.w + 'T12:00' : ''};
+    X.openForm(init, {planCb: cb, planBack: back, planTitle: t(it ? 'v361.plan.edit' : 'v361.plan.title'), pd: {on: !!(it && +it.n > 0), n: it && +it.n > 0 ? +it.n : 10}});
     var fx = X.saveFormRaw().FX; if (fx) { fx.more = true; X.renderForm(); }
   }
   function evItemsOut(items) {
     return (items || []).map(function (i) {
       var q = +i.q || 0, h = +i.h || 0, j = q > 0 && h > 0 ? q * h : (+i.j || 0);
-      var o = {g: i.g, k: i.k || '', j: j}; ['s', 'b', 'd', 'w', 'c', 'x'].forEach(function (f) { if (String(i[f] || '').trim()) o[f] = String(i[f]).trim(); }); if (q > 0 && h > 0) { o.q = q; o.h = h; } return o;
+      var o = {g: i.g, k: i.k || '', j: j}; ['s', 'b', 'd', 'w', 'c', 'x'].forEach(function (f) { if (String(i[f] || '').trim()) o[f] = String(i[f]).trim(); }); if (q > 0 && h > 0) { o.q = q; o.h = h; } if (+i.n > 0 && +i.per > 0) { o.n = +i.n; o.per = +i.per; o.j = o.n * o.per; delete o.q; delete o.h; } return o;
     }).filter(function (i) { return i.j > 0; });
   }
   // realisasi: buka formulir Catat sungguhan dari kartu event
-  function realOpen(evId, idx) {
+  function realOpen(evId, idx, day) {
     var e = P.rc.list('event').filter(function (x) { return x.id === evId; })[0]; if (!e) return; var it = (e.items || [])[idx]; if (!it) return;
-    X.openForm({jenis: 'Expense', kodeAkun: it.k || '', dompet: it.d || '', jumlah: +it.j || 0, toko: it.s || '', barang: it.b || '', catatan: it.c || '', tag: e.tag || evTag(e)}, {planTitle: t('v361.real.title'), after: function (x) {
+    X.openForm({jenis: 'Expense', kodeAkun: it.k || '', dompet: it.d || '', jumlah: day ? +it.per || 0 : +it.j || 0, toko: it.s || '', barang: it.b || '', catatan: it.c || '', tag: e.tag || evTag(e), waktu: day ? (day === C.todayLocal() ? C.nowLocal() : day + 'T12:00') : ''}, {planTitle: t('v361.real.title'), after: function (x) {
+      if (day) return;
       var items = (e.items || []).map(function (r, n) { return n === idx ? Object.assign({}, r, {x: x.ID}) : r; });
       P.rc.save('event', Object.assign({}, e, {items: items}), e.id).catch(function (er) { X.toast(X.srvErr(er)); });
     }});
@@ -183,10 +190,140 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
     return '<div class="seg sm txtabs">' + [['list', 'v361.tab.list'], ['rutin', 'v361.tab.rutin']].map(function (x) { return '<button class="' + (tab === x[0] ? 'on' : '') + '" data-act="v361-txtab" data-v="' + x[0] + '">' + t(x[1]) + (x[0] === 'rutin' && due ? ' <em class="bdg">' + due + '</em>' : '') + '</button>'; }).join('') + '</div>';
   }
 
+  // ---------------------------------------------------------------- tabel harian
+  function wk(d) { try { return new Date(d + 'T00:00:00Z').toLocaleDateString(S.pref && S.pref.lang === 'en' ? 'en-GB' : 'id-ID', {weekday: 'short', timeZone: 'UTC'}); } catch (e) { return ''; } }
+  function dayRows(w) {
+    var it = w.it, today = C.todayLocal(), out = [];
+    for (var i = 0; i < +it.n; i++) {
+      var d = dayIso(dayNum(it.w) + i), act = w.days[d] || 0, q = +it.per || 0;
+      out.push({i: i + 1, d: d, q: q, act: act, diff: q - act, st: d === today ? 'today' : (d > today ? 'future' : (act ? 'past' : 'none'))});
+    }
+    return out;
+  }
+  function dailyTable(e, w) {
+    var rows = dayRows(w);
+    return '<div class="evdaily"><div class="evdh"><span>' + t('v361.r.day') + '</span><span>' + t('v361.r.quota') + '</span><span>' + t('v361.r.act') + '</span><span></span></div>' + rows.map(function (r) {
+      var lab = r.i + ' · ' + wk(r.d) + ' ' + C.fmtTgl(r.d).replace(/\s\d{4}$/, '');
+      var st = r.st === 'today' ? '<span class="pst ok"><i></i>' + t('v361.day.today') + '</span>' : (r.st === 'none' ? '<small class="muted sm">' + t('v361.day.none') + '</small>' : '');
+      return '<div class="evdr' + (r.st === 'today' ? ' now' : '') + '"><span>' + esc(lab) + (st ? '<br>' + st : '') + '</span><span class="num">' + esc(C.fmtNum(r.q)) + '</span><span class="num ' + (r.act > r.q ? 'out' : '') + '">' + esc(r.act ? C.fmtNum(r.act) : '-') + '</span>' +
+        '<button class="link sm" data-act="ev-real" data-id="' + esc(e.id) + '" data-i="' + w.i + '" data-d="' + r.d + '">' + t('v361.day.catat') + '</button></div>';
+    }).join('') + '</div>';
+  }
+
+  // ---------------------------------------------------------------- Laporan event
+  function evModel(e) {
+    var a = evActual(e), bud = evBudget(e), gs = evGroups(e, a), today = C.todayLocal(), m = {e: e, a: a, bud: bud, real: a.total, left: bud - a.total, gs: gs, pct: bud ? a.total / bud : 0, today: today};
+    if (e.mulai && e.mulai <= today) {
+      var last = e.selesai && e.selesai < today ? e.selesai : today, el = dayNum(last) - dayNum(e.mulai) + 1; m.avg = el > 0 ? a.total / el : 0;
+      if (e.selesai && el >= 3) m.proj = m.avg * (dayNum(e.selesai) - dayNum(e.mulai) + 1);
+      m.day = el;
+    }
+    m.phase = phaseText(e);
+    m.nPlan = a.items.length; m.nDone = a.items.filter(function (w) { return w.it.x || (w.it.n ? w.real > 0 : w.real > 0); }).length;
+    m.pend = a.items.filter(function (w) { return !w.it.n && !w.it.x && w.real === 0; });
+    m.daily = a.items.filter(function (w) { return +w.it.n > 0; });
+    m.other = Object.keys(a.otherSub).map(function (k) { var sc = S.M.katByKode[k] || {}; return {g: sc.Kategori || '', nama: subName(k) || k, v: a.otherSub[k]}; });
+    return m;
+  }
+  function sgn(n) { return (n > 0 ? '+' : (n < 0 ? '-' : '')) + C.fmtNum(Math.abs(n)); }
+  function repEvents() { return P.rc.list('event').filter(function (e) { return e.aktif !== false; }); }
+  function repPick() {
+    var evs = repEvents(), id = S.evRep, e = evs.filter(function (x) { return x.id === id; })[0];
+    if (!e && evs.length) { var st = P.state('Semua').ev; e = (st[0] && st[0].e) || evs[0]; S.evRep = e.id; }
+    return e;
+  }
+  function reportHTML(m, forPrint) {
+    var h = H(), e = m.e, out = '';
+    out += '<div class="card evrep"><div class="evrt"><b>' + esc(e.nama) + '</b><div class="muted sm">#' + esc(h.norm(e.tag)) + (e.mulai ? ' · ' + esc(C.fmtTgl(e.mulai)) + (e.selesai ? ' – ' + esc(C.fmtTgl(e.selesai)) : '') : '') + (m.phase ? ' · ' + esc(m.phase) : '') + '</div></div>' +
+      '<div class="evstat"><div><small class="muted">' + t('v361.bud') + '</small><b class="num">' + esc(m.bud ? C.fmtNum(m.bud) : '-') + '</b></div><div><small class="muted">' + t('v361.r.real') + '</small><b class="num">' + esc(C.fmtNum(m.real)) + '</b></div><div><small class="muted">' + t(m.left < 0 && m.bud ? 'v361.over' : 'v361.left') + '</small><b class="num ' + (m.left < 0 && m.bud ? 'out' : 'in') + '">' + esc(m.bud ? C.fmtNum(Math.abs(m.left)) : '-') + '</b></div></div>' + (m.bud ? h.pbar(m.pct) : '') +
+      '<div class="muted sm" style="margin-top:6px">' + [m.avg != null ? t('v361.r.avg', frp(Math.round(m.avg))) : '', m.proj != null ? t('v361.r.proj', frp(Math.round(m.proj))) : '', t('v361.r.cnt', m.nDone, m.nPlan, m.a.n - sumBy(m.a.items, function (w) { return w.n; }))].filter(Boolean).join('. ') + '</div></div>';
+    if (m.gs.length) {
+      var mx = 1; m.gs.forEach(function (g) { mx = Math.max(mx, g.bud, g.real); });
+      out += '<div class="card"><h3 class="evh3">' + t('v361.r.cat') + '</h3>' + m.gs.map(function (g) {
+        return '<div class="evbc"><div class="sr"><span>' + esc(dn(g.nama)) + '</span><b class="num">' + esc(C.fmtNum(g.real)) + (g.bud ? ' / ' + esc(C.fmtNum(g.bud)) : '') + '</b></div>' +
+          (g.bud ? '<div class="evbb"><i class="pl" style="width:' + Math.round(g.bud / mx * 100) + '%"></i></div>' : '') + '<div class="evbb"><i class="' + (g.bud && g.real > g.bud ? 'bad' : 'ok') + '" style="width:' + Math.round(g.real / mx * 100) + '%"></i></div></div>';
+      }).join('') + '<div class="muted sm" style="margin-top:6px"><span class="lg pl"></span>' + t('v361.r.plan') + ' <span class="lg ok"></span>' + t('v361.r.real') + '</div></div>';
+      out += '<div class="card"><h3 class="evh3">' + t('v361.r.det') + '</h3><table class="rep evrp"><colgroup><col style="width:43%"><col style="width:19%"><col style="width:19%"><col style="width:19%"></colgroup><tr class="hdr"><th></th><th>' + t('v361.r.plan') + '</th><th>' + t('v361.r.real') + '</th><th>' + t('v361.r.diff') + '</th></tr>' + m.gs.map(function (g) {
+        var r = '<tr class="tot"><td>' + esc(dn(g.nama)) + '</td><td>' + esc(C.fmtNum(g.bud)) + '</td><td>' + esc(C.fmtNum(g.real)) + '</td><td class="' + (g.bud - g.real < 0 ? 'out' : 'in') + '">' + esc(g.bud ? sgn(g.bud - g.real) : '') + '</td></tr>';
+        g.subOrder.forEach(function (k) {
+          var s = g.subs[k]; r += '<tr class="sub"><td>' + esc(k ? subName(k) : t('v361.allsub')) + '</td><td>' + esc(C.fmtNum(s.bud)) + '</td><td>' + esc(C.fmtNum(s.real)) + '</td><td>' + esc(s.bud ? sgn(s.bud - s.real) : '') + '</td></tr>';
+          s.items.filter(function (w) { return w.it.s || w.it.b; }).forEach(function (w) { r += '<tr class="det"><td>' + esc(itemTitle(w.it)) + '</td><td>' + esc(C.fmtNum(w.it.j)) + '</td><td>' + esc(C.fmtNum(w.real)) + '</td><td>' + (w.it.x ? t('v361.real.done') : '') + '</td></tr>'; });
+        });
+        return r;
+      }).join('') + '</table></div>';
+    }
+    m.daily.forEach(function (w) {
+      var rows = dayRows(w), tq = sumBy(rows, function (r) { return r.q; }), ta = sumBy(rows, function (r) { return r.act; });
+      out += '<div class="card"><h3 class="evh3">' + t('v361.r.daily') + ': ' + esc(itemTitle(w.it)) + '</h3><div class="muted sm" style="margin-bottom:4px">' + t('v361.days', w.it.n, C.fmtNum(w.it.per)) + '</div><table class="rep evrp"><tr class="hdr"><th>' + t('v361.r.day') + '</th><th>' + t('v361.r.quota') + '</th><th>' + t('v361.r.act') + '</th><th>' + t('v361.r.diff') + '</th></tr>' +
+        rows.map(function (r) { var fut = r.st === 'future'; return '<tr class="' + (fut ? 'muted' : '') + '"><td>' + r.i + ' · ' + esc(wk(r.d) + ' ' + C.fmtTgl(r.d).replace(/\s\d{4}$/, '')) + (r.st === 'today' ? ' *' : '') + '</td><td>' + esc(C.fmtNum(r.q)) + '</td><td>' + esc(r.act ? C.fmtNum(r.act) : (fut ? '' : '-')) + '</td><td class="' + (r.diff < 0 ? 'out' : 'in') + '">' + esc(fut ? '' : sgn(r.diff)) + '</td></tr>'; }).join('') +
+        '<tr class="tot"><td>' + t('v361.r.total') + '</td><td>' + esc(C.fmtNum(tq)) + '</td><td>' + esc(C.fmtNum(ta)) + '</td><td>' + esc(sgn(tq - ta)) + '</td></tr></table></div>';
+    });
+    if (m.other.length) out += '<div class="card"><h3 class="evh3">' + t('v361.r.out') + '</h3><table class="rep evrp">' + m.other.map(function (o) { return '<tr><td>' + esc((o.g ? dn(o.g) + ' › ' : '') + o.nama) + '</td><td>' + esc(C.fmtNum(o.v)) + '</td></tr>'; }).join('') + '</table></div>';
+    if (m.pend.length) out += '<div class="card"><h3 class="evh3">' + t('v361.r.pend') + '</h3><table class="rep evrp">' + m.pend.map(function (w) { return '<tr><td>' + esc(itemTitle(w.it) + (w.it.w ? ' · ' + C.fmtTgl(w.it.w) : '')) + '</td><td>' + esc(C.fmtNum(w.it.j)) + '</td></tr>'; }).join('') + '</table></div>';
+    return out;
+  }
+  function evRender() {
+    var evs = repEvents(); if (!evs.length) return '<div class="card"><div class="empty">' + t('v361.r.none') + '</div></div>';
+    var e = repPick(), m = evModel(e);
+    return '<div class="chips" style="margin:0 0 10px">' + evs.map(function (x) { return '<button class="chip sm' + (x.id === e.id ? ' on' : '') + '" data-act="ev-rpick" data-id="' + esc(x.id) + '">' + esc(x.nama) + '</button>'; }).join('') + '<button class="chip sm" data-act="ev-pdf">' + t('v361.r.pdf') + '</button></div>' + reportHTML(m);
+  }
+  function evDoc() {
+    var e = repPick(), b = [], m, today = C.todayLocal(); if (!e) return {title: t('r.event'), sub: '', blocks: [{k: 'text', l: t('v361.r.none')}], foot: 'Do it · ' + C.fmtTgl(today)};
+    m = evModel(e);
+    b.push({k: 'prog', l: t('v361.r.real'), r: frp(m.real) + (m.bud ? ' / ' + frp(m.bud) : ''), pct: m.pct, c: m.pct > 1 ? 'out' : (m.pct >= 0.8 ? 'warn' : 'in'), s: [m.bud ? t(m.left < 0 ? 'v361.over' : 'v361.left') + ' ' + frp(Math.abs(m.left)) : '', m.avg != null ? t('v361.r.avg', frp(Math.round(m.avg))) : '', m.proj != null ? t('v361.r.proj', frp(Math.round(m.proj))) : ''].filter(Boolean).join(' · ')});
+    if (m.gs.length) {
+      b.push({k: 'gap'}); b.push({k: 'head', l: t('v361.r.cat'), r: ''});
+      m.gs.forEach(function (g) { b.push({k: 'prog', l: dn(g.nama), r: C.fmtNum(g.real) + (g.bud ? ' / ' + C.fmtNum(g.bud) : ''), pct: g.bud ? g.real / g.bud : 0, c: g.bud && g.real > g.bud ? 'out' : 'in', s: g.bud ? sgn(g.bud - g.real) : ''}); });
+      b.push({k: 'gap'}); b.push({k: 'head', l: t('v361.r.det'), r: ''}); b.push({k: 'cols', hdr: true, l: '', cols: [t('v361.r.plan'), t('v361.r.real'), t('v361.r.diff')]});
+      m.gs.forEach(function (g) {
+        b.push({k: 'cols', tot: true, l: dn(g.nama), cols: [C.fmtNum(g.bud), C.fmtNum(g.real), g.bud ? sgn(g.bud - g.real) : ''], cc: ['', '', g.bud - g.real < 0 ? 'out' : 'in']});
+        g.subOrder.forEach(function (k) { var s = g.subs[k]; b.push({k: 'cols', b: true, ind: true, l: k ? subName(k) : t('v361.allsub'), cols: [C.fmtNum(s.bud), C.fmtNum(s.real), s.bud ? sgn(s.bud - s.real) : ''], cc: ['', '', s.bud - s.real < 0 ? 'out' : '']}); });
+      });
+    }
+    m.daily.forEach(function (w) {
+      var rows = dayRows(w); b.push({k: 'gap'}); b.push({k: 'head', l: t('v361.r.daily') + ': ' + itemTitle(w.it), r: ''}); b.push({k: 'cols', hdr: true, l: t('v361.r.day'), cols: [t('v361.r.quota'), t('v361.r.act'), t('v361.r.diff')]});
+      rows.forEach(function (r) { var fut = r.st === 'future'; b.push({k: 'cols', ind: true, l: r.i + ' · ' + wk(r.d) + ' ' + C.fmtTgl(r.d).replace(/\s\d{4}$/, ''), cols: [C.fmtNum(r.q), r.act ? C.fmtNum(r.act) : (fut ? '' : '-'), fut ? '' : sgn(r.diff)], cc: ['', '', r.diff < 0 ? 'out' : 'in']}); });
+    });
+    if (m.other.length) { b.push({k: 'gap'}); b.push({k: 'head', l: t('v361.r.out'), r: ''}); m.other.forEach(function (o) { b.push({k: 'row', ind: true, l: (o.g ? dn(o.g) + ' › ' : '') + o.nama, r: C.fmtNum(o.v)}); }); }
+    if (m.pend.length) { b.push({k: 'gap'}); b.push({k: 'head', l: t('v361.r.pend'), r: ''}); m.pend.forEach(function (w) { b.push({k: 'row', ind: true, l: itemTitle(w.it) + (w.it.w ? ' · ' + C.fmtTgl(w.it.w) : ''), r: C.fmtNum(w.it.j)}); }); }
+    return {title: e.nama, sub: '#' + H().norm(e.tag) + (e.mulai ? ' · ' + C.fmtTgl(e.mulai) + (e.selesai ? ' – ' + C.fmtTgl(e.selesai) : '') : ''), blocks: b, foot: 'Do it · ' + C.fmtTgl(today)};
+  }
+  function printPDF() {
+    var e = repPick(); if (!e) return; var root = document.getElementById('printroot');
+    if (!root) { root = document.createElement('div'); root.id = 'printroot'; document.body.appendChild(root); }
+    root.innerHTML = '<div class="prt">' + reportHTML(evModel(e), true) + '<div class="prtf">Do it · ' + esc(C.fmtTgl(C.todayLocal())) + '</div></div>';
+    document.body.classList.add('printing');
+    function done() { document.body.classList.remove('printing'); root.innerHTML = ''; window.removeEventListener('afterprint', done); }
+    window.addEventListener('afterprint', done); setTimeout(function () { try { window.print(); } catch (er) { done(); } }, 60);
+  }
+  X.repKinds.event = {render: evRender, doc: evDoc, period: false, dim: false, label: function () { var e = repPick(); return e ? e.nama : ''; }};
+
+  // ---------------------------------------------------------------- saran tag event di form Catat
+  function tagSug(f) {
+    if (!f || f.jenis !== 'Expense') return '';
+    var d = String(f.waktu || '').substr(0, 10) || C.todayLocal(), have = String(f.tag || '').toLowerCase();
+    var evs = repEvents().filter(function (e) { return e.mulai && e.mulai <= d && (!e.selesai || e.selesai >= d) && e.tag && have.indexOf(String(e.tag).toLowerCase()) < 0; });
+    if (!evs.length) return '';
+    return '<div class="chips" style="margin-top:8px">' + evs.map(function (e) { return '<button class="chip sm" data-act="f-sug" data-field="tag" data-v="' + esc(e.tag) + '">+ ' + esc(e.tag) + '</button>'; }).join('') + '</div>';
+  }
+  // ---------------------------------------------------------------- form rencana: saklar berulang harian
+  function pdBlock(pd) {
+    pd = pd || {on: false, n: 10};
+    return '<div class="pdblk"><button class="tog' + (pd.on ? ' on' : '') + '" data-act="pd-tog"><i></i><span>' + t('v361.daily') + '</span></button>' + (pd.on ? '<label class="lbl2">' + t('v361.daily.n') + '</label><input class="input" inputmode="numeric" data-pdn="1" value="' + esc(pd.n || '') + '" autocomplete="off"><div class="muted sm" style="margin:4px 2px 0">' + t('v361.daily.hint') + '</div>' : '') + '</div>';
+  }
+  document.addEventListener('input', function (e) {
+    var el = e.target; if (!el || !el.dataset || !el.dataset.pdn) return; var fx = X.saveFormRaw().FX; if (!fx || !fx.pd) return;
+    var dg = el.value.replace(/\D/g, '').substr(0, 3); el.value = dg; fx.pd.n = dg ? Number(dg) : 0;
+  });
+
   Object.assign(A, {
+    'pd-tog': function () { var fx = X.saveFormRaw().FX; if (!fx || !fx.pd) return; fx.pd.on = !fx.pd.on; X.renderForm(); },
+    'ev-lap': function (el) { S.rep = S.rep || {}; S.rep.kind = 'event'; S.evRep = el.dataset.id; X.setTab('laporan'); },
+    'ev-rpick': function (el) { S.evRep = el.dataset.id; X.render(); },
+    'ev-pdf': printPDF,
     'ev-padd': function () { planOpen(-1); },
     'ev-pedit': function (el) { planOpen(+el.dataset.i); },
-    'ev-real': function (el) { realOpen(el.dataset.id, +el.dataset.i); },
+    'ev-real': function (el) { realOpen(el.dataset.id, +el.dataset.i, el.dataset.d); },
     'ev-tog': function (el) { S.evClosed = S.evClosed || {}; var k = el.dataset.k; S.evClosed[k] = !S.evClosed[k]; X.render(); },
     'v361-txtab': function (el) { S.txTab = el.dataset.v === 'rutin' ? 'rutin' : 'list'; X.render(); },
     'home-plan': function (el) {
@@ -199,5 +336,5 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v361'] = '3.6.2';
   X.pages.anggaran = {title: function () { return t('pg.anggaran'); }, render: P.vAnggaran};
   X.pages.tujuan = {title: function () { return t('pg.tujuan'); }, render: P.vGoals};
 
-  X.v361 = {evItems: evItems, evItemsOut: evItemsOut, evCard: evCard, homeEv: homeEv, homeGl: homeGl, txTabs: txTabs, evActual: evActual, vEvent: vEvent};
+  X.v361 = {tagSug: tagSug, pdBlock: pdBlock, evModel: evModel, dayRows: dayRows, printPDF: printPDF, evItems: evItems, evItemsOut: evItemsOut, evCard: evCard, homeEv: homeEv, homeGl: homeGl, txTabs: txTabs, evActual: evActual, vEvent: vEvent};
 })();
