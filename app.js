@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.6.3', APP_NAME = 'Do it';
+  var VERSION = '3.6.4', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -624,7 +624,7 @@
     var cx = repCtx(), R = cx.R, today = cx.today, per = cx.per, end = cx.end, f = cx.f, lines = cx.lines, h = '', reg = X.repKinds[R.kind];
     h += '<div class="ddrow">' + dd(t('r.' + R.kind), 'rep', 'rep-kind', R.kind) + ((!reg || reg.period !== false) ? perChips(R.period, 'rep-period') : '') + ownerChips(R.who, 'rep-who') +
       (reg && reg.dim === false ? '' : dd(t(R.dim === 'pencatat' ? 'r.dim.rec' : 'r.dim.owner'), 'dim', 'rep-dim', R.dim)) +
-      '<button class="hb" data-act="rep-share" aria-label="' + t('jpg.share') + '" title="' + t('jpg.share') + '">' + ICON.share + '</button>' + (R.kind === 'ann' ? '' : '<button class="hb csvb" data-act="rep-csv" aria-label="CSV" title="CSV">CSV</button>') + '</div>';
+      '<button class="hb" data-act="rep-export" aria-label="' + t('v364.export') + '" title="' + t('v364.export') + '">' + ICON.share + '</button></div>';
     var labelRange = reg ? (reg.label ? reg.label(cx) : '') : (R.kind === 'is' || R.kind === 'jr' ? (R.period === 'semua' ? t('per.alltime') : C.fmtTgl(per.start) + ' – ' + C.fmtTgl(end)) : t('per.asof', C.fmtTgl(end)));
     h += '<div class="muted sm" style="margin:6px 2px 10px">' + esc(labelRange) + (labelRange ? ' · ' : '') + esc(f ? R.who : t('r.combined')) + '</div>';
     function rows2(groups) {
@@ -827,7 +827,8 @@
       '<div class="title"><span class="tt">' + esc(title) + '</span><button id="sync" class="sync" data-act="sync"><i></i></button>' + (S._ownTop ? '<span class="ownd">' + dd(S.owner === 'Semua' ? t('all') : S.owner, 'owner', 'owner', S.owner) + '</span>' : '') + '</div>' +
       (X.hooks.topExtra ? X.hooks.topExtra() : '') + '<button class="hb bell" data-act="page" data-v="notif" aria-label="' + t('pg.notif') + '" title="' + t('pg.notif') + '">' + ICON.bell + (unread ? '<b class="bdg">' + (unread > 9 ? '9+' : unread) + '</b>' : '') + '</button>' +
       '<button class="hb" data-act="theme-cycle" aria-label="' + t('theme.' + mode) + '" title="' + t('theme.' + mode) + '">' + mIco + '</button>' +
-      '<button class="hb lang" data-act="lang-toggle" aria-label="' + t('lang.switch') + '">' + (S.pref.lang === 'en' ? 'EN' : 'ID') + '</button></header>' +
+      '<button class="hb lang" data-act="lang-toggle" aria-label="' + t('lang.switch') + '">' + (S.pref.lang === 'en' ? 'EN' : 'ID') + '</button>' +
+      '<button class="hb gear" data-act="page" data-v="settings" aria-label="' + t('pg.settings') + '" title="' + t('pg.settings') + '">' + ICON.gear + '</button></header>' +
       '<main class="' + (anim ? 'anim-' + anim : '') + '">' + view + '</main></div>' +
       '<nav class="bottom"><div class="in">' + nav.map(function (n) {
         if (n[0] === 'add') return '<button class="addbtn" data-act="add" aria-label="' + t('nav.add') + '"><span>' + ICON.plus + '</span>' + t('nav.add') + '</button>';
@@ -1328,22 +1329,24 @@
   function openKatForm() {
     closeOverlays();
     var groups = []; S.M.kategori.forEach(function (k) { if (k.Jenis === S.katJenis && groups.indexOf(k.Kategori) < 0) groups.push(k.Kategori); });
-    K = {jenis: S.katJenis, groups: groups, kategori: groups[0] || '', nama: '', err: '', busy: false}; renderKatForm(true);
+    K = {jenis: S.katJenis, groups: groups, kategori: groups[0] || '', nama: '', en: '', err: '', busy: false}; renderKatForm(true);
   }
   function renderKatForm(focus) {
     var h = '<div class="sheet-h"><div class="sh-t">' + t('k.add') + ' · ' + t(K.jenis === 'Income' ? 'pg.income' : 'pg.expense') + '</div><button class="x" data-act="ov-close">' + ICON.x + '</button></div><div class="sheet-b">' +
       '<label class="lbl2">' + t('k.group') + '</label><div class="chips">' + K.groups.map(function (g) { return '<button class="chip ci' + (K.kategori === g ? ' on' : '') + '" data-act="k-group" data-v="' + esc(g) + '">' + catIcon(g) + esc(dn(g)) + '</button>'; }).join('') + '</div>' +
-      '<label class="lbl2">' + t('k.name') + '</label><input class="input" id="k-nama" data-k="nama" value="' + esc(K.nama) + '" autocomplete="off" placeholder="' + esc(t('k.name.ph')) + '">' +
-      '<div class="note">' + t('k.note') + '</div></div><div class="sheet-f">' + (K.err ? '<div class="err">' + esc(K.err) + '</div>' : '') +
+      '<label class="lbl2">' + t('v364.k.id') + '</label><input class="input" id="k-nama" data-k="nama" value="' + esc(K.nama) + '" autocomplete="off" placeholder="' + esc(t('v364.k.id.ph')) + '">' +
+      '<label class="lbl2">' + t('v364.k.en') + '</label><input class="input" id="k-nama-en" data-k="en" value="' + esc(K.en || '') + '" autocomplete="off" placeholder="' + esc(t('v364.k.en.ph')) + '">' +
+      '<div class="note">' + t('k.note') + ' ' + t('v364.k.note') + '</div></div><div class="sheet-f">' + (K.err ? '<div class="err">' + esc(K.err) + '</div>' : '') +
       '<button class="btn primary" data-act="k-save"' + (K.busy ? ' disabled' : '') + '>' + (K.busy ? t('w.saving') : t('k.save')) + '</button></div>';
     $('#overlay').innerHTML = '<div class="scrim" data-act="ov-close"></div><div class="sheet full">' + h + '</div>';
     if (focus) { var a = $('#k-nama'); if (a) a.focus(); }
   }
   function saveKat() {
-    var nama = C.clean(K.nama);
+    var nid = C.clean(K.nama), nen = C.clean(K.en || ''), nama = nid || nen;
     if (nama.length < 2) { K.err = t('w.short'); renderKatForm(); return; }
     K.busy = true; K.err = ''; renderKatForm();
     api('kategoriBaru', {jenis: K.jenis, kategori: K.kategori, sub: nama}).then(function (r) {
+      if (X.v361 && (nid || nen) && nid !== nen) X.v361.setNM(nama, nid, nen);
       waitMaster(function () { return S.M.katByKode[r.kode]; }, function () { K = null; closeOverlays(); toast(r.dup ? t('k.dup') : t('k.ok')); render(); });
     }).catch(function (e) { K.busy = false; K.err = srvErr(e); renderKatForm(); });
   }

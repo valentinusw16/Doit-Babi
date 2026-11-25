@@ -81,7 +81,6 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['ux'] = '3.3.0';
     L.push({id: 'c-sync', g: 'pal.cmd', label: t('pal.sync'), ico: 'repeat', kw: 'sinkron sync refresh muat', run: function () { X.syncNow && X.syncNow(); }});
     who.forEach(function (u) { L.push({id: 'c-who-' + u, g: 'pal.cmd', label: t('pal.who', u === 'Semua' ? t('all') : u), ico: 'people', kw: 'pengguna pemilik owner filter ' + u, run: function () { S.owner = u; X.render(); }}); });
     if (!S.page && S.tab === 'laporan') {
-      L.push({id: 'c-csv', g: 'pal.cmd', label: t('pal.csv'), ico: 'copy', kw: 'csv ekspor export unduh', run: function () { A['rep-csv'] && A['rep-csv'](); }});
       L.push({id: 'c-jpg', g: 'pal.cmd', label: t('pal.jpg'), ico: 'share', kw: 'jpg bagikan share gambar', run: function () { A['rep-share'] && A['rep-share'](); }});
     }
     return L;

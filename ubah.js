@@ -18,6 +18,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['ubah'] = '3.5.0';
       h += '<label class="lbl2">' + t('ub.move') + '</label><div class="chips">' + U.groups.map(function (g) { return '<button class="chip' + (g === U.kategori ? ' on' : '') + '" data-act="ub-move" data-v="' + esc(g) + '">' + esc(X.dn(g)) + '</button>'; }).join('') + '</div>' +
         (X.A['ik-open'] && U.ik ? '<div class="btnrow2" style="margin-top:12px"><button class="btn sm" data-act="ub-ico">' + t('ub.ico') + '</button></div>' : '');
     }
+    if ((U.kind === 'sub' || U.kind === 'kategori') && X.v361) h += X.v361.trBlock(U.lama);
     h += '<div class="note">' + t('ub.note') + '</div></div><div class="sheet-f">' + (U.err ? '<div class="err">' + esc(U.err) + '</div>' : '') +
       '<button class="btn primary" data-act="ub-save"' + (U.busy ? ' disabled' : '') + '>' + t(U.busy ? 'ub.busy' : 'ub.save') + '</button></div></div>';
     $('#overlay2').innerHTML = h;

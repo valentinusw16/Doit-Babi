@@ -173,7 +173,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['lap'] = '3.3.0';
     return '<div class="seg" style="margin-bottom:10px">' + tabs.map(function (k) { return '<button class="' + (tab === k ? 'on' : '') + '" data-act="lap-tab" data-v="' + k + '">' + t('ann.' + k) + '</button>'; }).join('') + '</div>' +
       '<div class="lapbar"><span class="ddgrp">' + X.dd(String(y), 'lapY', 'lap-y', String(y)) + X.dd(t('ann.u.' + unit()), 'lapU', 'lap-u', unit()) + '</span>' +
       (tab !== 'bva' ? '<button class="chip sm' + (S.lapDet ? ' on' : '') + '" data-act="lap-det">' + t('ann.detail') + '</button>' : '') +
-      '<span class="grow"></span><button class="chip sm" data-act="rep-csv">' + t('rep.csv') + '</button></div>';
+      '</div>';
   }
   function tableHTML(m) {
     var showTot = m.sum === true || m.sum === 'bva', th = '<tr><th class="c1"></th>' + m.cols.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') +
