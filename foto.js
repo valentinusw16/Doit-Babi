@@ -7,7 +7,11 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.3.0';
   // Bila app.js yang termuat versi lama (cache/GitHub Pages belum sinkron), modul foto dilewati supaya aplikasi tetap jalan.
   if (!X || !X.DB || !X.A || !X.rc || !X.savePref || !(function (v) { v = String(v || '0').split('.').map(Number); return v[0] > 2 || (v[0] === 2 && v[1] >= 2); })(X.VERSION)) return;
   var S = X.S, t = X.t, esc = X.esc, $ = X.$;
-  var card = {url: null, loaded: false};
+  var card = {url: null, loaded: false}, card2 = {url: null};
+  if (window.I18N && window.I18N.add) {
+    window.I18N.add('id', {'cp2.t': 'Foto kartu Waterfall', 'cp2.s': 'Latar kartu Perubahan kekayaan bersih. Pilih foto sendiri, samakan dengan kartu Net Worth, atau tanpa foto.', 'cp2.m.beda': 'Foto beda', 'cp2.m.sama': 'Foto sama', 'cp2.m.tanpa': 'Tanpa foto', 'cp2.fallback': 'Belum ada foto kedua, jadi sementara memakai foto kartu Net Worth.'});
+    window.I18N.add('en', {'cp2.t': 'Waterfall card photo', 'cp2.s': 'Background of the Net worth change card. Use its own photo, the same as the Net worth card, or none.', 'cp2.m.beda': 'Own photo', 'cp2.m.sama': 'Same photo', 'cp2.m.tanpa': 'No photo', 'cp2.fallback': 'No second photo yet, so the Net worth card photo is used for now.'});
+  }
 
   // ---------------------------------------------------------------- olah gambar
   function loadImg(file) {
@@ -93,6 +97,23 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.3.0';
       card.loaded = true;
     });
   }
+  function loadCard2() {
+    return X.DB.get('cardimg2').then(function (b) {
+      if (card2.url) { URL.revokeObjectURL(card2.url); card2.url = null; }
+      if (b && (b instanceof Blob)) card2.url = URL.createObjectURL(b);
+    });
+  }
+  function bgOf(url) {
+    var p = cpPref(), pos = {top: '0%', center: '50%', bottom: '100%'}[p.pos] || '50%';
+    return {cls: 'bl' + p.blur + ' dm' + p.dim, html: '<div class="hbg" style="background-image:url(\'' + url + '\');background-position:50% ' + pos + '"></div><div class="hdim"></div>'};
+  }
+  function wfMode() { var m = S.pref.wfPhoto; return m === 'sama' || m === 'tanpa' ? m : 'beda'; }
+  /** Latar kartu Waterfall: foto sendiri (beda), foto yang sama dengan Net Worth (sama), atau tanpa foto. */
+  X.hooks.heroBg2 = function () {
+    var m = wfMode(); if (m === 'tanpa') return null;
+    var url = m === 'sama' ? card.url : (card2.url || card.url);
+    return url ? bgOf(url) : null;
+  };
   X.hooks.heroBg = function () {
     if (!card.url) return null;
     var p = cpPref(), pos = {top: '0%', center: '50%', bottom: '100%'}[p.pos] || '50%';
@@ -113,7 +134,17 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.3.0';
     }
     h += '<div class="btnrow2" style="margin-top:12px"><button class="btn sm" data-act="cp-pick">' + t(card.url ? 'cp.change' : 'cp.pick') + '</button>' + (card.url ? '<button class="btn sm danger" data-act="cp-del">' + t('cp.del') + '</button>' : '') + '</div>' +
       '<input type="file" id="file-cp" accept="image/*" hidden data-file="cp"></div>';
-    return h;
+    var wm = wfMode();
+    h += '<div class="card"><div class="t" style="font-weight:600">' + t('cp2.t') + '</div><div class="muted sm">' + t('cp2.s') + '</div>' +
+      '<div class="seg" style="margin-top:8px">' + ['beda', 'sama', 'tanpa'].map(function (v) { return '<button class="' + (wm === v ? 'on' : '') + '" data-act="wf-photo" data-v="' + v + '">' + t('cp2.m.' + v) + '</button>'; }).join('') + '</div>';
+    if (wm === 'beda') {
+      var bg2 = X.hooks.heroBg2();
+      if (bg2) h += '<div class="card hero photo cprev ' + bg2.cls + '" style="margin-top:10px">' + bg2.html + '<div class="lbl">' + t('dk.wf.t', new Date().getFullYear()) + '</div></div>';
+      h += '<div class="btnrow2" style="margin-top:12px"><button class="btn sm" data-act="cp2-pick">' + t(card2.url ? 'cp.change' : 'cp.pick') + '</button>' + (card2.url ? '<button class="btn sm danger" data-act="cp2-del">' + t('cp.del') + '</button>' : '') + '</div>' +
+        '<input type="file" id="file-cp2" accept="image/*" hidden data-file="cp2">';
+      if (!card2.url && card.url) h += '<div class="muted sm" style="margin-top:8px">' + t('cp2.fallback') + '</div>';
+    }
+    return h + '</div>';
   };
   function setCp(k, v) { var p = cpPref(); p[k] = v; S.pref.card = p; X.savePref(); X.render(); }
 
@@ -124,6 +155,9 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.3.0';
     'av-pick': function () { var i = $('#file-av'); if (i) i.click(); },
     'av-del': function () { avSave(''); },
     'cp-pick': function () { var i = $('#file-cp'); if (i) i.click(); },
+    'cp2-pick': function () { var i = $('#file-cp2'); if (i) i.click(); },
+    'cp2-del': function () { X.DB.set('cardimg2', null).then(loadCard2).then(function () { X.toast(t('cp.deleted')); X.render(); }); },
+    'wf-photo': function (el) { S.pref.wfPhoto = el.dataset.v; X.savePref(); X.render(); },
     'cp-del': function () { X.DB.set('cardimg', null).then(loadCard).then(function () { X.toast(t('cp.deleted')); X.render(); }); },
     'cp-blur': function (el) { setCp('blur', +el.dataset.v); },
     'cp-dim': function (el) { setCp('dim', +el.dataset.v); },
@@ -133,13 +167,14 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.3.0';
     var el = e.target; if (!el.dataset || !el.dataset.file) return;
     var f = el.files && el.files[0]; if (!f) return;
     if (el.dataset.file === 'av') avatarData(f).then(avSave).catch(function () { X.toast(t('cp.fail')); });
+    else if (el.dataset.file === 'cp2') cardBlob(f).then(function (b) { return X.DB.set('cardimg2', b); }).then(loadCard2).then(function () { X.toast(t('cp.saved')); X.render(); }).catch(function () { X.toast(t('cp.fail')); });
     else cardBlob(f).then(function (b) { return X.DB.set('cardimg', b); }).then(loadCard).then(function () { X.toast(t('cp.saved')); X.render(); }).catch(function () { X.toast(t('cp.fail')); });
     el.value = '';
   });
   var start0 = X.start;
   X.start = function () {
     start0();
-    try { loadCard().then(function () { if (card.url && S.cfg && S.master) X.render(); }).catch(function () {}); } catch (e) {}
+    try { Promise.all([loadCard(), loadCard2()]).then(function () { if ((card.url || card2.url) && S.cfg && S.master) X.render(); }).catch(function () {}); } catch (e) {}
   };
   X.foto = {avImg: avImg, avHTML: avHTML, avatarData: avatarData, loadCard: loadCard};
 })();

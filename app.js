@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var C = window.Core, C2 = window.Core2, L = window.I18N, t = L.t;
-  var VERSION = '3.7.0', APP_NAME = 'Do it';
+  var VERSION = '3.7.1', APP_NAME = 'Do it';
   var X = window.DoIt = {hooks: {}, pages: {}, repKinds: {}};
 
   // ---------------------------------------------------------------- util
@@ -212,7 +212,7 @@
   }
   function unreadCount() {
     if (!S.cfg) return 0; var cut = actCutoff(), seen = S.prefs.actSeen || 0;
-    return S.act.filter(function (a) { return a.Oleh !== S.cfg.user && a.Rev > seen && a.Waktu >= cut; }).length + (X.analisis ? X.analisis.newWarnCount() : 0);
+    return S.act.filter(function (a) { return a.Oleh !== S.cfg.user && a.Rev > seen && a.Waktu >= cut; }).length + (X.analisis ? X.analisis.newWarnCount() : 0) + (X.hooks.extraUnread ? X.hooks.extraUnread() : 0);
   }
   function unreadAct() { var cut = actCutoff(), seen = S.prefs.actSeen || 0; return S.cfg ? S.act.filter(function (a) { return a.Oleh !== S.cfg.user && a.Rev > seen && a.Waktu >= cut; }).length : 0; }
   function actText(a) {
@@ -724,7 +724,7 @@
       var n = x[0] === 'warn' && X.analisis ? X.analisis.newWarnCount() : 0;
       return '<button class="' + (S.ntab === x[0] ? 'on' : '') + '" data-act="n-tab" data-v="' + x[0] + '">' + t(x[1]) + (n ? ' <b class="bdg2">' + n + '</b>' : '') + '</button>'; }).join('') + '</div>';
     if (S.ntab === 'warn' && X.analisis) { var wh = X.analisis.warnView(); X.analisis.markWarnSeen(); return tabs + wh; }
-    return tabs + vNotifList();
+    return tabs + (X.hooks.notifTop ? X.hooks.notifTop() : '') + vNotifList();
   }
   function vNotifList() {
     markActSeen();
