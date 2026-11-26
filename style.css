@@ -1198,9 +1198,6 @@ html[data-panel] .top .clk { display: none !important; }
 .bento.v37 > .pe > .bt { display: flex; flex-direction: column; }
 .bento.v37 > .pe > .bt > .card { flex: 1; margin: 0; }
 .hero.hmain { position: relative; }
-.hero.photo.hmain { color: var(--ink); }
-.hero.photo.hmain .hdim { background: color-mix(in srgb, var(--card) 84%, transparent); }
-.hero.photo.hmain .lbl, .hero.photo.hmain .sub2, .hero.photo.hmain .muted { color: var(--muted); }
 .hmain .wfc { margin-top: 10px; } .hmain .wfc > .ct { display: none; }
 .hm-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .hm-tiles button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 6%, transparent); text-align: left; min-width: 0; }
@@ -1271,25 +1268,45 @@ html[data-panel] .top .clk { display: none !important; }
   .bento.v371.bn2 > .x-bud { grid-column: span 14; } .bento.v371.bn2 > .x-gl, .bento.v371.bn2 > .x-ev { grid-column: span 10; }
   .bento.v371.bn1 > .x-bud { grid-column: 1 / -1; }
 }
-/* Net Worth */
-.hero.nw { container: nwc / inline-size; display: flex; flex-direction: column; }
-.hero.photo.hmain .hdim { background: color-mix(in srgb, var(--card) 80%, transparent); }
-.hero.photo.hmain.dm0 .hdim { background: color-mix(in srgb, var(--card) 68%, transparent); }
-.hero.photo.hmain.dm2 .hdim { background: color-mix(in srgb, var(--card) 90%, transparent); }
-.nwg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: auto; padding-top: 12px; }
-.nwg .nwt:last-child { grid-column: 1 / -1; }
-.nwt { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 14px; background: color-mix(in srgb, var(--tn) 13%, transparent); text-align: left; min-width: 0; }
-.nwt .ti { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--tn) 26%, transparent); color: color-mix(in srgb, var(--tn) 72%, var(--ink)); }
-.nwt .ti svg { width: 18px; height: 18px; }
-.nwt .tx { display: flex; flex-direction: column; min-width: 0; } .nwt small { font-size: 11.5px; color: var(--muted); }
-.nwt b { font-size: 14px; font-variant-numeric: tabular-nums; } .nwt .vs { display: none; }
-@container nwc (max-width: 400px) { .nwt .vf { display: none; } .nwt .vs { display: inline; } }
-/* Waterfall berfoto */
-.card.wfx.photo { position: relative; overflow: hidden; isolation: isolate; }
+/* Net Worth (mirip mockup v11.5) */
+.hero.nw { container: nwc / inline-size; display: flex; flex-direction: column; gap: 0; }
+.nw .ytd { margin-top: 6px; }
+.nws { position: relative; height: 86px; margin-top: 10px; } .nws svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+@container (min-width: 900px) { .hero.nw .nws { flex: 1 1 auto; height: auto; min-height: 86px; } }
+.nws .sa { fill: var(--accent); opacity: .16; stroke: none; } .nws .sl { fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.hero.photo .nws .sa { fill: #fff; opacity: .2; } .hero.photo .nws .sl { stroke: #fff; }
+.nwx { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 2px; } .hero.photo .nwx { color: rgba(255,255,255,.8); }
+.nwrs { margin-top: 10px; display: flex; flex-direction: column; }
+.nwr { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent); text-align: left; font-size: 13.5px; }
+.nwr .nl { flex: 1; } .nwr b { font-variant-numeric: tabular-nums; }
+.nwb { height: 6px; border-radius: 6px; background: color-mix(in srgb, var(--out) 55%, transparent); overflow: hidden; margin-top: 4px; } .nwb i { display: block; height: 100%; background: var(--in); border-radius: 6px; }
+.nwc { color: var(--muted); font-size: 11.5px; margin-top: 4px; } .hero.photo .nwc { color: rgba(255,255,255,.8); }
+.nwg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.nwt { display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; border-radius: 14px; background: color-mix(in srgb, var(--tn) 13%, transparent); text-align: left; min-width: 0; }
+.nwt .nth { display: flex; align-items: center; gap: 6px; } .nwt small { font-size: 11.5px; color: var(--muted); } .hero.photo .nwt small { color: rgba(255,255,255,.86); }
+.nwt b { font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; } .nwt .vs { display: none; }
+.nw .ti { width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--tn) 26%, transparent); color: color-mix(in srgb, var(--tn) 72%, var(--ink)); }
+.nw .ti svg { width: 15px; height: 15px; }
+.hero.photo .nwt, .hero.photo .nwr .ti, .hero.photo .nwt .ti { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); color: #fff; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.hero.photo .nwr .ti, .hero.photo .nwt .ti { border: 0; background: rgba(255,255,255,.16); }
+@container nwc (max-width: 420px) { .nwt .vf { display: none; } .nwt .vs { display: inline; } }
+@container nwc (min-width: 421px) { .nwt .vs { display: none; } }
+/* Waterfall berfoto: lapisan gelap dan teks terang, seperti kartu Net Worth */
+.card.wfx.photo { position: relative; overflow: hidden; isolation: isolate; color: #fff; border-color: transparent; text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+html[data-gaya="kaca"] .card.wfx.photo { background: transparent; }
 .wfx.photo .hbg { position: absolute; inset: -24px; z-index: -2; background-size: cover; background-repeat: no-repeat; }
-.wfx.photo .hdim { position: absolute; inset: 0; z-index: -1; background: color-mix(in srgb, var(--card) 80%, transparent); }
-.wfx.photo.dm0 .hdim { background: color-mix(in srgb, var(--card) 68%, transparent); } .wfx.photo.dm2 .hdim { background: color-mix(in srgb, var(--card) 90%, transparent); }
+.wfx.photo .hdim { position: absolute; inset: 0; z-index: -1; background: radial-gradient(130% 100% at 15% 10%, rgba(10,4,8,.30), transparent 70%), linear-gradient(180deg, rgba(12,6,10,.5), rgba(12,6,10,.7)); }
+.wfx.photo.dm0 .hdim { background: linear-gradient(180deg, rgba(12,6,10,.36), rgba(12,6,10,.56)); } .wfx.photo.dm2 .hdim { background: linear-gradient(180deg, rgba(12,6,10,.64), rgba(12,6,10,.84)); }
 .wfx.photo.bl0 .hbg { filter: blur(3px); } .wfx.photo.bl1 .hbg { filter: blur(10px); } .wfx.photo.bl2 .hbg { filter: blur(20px); }
+.wfx.photo .muted, .wfx.photo .sm, .wfx.photo small { color: rgba(255,255,255,.84); }
+.wfx.photo .wfs .gl { stroke: rgba(255,255,255,.28); } .wfx.photo .wfs .ax, .wfx.photo .wfs .wfb.sel .ax { fill: rgba(255,255,255,.9); } .wfx.photo .wfs .cn { stroke: #fff; stroke-opacity: .6; }
+.wfx.photo .wfs .vl { fill: #fff; } .wfx.photo .wfs .vl.up { fill: #b9f6cf; } .wfx.photo .wfs .vl.dn { fill: #ffc9c9; }
+.wfx.photo .in, .wfx.photo .pjl b.in { color: #b9f6cf; } .wfx.photo .out { color: #ffc9c9; }
+.wfx.photo .dtag.up { background: rgba(255,255,255,.9); color: #1b7f4b; text-shadow: none; } .wfx.photo .dtag.dn { background: rgba(255,255,255,.9); color: #b3342f; text-shadow: none; }
+.wfx.photo .wtip { background: transparent; border: 0; border-top: 1px solid rgba(255,255,255,.28); border-radius: 0; padding: 12px 2px 0; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+.wfx.photo .wtip .wsum { border-top-color: rgba(255,255,255,.28); }
+.wfx.photo select, .wfx.photo .sel { text-shadow: none; color: var(--ink); }
+.wfx .wtip .wth { justify-content: space-between; }
 /* Aset & Utang berikon */
 .adr > .ai { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--tn) 20%, transparent); color: color-mix(in srgb, var(--tn) 80%, var(--ink)); }
 .adr > .ai svg { width: 17px; height: 17px; } .adr { gap: 10px; padding: 3px 0; }
@@ -1328,5 +1345,20 @@ html[data-panel] .top .clk { display: none !important; }
 .bwn { display: flex; flex-direction: column; min-width: 0; } .bwn small { color: var(--muted); font-size: 11px; }
 .bwr em { font-style: normal; font-weight: 700; font-size: 12px; white-space: nowrap; } .bwok { margin-top: 12px; }
 .bcr { grid-template-columns: minmax(70px, 120px) 1fr 44px; }
-.nws { flex: 1; min-height: 64px; margin-top: 10px; display: flex; } .nws svg { width: 100%; height: 100%; min-height: 64px; display: block; } .nws svg path, .nws svg polyline { stroke-linejoin: round; }
-.nwg { margin-top: 0; }
+
+.bento.v371 .sankey .skp { display: none; }
+@container (min-width: 900px) { .bento.v371 .sankey .skl { font-size: 11px; } }
+
+/* v3.7.2: donat pastel seperti mockup, Aset & Utang tersusun vertikal, ringkasan Waterfall berikon */
+:root { --dc0: #e58aa8; --dc1: #6fcf9a; --dc2: #e0b85e; --dc3: #8e9ee0; --dc4: #7fc8c0; --dc5: #c58ad0; --dcu: #f2a7b6; }
+html[data-dark="1"] { --dc0: #f6c6d8; --dc1: #b9f0cf; --dc2: #ffe0a3; --dc3: #c3ccf5; --dc4: #a8e3dc; --dc5: #e3bdf0; --dcu: #f2a7b6; }
+.adc2 .adw { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 14px; align-items: stretch; }
+.adc2 .add { display: flex; justify-content: space-around; align-items: flex-start; gap: 12px; width: 100%; margin: 0; }
+.adc2 .adl { flex: none; width: 100%; }
+.adsv { width: 118px; height: 118px; } .adt1 { font-size: 11px; fill: var(--muted); } .adt2 { font-size: 13px; font-weight: 800; fill: var(--ink); }
+.adr > .ai { background: color-mix(in srgb, var(--tn) 33%, transparent); color: var(--ink); }
+.wtip .wtl { display: inline-flex; align-items: center; gap: 8px; } .wtip .wti { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 8%, transparent); } .wtip .wti svg { width: 14px; height: 14px; }
+.wfx.photo .wtip .wti { background: rgba(255,255,255,.16); }
+
+.bento.v371 .sankey .ah > .muted { margin-left: auto; }
+html[data-dark="1"] .bento.v371 .sankey svg path { opacity: .55; }

@@ -1,5 +1,5 @@
-if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v371'] = '3.7.1';
-/* Do it v3.7.1 - Beranda disempurnakan: Net Worth dan Waterfall jadi dua kartu (masing-masing bisa berfoto), Aset & Utang berikon,
+if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v371'] = '3.7.2';
+/* Do it v3.7.1/3.7.2 - Beranda disempurnakan (v3.7.2: kartu berfoto gelap & terbaca, donat pastel, Sankey proporsional, Waterfall hanya pilihan tahun): Net Worth dan Waterfall jadi dua kartu (masing-masing bisa berfoto), Aset & Utang berikon,
    Arus kas mengikuti tinggi kartu di sebelahnya, Transaksi terbaru per hari (tinggi mengikuti Kalender), Kalender lebar dengan detail
    saat diketuk dan penanda JT, Anggaran ringkas dengan peringatan subkategori, JT di Notifikasi.
    Tanpa perubahan server. */
@@ -12,17 +12,17 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v371'] = '3.7.1';
     'v371.jt': 'Jatuh tempo', 'v371.jt.log': 'Catat', 'v371.jt.skip': 'Lewati', 'v371.jt.edit': 'Ubah', 'v371.jt.over': 'Perlu dicatat', 'v371.jt.done': 'Sudah dicatat', 'v371.jt.plan': 'Terjadwal',
     'v371.jt.next': 'Berikutnya', 'v371.jt.none': 'Tidak ada jatuh tempo pada hari ini.', 'v371.day.none': 'Belum ada transaksi pada hari ini.', 'v371.open': 'Lihat transaksi', 'v371.hint': 'Ketuk tanggal untuk melihat rincian.',
     'v371.s.over': 'Melebihi', 'v371.s.warn': 'Waspada', 'v371.bud.warn': 'Perlu diperhatikan', 'v371.bud.ok': 'Semua anggaran masih aman.',
-    'v371.th.time': 'Jam', 'v371.th.tx': 'Transaksi', 'v371.th.who': 'Pemilik · dompet', 'v371.th.amt': 'Jumlah', 'v371.n.due': '{0} transaksi rutin jatuh tempo', 'v371.left': 'Sisa'
+    'v371.th.time': 'Jam', 'v371.th.tx': 'Transaksi', 'v371.th.who': 'Pemilik · dompet', 'v371.th.amt': 'Jumlah', 'v371.n.due': '{0} transaksi rutin jatuh tempo', 'v371.left': 'Sisa', 'v371.trend': 'Tren {0}', 'v371.comp': 'Komposisi: aset {0} · utang {1}', 'v371.in': 'Masuk', 'v371.out': 'Keluar', 'v371.health': 'Kesehatan', 'v371.flow': 'Arus kas bulan ini'
   });
   I.add('en', {
     'v371.jt': 'Due', 'v371.jt.log': 'Log', 'v371.jt.skip': 'Skip', 'v371.jt.edit': 'Edit', 'v371.jt.over': 'Needs logging', 'v371.jt.done': 'Logged', 'v371.jt.plan': 'Scheduled',
     'v371.jt.next': 'Next', 'v371.jt.none': 'Nothing due on this day.', 'v371.day.none': 'No transactions on this day.', 'v371.open': 'View transactions', 'v371.hint': 'Tap a date to see the details.',
     'v371.s.over': 'Over', 'v371.s.warn': 'Watch', 'v371.bud.warn': 'Needs attention', 'v371.bud.ok': 'All budgets are on track.',
-    'v371.th.time': 'Time', 'v371.th.tx': 'Transaction', 'v371.th.who': 'Owner · wallet', 'v371.th.amt': 'Amount', 'v371.n.due': '{0} recurring transactions due', 'v371.left': 'Left'
+    'v371.th.time': 'Time', 'v371.th.tx': 'Transaction', 'v371.th.who': 'Owner · wallet', 'v371.th.amt': 'Amount', 'v371.n.due': '{0} recurring transactions due', 'v371.left': 'Left', 'v371.trend': 'Trend {0}', 'v371.comp': 'Composition: assets {0} · debts {1}', 'v371.in': 'Income', 'v371.out': 'Spent', 'v371.health': 'Health', 'v371.flow': 'Cash flow this month'
   });
 
   var TN = {a: '#4fae9a', u: '#c9788a', i: '#3f9f6b', o: '#e08a5b', h: '#7e8fd6'};
-  var PAL = ['var(--accent)', 'var(--in)', '#d6a24c', '#7e8fd6', '#5db8a8', '#b561a8'];
+  var PAL = ['var(--dc0)', 'var(--dc1)', 'var(--dc2)', 'var(--dc3)', 'var(--dc4)', 'var(--dc5)'];
   function frp(n) { return C.fmtRp(n); }
   function fnum(n) { return C.fmtNum(Math.round(n)); }
   function dual(n) { return '<span class="vf">' + esc(frp(n)) + '</span><span class="vs">' + esc('Rp ' + X.shortRp(n)) + '</span>'; }
@@ -33,57 +33,67 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v371'] = '3.7.1';
 
   // ---------------------------------------------------------------- Net Worth
   function nwCard(P) {
-    var hb = X.hooks.heroBg ? X.hooks.heroBg() : null, is = P.is, ta = P.A.bs.aset.total, tu = P.A.bs.liabilitas.total;
+    var hb = X.hooks.heroBg ? X.hooks.heroBg() : null, is = P.is, ta = P.A.bs.aset.total, tu = P.A.bs.liabilitas.total, yr = +C.todayLocal().substr(0, 4);
     var hs = P.hero.indexOf('<div class="lbl">'), he = P.hero.indexOf('<div class="sub2">');
-    var head = hs >= 0 ? P.hero.slice(hs, he >= 0 ? he : undefined) : '', extra = X.hooks.heroExtra ? X.hooks.heroExtra(P.f) : '';
+    var head = hs >= 0 ? P.hero.slice(hs, he >= 0 ? he : undefined) : '', extra = (X.hooks.heroExtra ? X.hooks.heroExtra(P.f) : '').replace(/<div class="pj">[\s\S]*$/, '');
     var spark = '';
     try {
-      var nd = X.desk.nwData(P.f, +C.todayLocal().substr(0, 4));
+      var nd = X.desk.nwData(P.f, yr);
       if (nd && nd.has && nd.months.length) {
         var pts = [nd.start].concat(nd.months.map(function (m) { return m.end; })), lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts), sp = (hi - lo) || 1, W = 300, H = 80, n = pts.length - 1 || 1;
-        var xy = pts.map(function (v, i) { return [4 + i * (W - 8) / n, 8 + (hi - v) / sp * (H - 18)]; }), ln = xy.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' ');
-        spark = '<div class="nws"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><path d="M' + xy[0][0].toFixed(1) + ' ' + H + ' L' + ln.replace(/ /g, ' L') + ' L' + xy[xy.length - 1][0].toFixed(1) + ' ' + H + ' Z" fill="var(--accent)" opacity=".14"/><polyline points="' + ln + '" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg></div>';
+        var xy = pts.map(function (v, i) { return [4 + i * (W - 8) / n, 8 + (hi - v) / sp * (H - 18)]; }), ln = xy.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' '), lp = xy[xy.length - 1];
+        spark = '<div class="nws"><svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><path d="M' + xy[0][0].toFixed(1) + ' ' + H + ' L' + ln.replace(/ /g, ' L') + ' L' + lp[0].toFixed(1) + ' ' + H + ' Z" class="sa"/><polyline points="' + ln + '" class="sl" vector-effect="non-scaling-stroke"/></svg></div>' +
+          '<div class="nwx"><span>' + esc(C.namaBulan(1, true)) + '</span><span>' + esc(t('v371.trend', yr)) + '</span><span>' + esc(C.namaBulan(nd.months.length, true)) + '</span></div>';
       }
     } catch (e) { spark = ''; }
     var sc = X.analisis.health(P.f), lbl = sc == null ? t('v37.na') : (sc >= 75 ? t('v37.good') : (sc >= 50 ? t('v37.mid') : t('v37.low')));
-    function tile(tn, ico, label, val, cls, act, v) {
-      return '<button class="nwt tap" style="--tn:' + TN[tn] + '" data-act="' + act + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="ti">' + ico + '</span><span class="tx"><small>' + esc(label) + '</small><b class="' + cls + '">' + val + '</b></span></button>';
+    function pc(v) { return (Math.round(v * 100) / 100).toFixed(2).replace('.', S.pref.lang === 'en' ? '.' : ',') + '%'; }
+    var tot = ta + tu, pa = tot > 0 ? ta / tot * 100 : 100;
+    function row(tn, ico, label, val, cls, v) {
+      return '<button class="nwr tap" style="--tn:' + TN[tn] + '" data-act="page" data-v="' + v + '"><span class="ti">' + ico + '</span><span class="nl">' + esc(label) + '</span><b class="' + cls + '">' + esc(frp(val)) + '</b></button>';
     }
-    var tiles = '<div class="nwg">' + tile('a', ICON.wallet, t('v37.aset'), dual(ta), '', 'page', 'portfolio') + tile('u', ICON.loan, t('v37.utang'), dual(tu), tu > 0 ? 'out' : '', 'page', 'payable') +
-      tile('i', ICON.inArr, t('home.in'), dual(is.pendapatan.total), 'in', 'page', 'income') + tile('o', ICON.outArr, t('home.out'), dual(is.beban.total), 'out', 'page', 'expense') +
-      tile('h', ICON.heart, t('home.ratio'), '<span class="hs ' + (sc == null ? '' : (sc >= 75 ? 'in' : (sc >= 50 ? '' : 'out'))) + '">' + (sc == null ? '—' : sc + ' · ') + esc(sc == null ? '' : lbl) + '</span>', '', 'home-ratio', '') + '</div>';
-    return '<div class="card hero hmain nw' + (hb ? ' photo ' + hb.cls : '') + '">' + (hb ? hb.html : '') + head + extra + spark + tiles + '</div>';
+    function tile(tn, ico, label, val, cls, act, v) {
+      return '<button class="nwt tap" style="--tn:' + TN[tn] + '" data-act="' + act + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="nth"><span class="ti">' + ico + '</span><small>' + esc(label) + '</small></span><b class="' + cls + '">' + val + '</b></button>';
+    }
+    var rows = '<div class="nwrs">' + row('a', ICON.wallet, t('v37.aset'), ta, '', 'portfolio') + row('u', ICON.loan, t('v37.utang'), tu, tu > 0 ? 'out' : '', 'payable') +
+      '<div class="nwb" aria-hidden="true"><i style="width:' + pa.toFixed(2) + '%"></i></div><small class="nwc">' + esc(t('v371.comp', pc(pa), pc(100 - pa))) + '</small></div>';
+    var tiles = '<div class="nwg">' + tile('i', ICON.inArr, t('v371.in'), dual(is.pendapatan.total), 'in', 'page', 'income') + tile('o', ICON.outArr, t('v371.out'), dual(is.beban.total), 'out', 'page', 'expense') +
+      tile('h', ICON.heart, t('v371.health'), '<span class="hs ' + (sc == null ? '' : (sc >= 75 ? 'in' : (sc >= 50 ? '' : 'out'))) + '">' + (sc == null ? '—' : sc + ' · ') + esc(sc == null ? '' : lbl) + '</span>', '', 'home-ratio', '') + '</div>';
+    return '<div class="card hero hmain nw' + (hb ? ' photo ' + hb.cls : '') + '">' + (hb ? hb.html : '') + head + extra + spark + rows + tiles + '</div>';
   }
 
   // ---------------------------------------------------------------- Waterfall (kartu sendiri, foto sendiri)
   function wfCard(P) {
-    var hb = X.hooks.heroBg2 ? X.hooks.heroBg2() : null, h = X.desk.wfCard(P);
+    var hb = X.hooks.heroBg2 ? X.hooks.heroBg2() : null, st = S.wfStyle, md = S.wfMode, h;
+    S.wfStyle = 'wf'; S.wfMode = 'bulan';
+    try { h = X.desk.wfCard(P); } finally { S.wfStyle = st; S.wfMode = md; }
+    h = h.replace(/<select(?![^>]*id="wf-year")[^>]*>[\s\S]*?<\/select>/g, '');
     return h.replace('<div class="card wfc">', '<div class="card wfc wfx' + (hb ? ' photo ' + hb.cls : '') + '">' + (hb ? hb.html : ''));
   }
 
   // ---------------------------------------------------------------- Aset & Utang (berikon)
   function donut(items, total, lbl, tot) {
-    var R = 38, L = 2 * Math.PI * R, off = 0, g = '';
+    var Z = 118, SW = 16, R = (Z - SW) / 2, c = Z / 2, L = 2 * Math.PI * R, off = 0, g = '';
     if (total > 0) items.forEach(function (it) {
       var d = it.v / total * L; if (d <= 0) return;
-      g += '<circle cx="50" cy="50" r="' + R + '" stroke="' + it.c + '" stroke-dasharray="' + Math.max(d - (items.length > 1 ? 1.2 : 0), .6).toFixed(2) + ' ' + L.toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '"/>'; off += d;
-    }); else g = '<circle cx="50" cy="50" r="' + R + '" stroke="var(--line)"/>';
-    return '<svg class="adsv" viewBox="0 0 100 100" role="img" aria-label="' + esc(lbl + ' ' + tot) + '"><g fill="none" stroke-width="14" transform="rotate(-90 50 50)">' + g + '</g>' +
-      '<text x="50" y="47" text-anchor="middle" class="adt1">' + esc(lbl) + '</text><text x="50" y="60" text-anchor="middle" class="adt2">' + esc(tot) + '</text></svg>';
+      g += '<circle cx="' + c + '" cy="' + c + '" r="' + R + '" stroke="' + it.c + '" stroke-width="' + SW + '" stroke-dasharray="' + Math.max(d - (items.length > 1 ? 2 : 0), .6).toFixed(2) + ' ' + L.toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '"/>'; off += d;
+    });
+    return '<svg class="adsv" viewBox="0 0 ' + Z + ' ' + Z + '" role="img" aria-label="' + esc(lbl + ' ' + tot) + '"><g fill="none" transform="rotate(-90 ' + c + ' ' + c + ')"><circle cx="' + c + '" cy="' + c + '" r="' + R + '" stroke="var(--line)" stroke-width="' + SW + '"/>' + g + '</g>' +
+      '<text x="' + c + '" y="' + (c - 2) + '" text-anchor="middle" class="adt1">' + esc(lbl) + '</text><text x="' + c + '" y="' + (c + 14) + '" text-anchor="middle" class="adt2">' + esc(tot) + '</text></svg>';
   }
   function legend(groups, total, red) {
     return groups.map(function (g, i) {
-      var c = red ? 'var(--out)' : PAL[i % PAL.length], pg = /piutang/i.test(g.nama);
+      var c = red ? 'var(--dcu)' : PAL[i % PAL.length], pg = /piutang/i.test(g.nama);
       var a = red ? 'data-act="page" data-v="payable"' : (pg ? 'data-act="page" data-v="receivable"' : 'data-act="page" data-v="portfolio" data-g="' + esc(g.nama) + '"');
-      return '<div class="adr tap" ' + a + '><span class="ai" style="--tn:' + c + '">' + (red ? ICON.loan : X.catIcon(g.nama)) + '</span><span class="adn"><b>' + esc(dn(g.nama)) + '</b><small>' + esc(t('home.grp.n', g.rows.length)) + '</small></span><span class="adp">' + pct1(total ? g.total / total * 100 : 0) + '</span><b class="adv">' + esc(frp(g.total)) + '</b></div>';
+      return '<div class="adr tap" ' + a + '><span class="ai" style="--tn:' + c + '">' + (red ? ICON.loan : X.catIcon(g.nama)) + '</span><span class="adn"><b>' + esc(dn(g.nama)) + '</b><small>' + esc(t('home.grp.n', g.rows.length)) + '</small></span><span class="adp">' + pct1(total ? g.total / total * 100 : 0) + '</span><b class="adv">' + esc('Rp ' + X.shortRp(g.total)) + '</b></div>';
     }).join('');
   }
   function adCard(P) {
     var A2 = P.A, ag = A2.groups.filter(function (g) { return g.total > 0; }), ug = ((A2.bs.liabilitas && A2.bs.liabilitas.groups) || []).filter(function (g) { return g.total > 0; });
     var ta = A2.bs.aset.total, tu = A2.bs.liabilitas.total, sa = ag.reduce(function (a, g) { return a + g.total; }, 0), su = ug.reduce(function (a, g) { return a + g.total; }, 0);
     return '<div class="card adc adc2"><div class="ct"><h3>' + t('v37.aset') + ' &amp; ' + t('v37.utang') + '</h3><div class="sp"></div><button class="link sm" data-act="page" data-v="portfolio">' + t('see.all') + '</button></div><div class="adw"><div class="add">' +
-      '<div class="adk"><b>' + t('v37.aset') + '</b>' + donut(ag.map(function (g, i) { return {v: g.total, c: PAL[i % PAL.length]}; }), sa, t('v37.tot.a'), X.shortRp(ta)) + '<b class="num">' + esc(frp(ta)) + '</b></div>' +
-      '<div class="adk"><b>' + t('v37.utang') + '</b>' + donut(ug.map(function (g) { return {v: g.total, c: 'var(--out)'}; }), su, t('v37.tot.u'), X.shortRp(tu)) + '<b class="num out">' + esc(frp(tu)) + '</b></div></div>' +
+      '<div class="adk"><b>' + t('v37.aset') + '</b>' + donut(ag.map(function (g, i) { return {v: g.total, c: PAL[i % PAL.length]}; }), sa, t('v37.aset'), X.shortRp(ta)) + '<b class="num">' + esc(frp(ta)) + '</b></div>' +
+      '<div class="adk"><b>' + t('v37.utang') + '</b>' + donut(ug.map(function (g) { return {v: g.total, c: 'var(--dcu)'}; }), su, t('v37.utang'), X.shortRp(tu)) + '<b class="num out">' + esc(frp(tu)) + '</b></div></div>' +
       '<div class="adl"><div class="adh">' + t('v37.aset') + '</div>' + (ag.length ? legend(ag, sa) : '<div class="empty">' + t('home.empty.assets') + '</div>') +
       '<div class="adsep"></div><div class="adh">' + t('v37.utang') + '</div>' + (ug.length ? legend(ug, su, true) : '<div class="muted sm">' + t('v37.noutang') + '</div>') +
       (ta > 0 ? '<div class="muted sm" style="margin-top:8px">' + esc(t('v37.ratio', pct1(tu / ta * 100))) + '</div>' : '') + '</div></div></div>';
@@ -211,9 +221,16 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v371'] = '3.7.1';
     LAST = P;
     function bt(c, h) { return h ? '<div class="bt ' + c + '">' + h + '</div>' : ''; }
     var n = 1 + (P.gl ? 1 : 0) + (P.ev ? 1 : 0);
-    return '<div class="bwrap"><div class="bento v371 bn' + n + '">' + bt('x-ban', P.banner) + bt('x-nw', nwCard(P)) + bt('x-wf', wfCard(P)) + bt('x-ad', adCard(P)) + bt('x-fl', P.sankey) +
+    return '<div class="bwrap"><div class="bento v371 bn' + n + '">' + bt('x-ban', P.banner) + bt('x-nw', nwCard(P)) + bt('x-wf', wfCard(P)) + bt('x-ad', adCard(P)) + bt('x-fl', flowHead(P.sankey)) +
       bt('x-rec', recCard()) + bt('x-cal', calCard(P)) + bt('x-bud', budCard(P)) + bt('x-gl', P.gl) + bt('x-ev', P.ev) + '</div></div>';
   };
+
+  function flowHead(h) {
+    var n = C.todayLocal();
+    return h ? h.replace(/<div class="ah">[\s\S]*?<\/div>/, '<div class="ah"><span>' + esc(t('v371.flow')) + '</span><span class="muted sm">' + esc(C.namaBulan(+n.substr(5, 2), true) + ' ' + n.substr(0, 4)) + '</span></div>') : h;
+  }
+  var pre0 = X.hooks.homePre;
+  X.hooks.homePre = function () { if (pre0) pre0(); if (X.sankeyOpt) X.sankeyOpt = Object.assign({}, X.sankeyOpt, {fmt: X.shortRp}); };
 
   // ---------------------------------------------------------------- penyesuaian tinggi (desktop)
   function isDesk(g) { return g.parentNode.clientWidth >= DESK; }
@@ -230,14 +247,15 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v371'] = '3.7.1';
       for (i = 0; i < gh.length; i++) { var nx = gh[i].nextElementSibling; if (!nx || nx.classList.contains('rtg')) gh[i].remove(); }
     }
     if (dsk && ad && fl && LAST && X.hooks.homeSankey) {
-      var sk = fl.querySelector('.sankey'), svg = sk && sk.querySelector('svg'), d = ad.offsetHeight - fl.offsetHeight;
-      if (svg && d > 6) {
-        var vb = svg.viewBox.baseVal, sc = svg.getBoundingClientRect().width / (vb && vb.width || 1), O = X.sankeyOpt || {}, old = X.sankeyOpt;
-        if (sc > 0) {
-          X.sankeyOpt = Object.assign({}, O, {Hc: Math.round((O.Hc || 200) + d / sc)});
-          try { var html = X.hooks.homeSankey(LAST.is); if (html) fl.innerHTML = html; } catch (e) {}
-          X.sankeyOpt = old;
+      var sk = fl.querySelector('.sankey'), svg = sk && sk.querySelector('svg'), old = X.sankeyOpt;
+      if (svg) {
+        var w = Math.round(svg.getBoundingClientRect().width), Hc = 250;
+        function gen(h) { X.sankeyOpt = {W: w, Hc: h, gap: 6, fmt: X.shortRp}; try { var html = flowHead(X.hooks.homeSankey(LAST.is)); if (html) fl.innerHTML = html; } catch (e) {} }
+        if (w > 200) {
+          gen(Hc); var d = ad.offsetHeight - fl.offsetHeight;
+          if (d > 6) gen(Hc + d);
         }
+        X.sankeyOpt = old;
       }
     }
     g.style.alignItems = '';

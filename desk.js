@@ -272,7 +272,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
     var tp = b.tip, h = '<div class="wth"><b>' + esc(tp.title) + '</b>' + (b.tot ? '' : '<span class="dtag ' + (tp.amt >= 0 ? 'up' : 'dn') + '">' + sgn(tp.amt || 1) + esc(frp(Math.abs(tp.amt))) + '</span>') + '</div><div class="wtr">';
     if (b.tot) h += '<span class="muted">' + t('dk.wf.nw') + '</span><b class="num">' + esc(frp(tp.amt)) + '</b>';
     else {
-      tp.rows.forEach(function (r) { h += '<span class="muted">' + esc(r[0]) + '</span><b class="num ' + (r[1] > 0 ? 'in' : (r[1] < 0 ? 'out' : '')) + '">' + sgn(r[1]) + esc(frp(Math.abs(r[1]))) + '</b>'; });
+      tp.rows.forEach(function (r, ri) { var wi = [ICON.inArr, ICON.outArr, ICON.trend][ri]; h += '<span class="muted wtl">' + (wi ? '<i class="wti">' + wi + '</i>' : '') + esc(r[0]) + '</span><b class="num ' + (r[1] > 0 ? 'in' : (r[1] < 0 ? 'out' : '')) + '">' + sgn(r[1]) + esc(frp(Math.abs(r[1]))) + '</b>'; });
       h += '<span class="muted wsum">' + t('dk.wf.nw') + '</span><b class="num wsum">' + esc(frp(tp.nw)) + '</b>';
     }
     return h + '</div>';

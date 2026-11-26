@@ -176,5 +176,5 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['foto'] = '3.3.0';
     start0();
     try { Promise.all([loadCard(), loadCard2()]).then(function () { if ((card.url || card2.url) && S.cfg && S.master) X.render(); }).catch(function () {}); } catch (e) {}
   };
-  X.foto = {avImg: avImg, avHTML: avHTML, avatarData: avatarData, loadCard: loadCard};
+  X.foto = {avImg: avImg, avHTML: avHTML, avatarData: avatarData, loadCard: loadCard, loadCard2: loadCard2};
 })();
