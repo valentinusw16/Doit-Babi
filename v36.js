@@ -371,5 +371,5 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['v36'] = '3.6.0';
     else if (el.id === 'tx-sub') { S.txSub = el.value; if (el.value && S.M.katByKode[el.value]) S.txCat = S.M.katByKode[el.value].Kategori; S.limit = 80; X.render(); }
   });
 
-  X.v36 = {stat: stat, d14: d14card, budget: budget, anggaranTop: anggaranTop, formSisa: formSisa, candle: candle, styleSelect: styleSelect, matchFlow: matchFlow, flowResult: flowResult, txFilters: txFilters, txBar: txBar, userCompare: userCompare, syncText: syncText, funds: funds};
+  X.v36 = {linesOf: linesOf, stat: stat, d14: d14card, budget: budget, anggaranTop: anggaranTop, formSisa: formSisa, candle: candle, styleSelect: styleSelect, matchFlow: matchFlow, flowResult: flowResult, txFilters: txFilters, txBar: txBar, userCompare: userCompare, syncText: syncText, funds: funds};
 })();

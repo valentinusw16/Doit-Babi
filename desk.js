@@ -516,5 +516,5 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['desk'] = '3.3.0';
     start0();
     try { loadBg().catch(function () {}); } catch (e) {}
   };
-  X.desk = {nwData: nwData, projection: projection, wide: wide, pushTampilan: pushGaya};
+  X.desk = {wfCard: wfCard, calCard: calCard, nwData: nwData, projection: projection, wide: wide, pushTampilan: pushGaya};
 })();

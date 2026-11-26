@@ -479,7 +479,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['plan'] = '3.3.0';
     });
     return out;
   }
-  X.plan = {bud: {curMonth: curMonth, curJenis: curJenis, groupsOf: groupsOf, actualMaps: actualMaps, lineName: lineName, lineGroup: lineGroup, lineJenis: lineJenis, strip: strip, monthLabel: monthLabel, ownerNow: ownerNow, openForm: openForm, saveVia: saveVia, setPF: function (p) { PF = p; }}, dueCount: dueCount, logAll: logAll, planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs,
+  X.plan = {bud: {curMonth: curMonth, curJenis: curJenis, groupsOf: groupsOf, actualMaps: actualMaps, lineName: lineName, lineGroup: lineGroup, lineJenis: lineJenis, strip: strip, monthLabel: monthLabel, ownerNow: ownerNow, openForm: openForm, saveVia: saveVia, setPF: function (p) { PF = p; }}, recs: recs, recName: recName, ownerOf: owner, dueCount: dueCount, logAll: logAll, planState: planState, planAlerts: planAlerts, markDone: markDone, rutinFromTx: rutinFromTx, budgetLines: budgetLines, incomeLines: incomeLines, allBudgetLines: allBudgetLines, dueList: dueList, myRecs: myRecs, formFromRec: formFromRec, recs: recs,
     h: {pbar: pbar, pct: pct, norm: norm, badge: badge, cover: cover}, state: planState, pf: function () { return PF; }, renderForm: renderForm, expenseGroups: expenseGroups, rc: rc, vAnggaran: vAnggaran, vGoals: vGoals, vRutin: vRutin, vEvent: vEvent};
 
   // ---------------------------------------------------------------- aksi

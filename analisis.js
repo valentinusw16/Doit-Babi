@@ -244,6 +244,7 @@ if (window.DoIt) (window.DoIt.ver = window.DoIt.ver || {})['analisis'] = '3.3.0'
   }
   function sig(i) { return i.kode + ':' + i.level + (i.id ? ':' + i.id : ''); }
   X.analisis = {
+    health: function (f) { var s = snapshot(f), r = C2.ratios(s), n = 0, ok = 0; RA.slice(0, 4).forEach(function (d) { var v = r[d.key]; if (v == null) return; n++; if (d.ok(v)) ok++; }); return n ? Math.round(ok / n * 100) : null; },
     newWarnCount: function () { if (!S.cfg) return 0; var seen = S.prefs.warnSeen || {}; return warnList().filter(function (i) { return i.level !== 'good' && !seen[sig(i)]; }).length; },
     markWarnSeen: function () { var m = {}; warnList().forEach(function (i) { m[sig(i)] = 1; }); S.prefs.warnSeen = m; X.persist(); },
     warnView: function () {
